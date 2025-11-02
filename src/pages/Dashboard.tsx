@@ -1,64 +1,162 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { GraduationCap, LogOut, User, Lock, CheckCircle2, PlayCircle } from "lucide-react";
+import { GraduationCap, LogOut, User, Lock, CheckCircle2, PlayCircle, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ChatBot from "@/components/ChatBot";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-// Datos de demostración
-const mockModules = [
-  {
-    id: 1,
-    title: "Módulo 1: Fundamentos",
-    description: "Conceptos básicos y fundamentos esenciales",
-    progress: 100,
-    lessons: [
-      { id: 1, title: "Introducción", completed: true, unlocked: true },
-      { id: 2, title: "Conceptos Clave", completed: true, unlocked: true },
-      { id: 3, title: "Aplicaciones Prácticas", completed: true, unlocked: true },
-    ],
-  },
-  {
-    id: 2,
-    title: "Módulo 2: Nivel Intermedio",
-    description: "Profundización en técnicas y metodologías",
-    progress: 33,
-    lessons: [
-      { id: 4, title: "Técnicas Avanzadas", completed: true, unlocked: true },
-      { id: 5, title: "Casos de Estudio", completed: false, unlocked: true },
-      { id: 6, title: "Proyecto Práctico", completed: false, unlocked: false },
-    ],
-  },
-  {
-    id: 3,
-    title: "Módulo 3: Nivel Avanzado",
-    description: "Dominando conceptos complejos",
-    progress: 0,
-    lessons: [
-      { id: 7, title: "Estrategias Profesionales", completed: false, unlocked: false },
-      { id: 8, title: "Análisis Profundo", completed: false, unlocked: false },
-      { id: 9, title: "Certificación Final", completed: false, unlocked: false },
-    ],
-  },
-];
+interface Lesson {
+  id: string;
+  title: string;
+  completed: boolean;
+  unlocked: boolean;
+}
+
+interface Module {
+  id: string;
+  module_number: number;
+  title: string;
+  description: string;
+  instructor: string;
+  progress: number;
+  lessons: Lesson[];
+}
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [modules] = useState(mockModules);
-  
-  const totalProgress = Math.round(
-    modules.reduce((acc, mod) => acc + mod.progress, 0) / modules.length
-  );
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  const [modules, setModules] = useState<Module[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalProgress, setTotalProgress] = useState(0);
+  const [canDownloadCertificate, setCanDownloadCertificate] = useState(false);
 
-  const handleLogout = () => {
-    navigate("/");
-  };
+  useEffect(() => {
+    if (user) {
+      loadDashboardData();
+    }
+  }, [user]);
 
-  const handleLessonClick = (lesson: any) => {
-    if (lesson.unlocked) {
-      navigate(`/lesson/${lesson.id}`);
+  const loadDashboardData = async () => {
+    try {
+      // Cargar módulos
+      const { data: modulesData, error: modulesError } = await supabase
+        .from('modules')
+        .select('*')
+        .order('module_number');
+
+      if (modulesError) throw modulesError;
+
+      // Cargar lecciones
+      const { data: lessonsData, error: lessonsError } = await supabase
+        .from('lessons')
+        .select('*')
+        .order('lesson_number');
+
+      if (lessonsError) throw lessonsError;
+
+      // Cargar progreso del usuario
+      const { data: progressData, error: progressError } = await supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', user!.id);
+
+      if (progressError) throw progressError;
+
+      // Organizar datos
+      const modulesWithLessons = modulesData!.map((module) => {
+        const moduleLessons = lessonsData!.filter(
+          (lesson) => lesson.module_id === module.id
+        );
+
+        const lessonsWithProgress = moduleLessons.map((lesson, index) => {
+          const progress = progressData!.find((p) => p.lesson_id === lesson.id);
+          const completed = progress?.completed || false;
+          
+          // La primera lección siempre está desbloqueada
+          const unlocked = index === 0 || (moduleLessons[index - 1] && 
+            progressData!.find((p) => p.lesson_id === moduleLessons[index - 1].id)?.completed);
+
+          return {
+            id: lesson.id,
+            title: lesson.title,
+            completed,
+            unlocked: unlocked || false,
+          };
+        });
+
+        const completedCount = lessonsWithProgress.filter((l) => l.completed).length;
+        const progress = moduleLessons.length > 0 
+          ? Math.round((completedCount / moduleLessons.length) * 100) 
+          : 0;
+
+        return {
+          id: module.id,
+          module_number: module.module_number,
+          title: module.title,
+          description: module.description || '',
+          instructor: module.instructor || '',
+          progress,
+          lessons: lessonsWithProgress,
+        };
+      });
+
+      setModules(modulesWithLessons);
+
+      // Calcular progreso total
+      const totalLessons = lessonsData!.length;
+      const completedLessons = progressData!.filter((p) => p.completed).length;
+      const overallProgress = totalLessons > 0 
+        ? Math.round((completedLessons / totalLessons) * 100) 
+        : 0;
+      setTotalProgress(overallProgress);
+
+      // Verificar si puede descargar certificado
+      if (totalLessons > 0 && completedLessons === totalLessons) {
+        setCanDownloadCertificate(true);
+      }
+
+    } catch (error: any) {
+      console.error('Error loading dashboard:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo cargar el dashboard",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleLogout = async () => {
+    await signOut();
+  };
+
+  const handleLessonClick = (lesson: Lesson) => {
+    if (lesson.unlocked) {
+      navigate(`/lesson/${lesson.id}`);
+    } else {
+      toast({
+        title: "Lección bloqueada",
+        description: "Completa la lección anterior para desbloquear esta",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-dark">
@@ -70,6 +168,16 @@ const Dashboard = () => {
             <span className="text-2xl font-bold gradient-text">MaestríaPro</span>
           </div>
           <div className="flex items-center gap-2">
+            {canDownloadCertificate && (
+              <Button
+                variant="outline"
+                onClick={() => navigate("/certificate")}
+                className="gap-2"
+              >
+                <Award className="h-5 w-5" />
+                Certificado
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -113,12 +221,15 @@ const Dashboard = () => {
             <div
               key={module.id}
               className="glass-card p-6 animate-slide-up"
-              style={{ animationDelay: `${idx * 0.1}s` }}
+              style={{ animationDelay: `${idx * 0.05}s` }}
             >
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h2 className="text-2xl font-bold mb-2">{module.title}</h2>
-                  <p className="text-muted-foreground">{module.description}</p>
+                  <p className="text-muted-foreground mb-1">{module.description}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Docente: {module.instructor}
+                  </p>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-primary">
