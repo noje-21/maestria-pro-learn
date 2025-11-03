@@ -12,6 +12,7 @@ import Lesson from "./pages/Lesson";
 import Exam from "./pages/Exam";
 import Profile from "./pages/Profile";
 import Certificate from "./components/Certificate";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Certificate />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <Admin />
                 </ProtectedRoute>
               } 
             />

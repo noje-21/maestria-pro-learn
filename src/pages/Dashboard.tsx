@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { GraduationCap, LogOut, User, Lock, CheckCircle2, PlayCircle, Award } from "lucide-react";
+import { GraduationCap, LogOut, User, Lock, CheckCircle2, PlayCircle, Award, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ChatBot from "@/components/ChatBot";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,6 +33,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [totalProgress, setTotalProgress] = useState(0);
   const [canDownloadCertificate, setCanDownloadCertificate] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -42,6 +43,15 @@ const Dashboard = () => {
 
   const loadDashboardData = async () => {
     try {
+      // Check if user is admin
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user!.id)
+        .single();
+
+      setIsAdmin(profile?.role === 'admin');
+
       // Cargar módulos
       const { data: modulesData, error: modulesError } = await supabase
         .from('modules')
@@ -168,6 +178,15 @@ const Dashboard = () => {
             <span className="text-2xl font-bold gradient-text">MaestríaPro</span>
           </div>
           <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button
+                onClick={() => navigate("/admin")}
+                className="btn-gradient-primary gap-2"
+              >
+                <Users className="h-4 w-4" />
+                Panel Admin
+              </Button>
+            )}
             {canDownloadCertificate && (
               <Button
                 variant="outline"

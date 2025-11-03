@@ -5,11 +5,12 @@ Plataforma de aprendizaje en línea para la **Maestría Latinoamericana en Circu
 ## 🎓 Características Principales
 
 - ✅ **28 módulos académicos** con contenido real de la MLCP
-- ✅ **Sistema de autenticación** seguro con Supabase
+- ✅ **Sistema de autenticación con aprobación manual** del administrador
+- ✅ **Panel administrativo completo** para gestión de usuarios
 - ✅ **Desbloqueo progresivo** mediante exámenes (≥80% para aprobar)
 - ✅ **Tutor virtual IA** especializado en Circulación Pulmonar
 - ✅ **Certificado PDF** automático al completar el programa
-- ✅ **Panel administrativo** con control de roles
+- ✅ **Control de acceso por roles** (admin/student)
 - ✅ **Identidad visual MLCP** (colores, tipografía oficial)
 
 ## 🚀 Tecnologías
@@ -42,16 +43,55 @@ La aplicación estará en `http://localhost:8080`
 ### Administrador
 - **Email**: admin@maestriapro.com
 - **Contraseña**: 947586
+- **Privilegios**: Acceso total al panel administrativo (`/admin`)
+- **Estado**: Aprobado automáticamente
 
-### Estudiante
+### Estudiante de Prueba  
 - **Email**: test_student@maestriapro.com
 - **Contraseña**: 947586
+- **Estado**: Pre-aprobado para pruebas
 
-> **Nota**: Los usuarios deben registrarse manualmente en `/auth`
+> **Importante**: Los nuevos usuarios que se registren tendrán `status = 'pending'` y necesitarán aprobación del admin para acceder al dashboard.
+
+## 🔐 Sistema de Control de Acceso
+
+### Flujo de Registro y Aprobación
+
+1. **Registro Nuevo Usuario**:
+   - Usuario se registra en `/auth` con email, contraseña y nombre completo
+   - Se crea perfil automáticamente con `status = 'pending'` y `role = 'student'`
+   - Aparece mensaje: "Tu solicitud está pendiente de aprobación"
+
+2. **Aprobación Administrativa**:
+   - Admin accede a `/admin` (botón visible solo para admins en dashboard)
+   - Ve lista de usuarios pendientes con información completa
+   - Puede aprobar o rechazar solicitudes con un clic
+
+3. **Acceso al Sistema**:
+   - Usuario aprobado (`status = 'approved'`) puede acceder al dashboard
+   - Usuario rechazado (`status = 'rejected'`) no puede acceder
+   - Sistema valida estado en cada acceso protegido
+
+### Panel de Administración (`/admin`)
+
+El administrador puede:
+- ✅ Ver estadísticas de usuarios (total, pendientes, aprobados, rechazados)
+- ✅ Gestionar solicitudes de registro (aprobar/rechazar)
+- ✅ Ver historial de usuarios aprobados y rechazados
+- ✅ Reactivar usuarios rechazados si es necesario
+
+> **Nota**: Solo usuarios con `role = 'admin'` y `status = 'approved'` pueden acceder al panel.
 
 ## 🎯 Flujo de Usuario
 
-1. **Registro/Login** → Autenticación segura
+### Para Nuevos Usuarios
+1. **Registro** → Completar formulario en `/auth`
+2. **Espera** → Mensaje de "Pendiente de aprobación"
+3. **Aprobación** → Admin revisa y aprueba en `/admin`
+4. **Acceso** → Ingresar al dashboard con credenciales
+
+### Para Usuarios Aprobados
+1. **Login** → Autenticación en `/auth`
 2. **Dashboard** → Vista de 28 módulos con progreso
 3. **Lecciones** → Video, materiales descargables
 4. **Exámenes** → 5 preguntas, mínimo 80% para aprobar
@@ -61,22 +101,33 @@ La aplicación estará en `http://localhost:8080`
 
 ## 🔐 Seguridad
 
-- Sistema de roles seguro (admin/student)
+- Sistema de roles seguro (admin/student) con tabla dedicada
+- Control de acceso por aprobación manual del admin
 - Row Level Security en todas las tablas
+- Políticas RLS específicas para admin y estudiantes
 - Autenticación con Supabase Auth
-- Rutas protegidas en frontend
-- Validación server-side con RPC
+- Rutas protegidas con verificación de `status = 'approved'`
+- Validación server-side con RPC y Security Definer
+- Protección contra privilege escalation
 
 ## 📊 Base de Datos
 
 ### Tablas Principales
-- `profiles` - Información de usuarios
-- `user_roles` - Sistema de roles
+- `profiles` - Información de usuarios con status y role
+- `user_roles` - Sistema de roles (deprecated, reemplazado por role en profiles)
 - `modules` - 28 módulos del programa
 - `lessons` - Lecciones por módulo
 - `exams` - Exámenes de evaluación
+- `exam_questions` - Preguntas de los exámenes
+- `exam_attempts` - Intentos de exámenes por usuario
 - `user_progress` - Progreso por usuario
 - `chat_messages` - Historial del tutor IA
+
+### Campos de Control de Acceso en `profiles`
+```sql
+status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected'))
+role TEXT DEFAULT 'student' CHECK (role IN ('admin', 'student'))
+```
 
 ## 🎨 Identidad Visual
 
@@ -125,6 +176,23 @@ Generación automática cuando completas todas las lecciones:
 
 ## 🧪 Testing
 
+### Como Administrador
+```bash
+# 1. Login como admin
+# admin@maestriapro.com / 947586
+
+# 2. Verificar acceso al botón "Panel Admin" en dashboard
+
+# 3. Acceder a /admin
+
+# 4. Crear usuario de prueba desde /auth (otro navegador/incógnito)
+
+# 5. Aprobar nuevo usuario desde panel admin
+
+# 6. Verificar que el nuevo usuario puede acceder
+```
+
+### Como Estudiante
 ```bash
 # 1. Login como estudiante
 # test_student@maestriapro.com / 947586
@@ -155,18 +223,29 @@ npm run lint     # Linter
 
 ## 🐛 Troubleshooting
 
+### "Pendiente de aprobación"
+- Usuario nuevo debe esperar aprobación del admin
+- Admin debe acceder a `/admin` y aprobar solicitud
+- Verificar que `status = 'approved'` en tabla profiles
+
 ### "User not authenticated"
 - Verificar sesión activa
 - Revisar token en localStorage
+- Intentar logout y login nuevamente
+
+### "Acceso denegado" en /admin
+- Solo usuarios con `role = 'admin'` pueden acceder
+- Verificar en tabla profiles que role sea 'admin'
 
 ### Chat IA no responde
 - Verificar conexión
 - Revisar logs en Lovable Cloud
-- Verificar límites de uso
+- Verificar límites de uso de Lovable AI
 
 ### Lecciones bloqueadas
 - Aprobar examen anterior con ≥80%
 - Verificar función RPC ejecutada
+- Revisar tabla user_progress
 
 ## 📞 Soporte
 
