@@ -41,13 +41,22 @@ const Admin = () => {
     }
 
     try {
+      // Check if user has admin role in user_roles table
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      // Check if user is approved
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role, status')
+        .select('status')
         .eq('id', user.id)
         .single();
 
-      if (profile?.role !== 'admin' || profile?.status !== 'approved') {
+      if (!userRole || profile?.status !== 'approved') {
         toast({
           title: "Acceso denegado",
           description: "No tienes permisos de administrador",

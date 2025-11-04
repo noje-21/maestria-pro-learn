@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('status, role')
+        .select('status')
         .eq('id', user.id)
         .single();
 
