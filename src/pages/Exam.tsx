@@ -43,9 +43,19 @@ const Exam = () => {
         .from('exams')
         .select('id')
         .eq('lesson_id', lessonId)
-        .single();
+        .maybeSingle();
 
       if (examError) throw examError;
+      
+      if (!exam) {
+        toast({
+          title: "Error",
+          description: "No hay examen disponible para esta lección",
+          variant: "destructive",
+        });
+        navigate(`/lesson/${lessonId}`);
+        return;
+      }
       setExamId(exam.id);
 
       // Obtener las preguntas del examen
