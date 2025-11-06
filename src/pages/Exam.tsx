@@ -7,6 +7,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { examAnswerSchema } from "@/lib/validations";
 
 interface Question {
   id: string;
@@ -91,6 +92,20 @@ const Exam = () => {
 
   const handleSubmit = async () => {
     if (!user || !examId || !lessonId) return;
+
+    // Validate all answers
+    const invalidAnswers = Object.values(answers).filter(
+      answer => !examAnswerSchema.safeParse(answer).success
+    );
+
+    if (invalidAnswers.length > 0) {
+      toast({
+        title: "Error de validación",
+        description: "Una o más respuestas son inválidas",
+        variant: "destructive",
+      });
+      return;
+    }
 
     let correct = 0;
     questions.forEach((q) => {

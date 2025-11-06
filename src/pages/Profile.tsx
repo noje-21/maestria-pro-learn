@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { profileUpdateSchema } from "@/lib/validations";
 
 interface ProfileData {
   full_name: string;
@@ -112,6 +113,21 @@ const Profile = () => {
     if (!user) return;
 
     try {
+      // Validate input
+      const validation = profileUpdateSchema.safeParse({
+        full_name: profile.full_name,
+        avatar_url: profile.avatar_url,
+      });
+
+      if (!validation.success) {
+        toast({
+          title: "Error de validación",
+          description: validation.error.issues[0].message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('profiles')
         .upsert({

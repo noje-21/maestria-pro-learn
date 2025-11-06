@@ -40,6 +40,37 @@ serve(async (req) => {
     console.log('AI Tutor request from user:', user.id);
 
     const { messages } = await req.json();
+
+    // Validate messages structure
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return new Response(JSON.stringify({ error: "Mensajes inválidos" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate each message
+    for (const msg of messages) {
+      if (!msg.role || !msg.content) {
+        return new Response(JSON.stringify({ error: "Estructura de mensaje inválida" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (typeof msg.content !== 'string' || msg.content.length === 0 || msg.content.length > 2000) {
+        return new Response(JSON.stringify({ error: "Contenido del mensaje inválido (debe tener entre 1-2000 caracteres)" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!['user', 'assistant', 'system'].includes(msg.role)) {
+        return new Response(JSON.stringify({ error: "Rol de mensaje inválido" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 

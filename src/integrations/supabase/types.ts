@@ -431,6 +431,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      verify_admin_access: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "student"

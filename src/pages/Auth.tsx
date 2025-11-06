@@ -6,6 +6,7 @@ import { GraduationCap, Mail, Lock, ArrowLeft, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { signUpSchema, signInSchema } from "@/lib/validations";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -24,12 +25,25 @@ const Auth = () => {
 
     try {
       if (isLogin) {
+        // Validate sign in
+        const validation = signInSchema.safeParse({ email, password });
+        if (!validation.success) {
+          toast({
+            title: "Error de validación",
+            description: validation.error.issues[0].message,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
         await signIn(email, password);
       } else {
-        if (!fullName.trim()) {
+        // Validate sign up
+        const validation = signUpSchema.safeParse({ email, password, fullName });
+        if (!validation.success) {
           toast({
-            title: "Error",
-            description: "Por favor ingresa tu nombre completo",
+            title: "Error de validación",
+            description: validation.error.issues[0].message,
             variant: "destructive",
           });
           setLoading(false);
