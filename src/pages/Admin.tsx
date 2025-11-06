@@ -11,9 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface Profile {
   id: string;
   full_name: string | null;
-  email: string | null;
   status: string;
-  role: string;
   created_at: string;
 }
 
@@ -76,9 +74,7 @@ const Admin = () => {
   const loadProfiles = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .rpc('get_user_list_for_admin');
 
       if (error) throw error;
 
@@ -235,7 +231,6 @@ const Admin = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold">{profile.full_name || 'Sin nombre'}</h3>
-                      <p className="text-sm text-muted-foreground">{profile.email}</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Registrado: {new Date(profile.created_at).toLocaleDateString('es-ES')}
                       </p>
@@ -273,10 +268,6 @@ const Admin = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold">{profile.full_name || 'Sin nombre'}</h3>
-                      <p className="text-sm text-muted-foreground">{profile.email}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Rol: {profile.role === 'admin' ? 'Administrador' : 'Estudiante'}
-                      </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-5 w-5 text-green-500" />
@@ -299,7 +290,6 @@ const Admin = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold">{profile.full_name || 'Sin nombre'}</h3>
-                      <p className="text-sm text-muted-foreground">{profile.email}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <XCircle className="h-5 w-5 text-red-500" />

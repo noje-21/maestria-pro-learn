@@ -117,7 +117,6 @@ const Profile = () => {
         .upsert({
           id: user.id,
           full_name: profile.full_name,
-          email: profile.email,
           avatar_url: profile.avatar_url,
           updated_at: new Date().toISOString(),
         });
@@ -248,8 +247,12 @@ const Profile = () => {
                       value={profile.email}
                       className="pl-10 bg-background/50"
                       readOnly
+                      disabled
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    El correo electrónico no se puede modificar
+                  </p>
                 </div>
 
                 <Button

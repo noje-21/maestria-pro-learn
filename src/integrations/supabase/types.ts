@@ -307,7 +307,6 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
-          role: string | null
           status: string | null
           updated_at: string | null
         }
@@ -317,7 +316,6 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
-          role?: string | null
           status?: string | null
           updated_at?: string | null
         }
@@ -327,7 +325,6 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
-          role?: string | null
           status?: string | null
           updated_at?: string | null
         }
@@ -404,6 +401,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_list_for_admin: {
+        Args: never
+        Returns: {
+          created_at: string
+          full_name: string
+          id: string
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
