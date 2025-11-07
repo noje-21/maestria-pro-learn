@@ -203,63 +203,123 @@ export type Database = {
           },
         ]
       }
-        lessons: {
-          Row: {
-            created_at: string | null
-            description: string | null
-            duration_minutes: number | null
-            id: string
-            is_active: boolean | null
-            lesson_number: number
-            material_url: string | null
-            module_id: string | null
-            title: string
-            updated_at: string | null
-            video_url: string | null
-            video1_url: string | null
-            video2_url: string | null
-          }
-          Insert: {
-            created_at?: string | null
-            description?: string | null
-            duration_minutes?: number | null
-            id?: string
-            is_active?: boolean | null
-            lesson_number: number
-            material_url?: string | null
-            module_id?: string | null
-            title: string
-            updated_at?: string | null
-            video_url?: string | null
-            video1_url?: string | null
-            video2_url?: string | null
-          }
-          Update: {
-            created_at?: string | null
-            description?: string | null
-            duration_minutes?: number | null
-            id?: string
-            is_active?: boolean | null
-            lesson_number?: number
-            material_url?: string | null
-            module_id?: string | null
-            title?: string
-            updated_at?: string | null
-            video_url?: string | null
-            video1_url?: string | null
-            video2_url?: string | null
-          }
-          Relationships: [
-            {
-              foreignKeyName: "lessons_module_id_fkey"
-              columns: ["module_id"]
-              isOneToOne: false
-              referencedRelation: "modules"
-              referencedColumns: ["id"]
-            },
-          ]
+      lesson_materials: {
+        Row: {
+          created_at: string | null
+          file_url: string
+          id: string
+          lesson_id: string
+          title: string
         }
-
+        Insert: {
+          created_at?: string | null
+          file_url: string
+          id?: string
+          lesson_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          file_url?: string
+          id?: string
+          lesson_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_materials_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_videos: {
+        Row: {
+          created_at: string | null
+          id: string
+          lesson_id: string
+          order_number: number | null
+          title: string | null
+          video_url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lesson_id: string
+          order_number?: number | null
+          title?: string | null
+          video_url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lesson_id?: string
+          order_number?: number | null
+          title?: string | null
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_videos_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lessons: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          is_active: boolean | null
+          lesson_number: number
+          material_url: string | null
+          module_id: string | null
+          title: string
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          lesson_number: number
+          material_url?: string | null
+          module_id?: string | null
+          title: string
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          lesson_number?: number
+          material_url?: string | null
+          module_id?: string | null
+          title?: string
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       modules: {
         Row: {
           course_id: string | null
@@ -408,6 +468,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_student_progress: {
+        Args: { _user_id?: string }
+        Returns: {
+          completed: boolean
+          completed_at: string
+          course_title: string
+          lesson_id: string
+          lesson_number: number
+          lesson_title: string
+          module_number: number
+          module_title: string
+          user_id: string
+          user_name: string
+        }[]
+      }
       get_user_list_for_admin: {
         Args: never
         Returns: {
@@ -424,6 +499,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_lesson_viewed: { Args: { _lesson_id: string }; Returns: Json }
       submit_exam_attempt: {
         Args: {
           _answers: Json
