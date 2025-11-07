@@ -3,10 +3,11 @@ import { ArrowRight, BookOpen, GraduationCap, Award, Users2, Calendar, MapPin } 
 import { useNavigate } from "react-router-dom";
 const Landing = () => {
   const navigate = useNavigate();
-  return <div className="min-h-screen bg-gradient-dark relative overflow-hidden">
+  return (
+    <div className="min-h-screen bg-gradient-dark relative overflow-hidden">
       {/* Glow Effect Background */}
       <div className="absolute inset-0 bg-gradient-glow pointer-events-none" />
-      
+
       {/* Navigation */}
       <nav className="relative z-10 border-b border-border backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -27,13 +28,14 @@ const Landing = () => {
             <Award className="h-4 w-4" />
             <span>Único en Latinoamérica</span>
           </div>
-          
+
           <h1 className="text-5xl md:text-7xl font-black leading-tight">
             Maestría Latinoamericana en <span className="gradient-text">Circulación Pulmonar</span>
           </h1>
-          
+
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Formación intensiva teórico-práctica con modalidad MEET UP, junto a los expertos más representativos en hipertensión pulmonar de la región.
+            Formación intensiva teórico-práctica con modalidad MEET UP, junto a los expertos más representativos en
+            hipertensión pulmonar de la región.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
@@ -49,12 +51,10 @@ const Landing = () => {
       <section className="relative z-10 container mx-auto px-4 py-20">
         <div className="glass-card p-8 md:p-12 max-w-5xl mx-auto space-y-8">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl md:text-4xl font-bold">
-              Modalidad del Programa
-            </h2>
+            <h2 className="text-3xl md:text-4xl font-bold">Modalidad del Programa</h2>
             <div className="w-20 h-1 bg-gradient-primary mx-auto rounded-full"></div>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-3 text-center">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
@@ -89,7 +89,7 @@ const Landing = () => {
 
           <div className="space-y-4 pt-4">
             <p className="text-lg leading-relaxed">
-              El Campus Virtual MLCP es único en Latinoamérica, combinando teoría y práctica con modalidad MEET UP. 
+              El Campus Virtual MLCP es único en Latinoamérica, combinando teoría y práctica con modalidad MEET UP.
               Aprenderás cada grupo de HTP con entrenamiento en:
             </p>
             <ul className="grid md:grid-cols-2 gap-3 text-muted-foreground">
@@ -117,21 +117,28 @@ const Landing = () => {
       {/* Features Section */}
       <section className="relative z-10 container mx-auto px-4 py-20">
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          <div className="glass-card p-8 space-y-4 animate-slide-up" style={{
-          animationDelay: '0.1s'
-        }}>
+          <div
+            className="glass-card p-8 space-y-4 animate-slide-up"
+            style={{
+              animationDelay: "0.1s",
+            }}
+          >
             <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
               <BookOpen className="h-6 w-6 text-primary" />
             </div>
             <h3 className="text-xl font-semibold">28 Módulos Especializados</h3>
             <p className="text-muted-foreground">
-              Desde fundamentos hasta tratamientos de vanguardia, cubriendo todos los aspectos de la hipertensión pulmonar.
+              Desde fundamentos hasta tratamientos de vanguardia, cubriendo todos los aspectos de la hipertensión
+              pulmonar.
             </p>
           </div>
 
-          <div className="glass-card p-8 space-y-4 animate-slide-up" style={{
-          animationDelay: '0.2s'
-        }}>
+          <div
+            className="glass-card p-8 space-y-4 animate-slide-up"
+            style={{
+              animationDelay: "0.2s",
+            }}
+          >
             <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center">
               <Users2 className="h-6 w-6 text-secondary" />
             </div>
@@ -141,9 +148,12 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="glass-card p-8 space-y-4 animate-slide-up" style={{
-          animationDelay: '0.3s'
-        }}>
+          <div
+            className="glass-card p-8 space-y-4 animate-slide-up"
+            style={{
+              animationDelay: "0.3s",
+            }}
+          >
             <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
               <Award className="h-6 w-6 text-primary" />
             </div>
@@ -158,9 +168,19 @@ const Landing = () => {
       {/* CTA Section */}
       <section className="relative z-10 container mx-auto px-4 py-20">
         <div className="glass-card p-12 max-w-4xl mx-auto text-center space-y-6">
-          <h2 className="text-3xl md:text-4xl font-bold">
-            ¿Listo para transformar tu práctica clínica?
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold">¿Listo para transformar tu práctica clínica?</h2>
+          <p className="text-xl text-muted-foreground">
+            Únete a la maestría que está formando a los especialistas en circulación pulmonar del futuro.
+          </p>
+          <Button size="lg" className="btn-gradient-primary px-8 py-6 text-lg" onClick={() => navigate("/auth")}>
+            Acceder al Campus Virtual
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+        </div>
+      </section>
+      <section className="relative z-10 container mx-auto px-4 py-20">
+        <div className="glass-card p-12 max-w-4xl mx-auto text-center space-y-6">
+          <h2 className="text-3xl md:text-4xl font-bold">¿Listo para transformar tu práctica clínica?</h2>
           <p className="text-xl text-muted-foreground">
             Únete a la maestría que está formando a los especialistas en circulación pulmonar del futuro.
           </p>
@@ -177,6 +197,7 @@ const Landing = () => {
           <p>© 2025 Maestría Latinoamericana en Circulación Pulmonar. Todos los derechos reservados.</p>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
 export default Landing;
