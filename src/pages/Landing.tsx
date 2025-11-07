@@ -185,7 +185,7 @@ const Landing = () => {
             Únete a al simposio que está formando a los especialistas en circulación pulmonar del futuro.
           </p>
           <Button size="lg" className="btn-gradient-primary px-8 py-6 text-lg" onClick={() => navigate("/simposio")}>
-            Acceder al Simposio
+            Registro para el Simposio
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
