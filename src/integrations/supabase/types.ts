@@ -397,6 +397,36 @@ export type Database = {
         }
         Relationships: []
       }
+      simposio_registros: {
+        Row: {
+          correo: string
+          created_at: string
+          id: string
+          modalidad: string
+          nombre: string
+          pais: string
+          telefono: string | null
+        }
+        Insert: {
+          correo: string
+          created_at?: string
+          id?: string
+          modalidad: string
+          nombre: string
+          pais: string
+          telefono?: string | null
+        }
+        Update: {
+          correo?: string
+          created_at?: string
+          id?: string
+          modalidad?: string
+          nombre?: string
+          pais?: string
+          telefono?: string | null
+        }
+        Relationships: []
+      }
       user_progress: {
         Row: {
           completed: boolean | null

@@ -13,6 +13,7 @@ import Exam from "./pages/Exam";
 import Profile from "./pages/Profile";
 import Certificate from "./components/Certificate";
 import Admin from "./pages/Admin";
+import Simposio from "./pages/Simposio";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,7 +28,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
-            <Route 
+            <Route path="/simposio" element={<Simposio />} />
+            <Route
               path="/dashboard" 
               element={
                 <ProtectedRoute>
