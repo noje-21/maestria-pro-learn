@@ -1,12 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BookOpen, GraduationCap, Award, Users2, Calendar, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
 const Landing = () => {
   const navigate = useNavigate();
-
-  return (
-    <div className="min-h-screen bg-gradient-dark relative overflow-hidden">
+  return <div className="min-h-screen bg-gradient-dark relative overflow-hidden">
       {/* Glow Effect Background */}
       <div className="absolute inset-0 bg-gradient-glow pointer-events-none" />
       
@@ -15,13 +12,9 @@ const Landing = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <GraduationCap className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-black gradient-text">MLCP</span>
+            <span className="text-2xl font-black gradient-text">MCP</span>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={() => navigate("/auth")}
-            className="border-primary/50 hover:bg-primary/10"
-          >
+          <Button variant="outline" onClick={() => navigate("/auth")} className="border-primary/50 hover:bg-primary/10">
             Iniciar Sesión
           </Button>
         </div>
@@ -44,11 +37,7 @@ const Landing = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button 
-              size="lg"
-              className="btn-gradient-primary px-8 py-6 text-lg"
-              onClick={() => navigate("/auth")}
-            >
+            <Button size="lg" className="btn-gradient-primary px-8 py-6 text-lg" onClick={() => navigate("/auth")}>
               Acceder al Campus
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -128,7 +117,9 @@ const Landing = () => {
       {/* Features Section */}
       <section className="relative z-10 container mx-auto px-4 py-20">
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          <div className="glass-card p-8 space-y-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <div className="glass-card p-8 space-y-4 animate-slide-up" style={{
+          animationDelay: '0.1s'
+        }}>
             <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
               <BookOpen className="h-6 w-6 text-primary" />
             </div>
@@ -138,7 +129,9 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="glass-card p-8 space-y-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <div className="glass-card p-8 space-y-4 animate-slide-up" style={{
+          animationDelay: '0.2s'
+        }}>
             <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center">
               <Users2 className="h-6 w-6 text-secondary" />
             </div>
@@ -148,7 +141,9 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="glass-card p-8 space-y-4 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+          <div className="glass-card p-8 space-y-4 animate-slide-up" style={{
+          animationDelay: '0.3s'
+        }}>
             <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
               <Award className="h-6 w-6 text-primary" />
             </div>
@@ -169,11 +164,7 @@ const Landing = () => {
           <p className="text-xl text-muted-foreground">
             Únete a la maestría que está formando a los especialistas en circulación pulmonar del futuro.
           </p>
-          <Button 
-            size="lg"
-            className="btn-gradient-primary px-8 py-6 text-lg"
-            onClick={() => navigate("/auth")}
-          >
+          <Button size="lg" className="btn-gradient-primary px-8 py-6 text-lg" onClick={() => navigate("/auth")}>
             Acceder al Campus Virtual
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
@@ -186,8 +177,6 @@ const Landing = () => {
           <p>© 2025 Maestría Latinoamericana en Circulación Pulmonar. Todos los derechos reservados.</p>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
