@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Plus, Trash2, Edit, Save, X, FileQuestion } from "lucide-react";
+import { Plus, Trash2, Edit, Save, X, FileQuestion, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -21,6 +21,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface Exam {
   id: string;
@@ -55,6 +57,8 @@ export const ExamQuestionsManager = () => {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
   const [newQuestion, setNewQuestion] = useState({
     question_text: "",
     option_a: "",
@@ -317,10 +321,17 @@ export const ExamQuestionsManager = () => {
     }
   };
 
+  const handlePreview = () => {
+    // Mezclar preguntas para la previsualización
+    const shuffled = [...questions].sort(() => Math.random() - 0.5);
+    setPreviewQuestions(shuffled);
+    setShowPreview(true);
+  };
+
   return (
-    <div className="space-y-6">
-      <Card className="p-4 md:p-6">
-        <h3 className="text-lg md:text-xl font-bold mb-4">Gestionar Exámenes y Preguntas</h3>
+    <div className="space-y-4 sm:space-y-6">
+      <Card className="p-4 sm:p-6">
+        <h3 className="text-xl sm:text-2xl font-bold mb-4">Gestionar Exámenes y Preguntas</h3>
 
         <div className="space-y-4">
           <div>
@@ -360,31 +371,44 @@ export const ExamQuestionsManager = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between p-4 bg-muted/20 rounded-lg border">
+                  <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between p-3 sm:p-4 bg-muted/20 rounded-lg border">
                     <div>
-                      <p className="font-semibold">{selectedExam.title}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="font-semibold text-sm sm:text-base">{selectedExam.title}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {questions.length} pregunta(s)
                       </p>
                     </div>
-                    <Button
-                      onClick={deleteExam}
-                      disabled={loading}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Eliminar Examen
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                      <Button
+                        onClick={handlePreview}
+                        disabled={loading || questions.length === 0}
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Previsualizar
+                      </Button>
+                      <Button
+                        onClick={deleteExam}
+                        disabled={loading}
+                        variant="destructive"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Eliminar
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Lista de preguntas */}
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold">Preguntas</h4>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <h4 className="font-semibold text-sm sm:text-base">Preguntas</h4>
                       <Button
                         onClick={() => setIsCreating(true)}
-                        className="btn-gradient-primary gap-2"
+                        className="btn-gradient-primary gap-2 w-full sm:w-auto"
                         size="sm"
                       >
                         <Plus className="h-4 w-4" />
@@ -394,7 +418,7 @@ export const ExamQuestionsManager = () => {
 
                     {/* Formulario de nueva pregunta */}
                     {isCreating && (
-                      <Card className="p-4 bg-card/50">
+                      <Card className="p-3 sm:p-4 bg-card/50">
                         <div className="space-y-3">
                           <div>
                             <label className="text-sm font-medium mb-1 block">Pregunta *</label>
@@ -468,11 +492,11 @@ export const ExamQuestionsManager = () => {
                             />
                           </div>
 
-                          <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <Button
                               onClick={saveQuestion}
                               disabled={loading}
-                              className="flex-1 btn-gradient-primary gap-2"
+                              className="btn-gradient-primary gap-2 w-full sm:flex-1"
                             >
                               <Save className="h-4 w-4" />
                               Guardar
@@ -480,7 +504,7 @@ export const ExamQuestionsManager = () => {
                             <Button
                               onClick={() => setIsCreating(false)}
                               variant="outline"
-                              className="flex-1"
+                              className="w-full sm:flex-1"
                             >
                               <X className="h-4 w-4 mr-2" />
                               Cancelar
@@ -492,7 +516,7 @@ export const ExamQuestionsManager = () => {
 
                     {/* Lista de preguntas existentes */}
                     {questions.map((question, idx) => (
-                      <Card key={question.id} className="p-4">
+                      <Card key={question.id} className="p-3 sm:p-4">
                         {editingQuestion?.id === question.id ? (
                           <div className="space-y-3">
                             <div>
@@ -551,11 +575,11 @@ export const ExamQuestionsManager = () => {
                               />
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex flex-col sm:flex-row gap-2">
                               <Button
                                 onClick={updateQuestion}
                                 disabled={loading}
-                                className="flex-1 btn-gradient-primary gap-2"
+                                className="btn-gradient-primary gap-2 w-full sm:flex-1"
                                 size="sm"
                               >
                                 <Save className="h-4 w-4" />
@@ -564,7 +588,7 @@ export const ExamQuestionsManager = () => {
                               <Button
                                 onClick={() => setEditingQuestion(null)}
                                 variant="outline"
-                                className="flex-1"
+                                className="w-full sm:flex-1"
                                 size="sm"
                               >
                                 Cancelar
@@ -573,24 +597,24 @@ export const ExamQuestionsManager = () => {
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            <div className="flex items-start justify-between gap-2">
+                            <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold mb-2">
+                                <p className="font-semibold mb-2 text-sm sm:text-base break-words">
                                   {idx + 1}. {question.question_text}
                                 </p>
-                                <div className="space-y-1 text-sm">
-                                  <p className={question.correct_answer === 'A' ? 'text-success font-medium' : ''}>A) {question.option_a}</p>
-                                  <p className={question.correct_answer === 'B' ? 'text-success font-medium' : ''}>B) {question.option_b}</p>
-                                  <p className={question.correct_answer === 'C' ? 'text-success font-medium' : ''}>C) {question.option_c}</p>
-                                  <p className={question.correct_answer === 'D' ? 'text-success font-medium' : ''}>D) {question.option_d}</p>
+                                <div className="space-y-1 text-xs sm:text-sm">
+                                  <p className={question.correct_answer === 'A' ? 'text-success font-medium break-words' : 'break-words'}>A) {question.option_a}</p>
+                                  <p className={question.correct_answer === 'B' ? 'text-success font-medium break-words' : 'break-words'}>B) {question.option_b}</p>
+                                  <p className={question.correct_answer === 'C' ? 'text-success font-medium break-words' : 'break-words'}>C) {question.option_c}</p>
+                                  <p className={question.correct_answer === 'D' ? 'text-success font-medium break-words' : 'break-words'}>D) {question.option_d}</p>
                                 </div>
                                 {question.hint && (
-                                  <p className="text-xs text-muted-foreground mt-2 italic">
+                                  <p className="text-xs text-muted-foreground mt-2 italic break-words">
                                     💡 Pista: {question.hint}
                                   </p>
                                 )}
                               </div>
-                              <div className="flex gap-1 flex-shrink-0">
+                              <div className="flex gap-1 shrink-0">
                                 <Button
                                   onClick={() => setEditingQuestion(question)}
                                   variant="outline"
@@ -625,6 +649,47 @@ export const ExamQuestionsManager = () => {
           )}
         </div>
       </Card>
+
+      {/* Dialog de previsualización */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl sm:text-2xl">Vista Previa del Examen</DialogTitle>
+            <DialogDescription>
+              Así se mostrará el examen a los estudiantes (con orden aleatorio)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 mt-4">
+            {previewQuestions.map((question, idx) => (
+              <Card key={question.id} className="p-4 sm:p-6">
+                <p className="font-semibold mb-4 text-sm sm:text-base break-words">
+                  {idx + 1}. {question.question_text}
+                </p>
+                <RadioGroup>
+                  <div className="space-y-3">
+                    {['A', 'B', 'C', 'D'].sort(() => Math.random() - 0.5).map((option) => (
+                      <div key={option} className="flex items-start space-x-3">
+                        <RadioGroupItem value={option} id={`preview-${question.id}-${option}`} disabled />
+                        <Label 
+                          htmlFor={`preview-${question.id}-${option}`} 
+                          className="text-sm break-words cursor-default"
+                        >
+                          {option}) {question[`option_${option.toLowerCase()}` as keyof Question]}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </RadioGroup>
+              </Card>
+            ))}
+          </div>
+          <div className="flex justify-end mt-4">
+            <Button onClick={() => setShowPreview(false)} className="w-full sm:w-auto">
+              Cerrar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

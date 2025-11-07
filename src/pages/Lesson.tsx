@@ -12,6 +12,7 @@ interface LessonData {
   title: string;
   description: string;
   duration_minutes?: number;
+  image_url?: string | null;
 }
 
 interface Video {
@@ -169,27 +170,38 @@ const Lesson = () => {
 
       {/* Content */}
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="glass-card p-8 mb-6">
-          <h1 className="text-4xl font-bold mb-2">{lesson.title}</h1>
-          <p className="text-muted-foreground text-lg">
+        {/* Imagen de la lección */}
+        {lesson.image_url && (
+          <div className="glass-card p-4 sm:p-6 mb-6 overflow-hidden">
+            <img
+              src={lesson.image_url}
+              alt={lesson.title}
+              className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg"
+            />
+          </div>
+        )}
+
+        <div className="glass-card p-4 sm:p-6 md:p-8 mb-6">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 break-words">{lesson.title}</h1>
+          <p className="text-muted-foreground text-sm sm:text-base md:text-lg break-words">
             {lesson.description ||
               "Aprende los conceptos fundamentales de este módulo"}
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Videos */}
             {videos.length === 0 ? (
-              <div className="glass-card p-6">
-                <p className="text-center text-muted-foreground">
+              <div className="glass-card p-4 sm:p-6">
+                <p className="text-center text-sm sm:text-base text-muted-foreground">
                   No hay videos disponibles para esta lección
                 </p>
               </div>
             ) : (
               videos.map((video, index) => (
-                <div key={video.id} className="glass-card p-6">
+                <div key={video.id} className="glass-card p-4 sm:p-6">
                   <div className="aspect-video bg-background rounded-lg overflow-hidden mb-4">
                     <iframe
                       width="100%"
@@ -201,7 +213,7 @@ const Lesson = () => {
                       className="border-0"
                     />
                   </div>
-                  <h3 className="font-semibold text-lg">
+                  <h3 className="font-semibold text-base sm:text-lg break-words">
                     {video.title || `Video ${index + 1}`}
                   </h3>
                 </div>
@@ -209,11 +221,11 @@ const Lesson = () => {
             )}
 
             {/* Botones de acción */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:justify-between">
               {!completed && (
                 <Button
                   onClick={handleComplete}
-                  className="btn-gradient-primary gap-2"
+                  className="btn-gradient-primary gap-2 w-full sm:w-auto"
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   Marcar como Vista
@@ -222,7 +234,7 @@ const Lesson = () => {
               {completed && (
                 <Button
                   onClick={handleExam}
-                  className="btn-gradient-secondary gap-2"
+                  className="btn-gradient-secondary gap-2 w-full sm:w-auto"
                 >
                   Realizar Examen
                 </Button>
@@ -230,11 +242,11 @@ const Lesson = () => {
             </div>
 
             {/* Descripción */}
-            <div className="glass-card p-6">
-              <h3 className="text-xl font-bold mb-4">
+            <div className="glass-card p-4 sm:p-6">
+              <h3 className="text-lg sm:text-xl font-bold mb-4">
                 Descripción del Módulo
               </h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed break-words">
                 Esta clase te proporcionará las bases fundamentales necesarias
                 para comprender los conceptos más avanzados de los siguientes
                 módulos.
@@ -243,13 +255,13 @@ const Lesson = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Materiales */}
-            <div className="glass-card p-6">
-              <h3 className="text-xl font-bold mb-4">Materiales</h3>
+            <div className="glass-card p-4 sm:p-6">
+              <h3 className="text-lg sm:text-xl font-bold mb-4">Materiales</h3>
               {materials.length === 0 ? (
-                <div className="p-4 bg-muted/20 rounded-lg border border-border text-center">
-                  <p className="text-sm text-muted-foreground">
+                <div className="p-3 sm:p-4 bg-muted/20 rounded-lg border border-border text-center">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     No hay materiales disponibles para esta lección
                   </p>
                 </div>
@@ -261,18 +273,18 @@ const Lesson = () => {
                       href={material.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-3 rounded-lg bg-card hover:bg-card-hover transition-colors border border-border"
+                      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-card hover:bg-card-hover transition-colors border border-border"
                     >
-                      <FileText className="h-5 w-5 text-primary" />
+                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">
+                        <div className="font-medium text-xs sm:text-sm truncate">
                           {material.title}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           Descargar
                         </div>
                       </div>
-                      <Download className="h-4 w-4 text-muted-foreground" />
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
                     </a>
                   ))}
                 </div>
@@ -280,14 +292,14 @@ const Lesson = () => {
             </div>
 
             {/* Progreso */}
-            <div className="glass-card p-6">
-              <h3 className="text-xl font-bold mb-4">Tu Progreso</h3>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
+            <div className="glass-card p-4 sm:p-6">
+              <h3 className="text-lg sm:text-xl font-bold mb-4">Tu Progreso</h3>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs sm:text-sm text-muted-foreground">
                   Estado de la clase
                 </span>
                 <span
-                  className={`text-sm font-semibold ${
+                  className={`text-xs sm:text-sm font-semibold ${
                     completed ? "text-success" : "text-primary"
                   }`}
                 >

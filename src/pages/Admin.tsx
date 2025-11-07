@@ -14,6 +14,7 @@ import SimposioRegistrations from "@/components/admin/SimposioRegistrations";
 import { ModuleVisibilityManager } from "@/components/admin/ModuleVisibilityManager";
 import { LessonImageManager } from "@/components/admin/LessonImageManager";
 import { ExamQuestionsManager } from "@/components/admin/ExamQuestionsManager";
+import { ModuleLessonManager } from "@/components/admin/ModuleLessonManager";
 
 interface Profile {
   id: string;
@@ -162,118 +163,126 @@ const Admin = () => {
       </nav>
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Panel de Administración</h1>
-          <p className="text-muted-foreground">Gestiona usuarios, módulos y exámenes</p>
+      <div className="container mx-auto px-4 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Panel de Administración</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Gestiona usuarios, módulos y exámenes</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <Card className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Usuarios</p>
-                <p className="text-3xl font-bold">{stats.totalUsers}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Usuarios</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold">{stats.totalUsers}</p>
               </div>
-              <Users className="h-8 w-8 text-primary" />
+              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Pendientes</p>
-                <p className="text-3xl font-bold text-yellow-500">{stats.pendingUsers}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Pendientes</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-yellow-500">{stats.pendingUsers}</p>
               </div>
-              <Clock className="h-8 w-8 text-yellow-500" />
+              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500" />
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Aprobados</p>
-                <p className="text-3xl font-bold text-green-500">{stats.approvedUsers}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Aprobados</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-500">{stats.approvedUsers}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
+              <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Rechazados</p>
-                <p className="text-3xl font-bold text-red-500">{stats.rejectedUsers}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Rechazados</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-red-500">{stats.rejectedUsers}</p>
               </div>
-              <XCircle className="h-8 w-8 text-red-500" />
+              <XCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
             </div>
           </Card>
         </div>
 
         {/* Tabs */}
         <Tabs defaultValue="pending" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-1">
-            <TabsTrigger value="pending" className="text-xs md:text-sm">
-              Pendientes
-            </TabsTrigger>
-            <TabsTrigger value="approved" className="text-xs md:text-sm">
-              Aprobados
-            </TabsTrigger>
-            <TabsTrigger value="rejected" className="text-xs md:text-sm">
-              Rechazados
-            </TabsTrigger>
-            <TabsTrigger value="videos" className="text-xs md:text-sm">
-              Videos
-            </TabsTrigger>
-            <TabsTrigger value="materials" className="text-xs md:text-sm">
-              Materiales
-            </TabsTrigger>
-            <TabsTrigger value="images" className="text-xs md:text-sm">
-              Imágenes
-            </TabsTrigger>
-            <TabsTrigger value="exams" className="text-xs md:text-sm">
-              Exámenes
-            </TabsTrigger>
-            <TabsTrigger value="progress" className="text-xs md:text-sm">
-              Progreso
-            </TabsTrigger>
-            <TabsTrigger value="visibility" className="text-xs md:text-sm">
-              Visibilidad
-            </TabsTrigger>
-            <TabsTrigger value="simposio" className="text-xs md:text-sm">
-              Simposio
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-4">
+            <TabsList className="inline-flex w-full min-w-max sm:grid sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-11 gap-1">
+              <TabsTrigger value="pending" className="text-xs sm:text-sm whitespace-nowrap">
+                Pendientes
+              </TabsTrigger>
+              <TabsTrigger value="approved" className="text-xs sm:text-sm whitespace-nowrap">
+                Aprobados
+              </TabsTrigger>
+              <TabsTrigger value="rejected" className="text-xs sm:text-sm whitespace-nowrap">
+                Rechazados
+              </TabsTrigger>
+              <TabsTrigger value="modules" className="text-xs sm:text-sm whitespace-nowrap">
+                Módulos
+              </TabsTrigger>
+              <TabsTrigger value="videos" className="text-xs sm:text-sm whitespace-nowrap">
+                Videos
+              </TabsTrigger>
+              <TabsTrigger value="materials" className="text-xs sm:text-sm whitespace-nowrap">
+                Materiales
+              </TabsTrigger>
+              <TabsTrigger value="images" className="text-xs sm:text-sm whitespace-nowrap">
+                Imágenes
+              </TabsTrigger>
+              <TabsTrigger value="exams" className="text-xs sm:text-sm whitespace-nowrap">
+                Exámenes
+              </TabsTrigger>
+              <TabsTrigger value="progress" className="text-xs sm:text-sm whitespace-nowrap">
+                Progreso
+              </TabsTrigger>
+              <TabsTrigger value="visibility" className="text-xs sm:text-sm whitespace-nowrap">
+                Visibilidad
+              </TabsTrigger>
+              <TabsTrigger value="simposio" className="text-xs sm:text-sm whitespace-nowrap">
+                Simposio
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="pending" className="space-y-4">
+          <TabsContent value="pending" className="space-y-3 sm:space-y-4">
             {pendingProfiles.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">No hay usuarios pendientes</p>
+              <Card className="p-6 sm:p-8 text-center">
+                <p className="text-sm sm:text-base text-muted-foreground">No hay usuarios pendientes</p>
               </Card>
             ) : (
               pendingProfiles.map((profile) => (
-                <Card key={profile.id} className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">{profile.full_name || 'Sin nombre'}</h3>
+                <Card key={profile.id} className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold break-words">{profile.full_name || 'Sin nombre'}</h3>
                       <p className="text-xs text-muted-foreground mt-1">
                         Registrado: {new Date(profile.created_at).toLocaleDateString('es-ES')}
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full sm:w-auto">
                       <Button
                         onClick={() => updateUserStatus(profile.id, 'approved')}
-                        className="btn-gradient-primary"
+                        className="btn-gradient-primary flex-1 sm:flex-initial text-xs sm:text-sm"
+                        size="sm"
                       >
-                        <CheckCircle className="h-4 w-4 mr-2" />
+                        <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                         Aprobar
                       </Button>
                       <Button
                         onClick={() => updateUserStatus(profile.id, 'rejected')}
                         variant="destructive"
+                        className="flex-1 sm:flex-initial text-xs sm:text-sm"
+                        size="sm"
                       >
-                        <XCircle className="h-4 w-4 mr-2" />
+                        <XCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                         Rechazar
                       </Button>
                     </div>
@@ -283,21 +292,21 @@ const Admin = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="approved" className="space-y-4">
+          <TabsContent value="approved" className="space-y-3 sm:space-y-4">
             {approvedProfiles.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">No hay usuarios aprobados</p>
+              <Card className="p-6 sm:p-8 text-center">
+                <p className="text-sm sm:text-base text-muted-foreground">No hay usuarios aprobados</p>
               </Card>
             ) : (
               approvedProfiles.map((profile) => (
-                <Card key={profile.id} className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">{profile.full_name || 'Sin nombre'}</h3>
+                <Card key={profile.id} className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold break-words">{profile.full_name || 'Sin nombre'}</h3>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                      <span className="text-sm text-green-500">Aprobado</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+                      <span className="text-xs sm:text-sm text-green-500">Aprobado</span>
                     </div>
                   </div>
                 </Card>
@@ -305,25 +314,26 @@ const Admin = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="rejected" className="space-y-4">
+          <TabsContent value="rejected" className="space-y-3 sm:space-y-4">
             {rejectedProfiles.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">No hay usuarios rechazados</p>
+              <Card className="p-6 sm:p-8 text-center">
+                <p className="text-sm sm:text-base text-muted-foreground">No hay usuarios rechazados</p>
               </Card>
             ) : (
               rejectedProfiles.map((profile) => (
-                <Card key={profile.id} className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">{profile.full_name || 'Sin nombre'}</h3>
+                <Card key={profile.id} className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold break-words">{profile.full_name || 'Sin nombre'}</h3>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <XCircle className="h-5 w-5 text-red-500" />
-                      <span className="text-sm text-red-500">Rechazado</span>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 shrink-0" />
+                      <span className="text-xs sm:text-sm text-red-500">Rechazado</span>
                       <Button
                         onClick={() => updateUserStatus(profile.id, 'approved')}
                         variant="outline"
                         size="sm"
+                        className="ml-auto text-xs sm:text-sm"
                       >
                         Aprobar
                       </Button>
@@ -332,6 +342,10 @@ const Admin = () => {
                 </Card>
               ))
             )}
+          </TabsContent>
+
+          <TabsContent value="modules">
+            <ModuleLessonManager />
           </TabsContent>
 
           <TabsContent value="videos">
