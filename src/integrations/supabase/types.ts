@@ -203,56 +203,63 @@ export type Database = {
           },
         ]
       }
-      lessons: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          duration_minutes: number | null
-          id: string
-          is_active: boolean | null
-          lesson_number: number
-          material_url: string | null
-          module_id: string | null
-          title: string
-          updated_at: string | null
-          video_url: string | null
+        lessons: {
+          Row: {
+            created_at: string | null
+            description: string | null
+            duration_minutes: number | null
+            id: string
+            is_active: boolean | null
+            lesson_number: number
+            material_url: string | null
+            module_id: string | null
+            title: string
+            updated_at: string | null
+            video_url: string | null
+            video1_url: string | null
+            video2_url: string | null
+          }
+          Insert: {
+            created_at?: string | null
+            description?: string | null
+            duration_minutes?: number | null
+            id?: string
+            is_active?: boolean | null
+            lesson_number: number
+            material_url?: string | null
+            module_id?: string | null
+            title: string
+            updated_at?: string | null
+            video_url?: string | null
+            video1_url?: string | null
+            video2_url?: string | null
+          }
+          Update: {
+            created_at?: string | null
+            description?: string | null
+            duration_minutes?: number | null
+            id?: string
+            is_active?: boolean | null
+            lesson_number?: number
+            material_url?: string | null
+            module_id?: string | null
+            title?: string
+            updated_at?: string | null
+            video_url?: string | null
+            video1_url?: string | null
+            video2_url?: string | null
+          }
+          Relationships: [
+            {
+              foreignKeyName: "lessons_module_id_fkey"
+              columns: ["module_id"]
+              isOneToOne: false
+              referencedRelation: "modules"
+              referencedColumns: ["id"]
+            },
+          ]
         }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          duration_minutes?: number | null
-          id?: string
-          is_active?: boolean | null
-          lesson_number: number
-          material_url?: string | null
-          module_id?: string | null
-          title: string
-          updated_at?: string | null
-          video_url?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          duration_minutes?: number | null
-          id?: string
-          is_active?: boolean | null
-          lesson_number?: number
-          material_url?: string | null
-          module_id?: string | null
-          title?: string
-          updated_at?: string | null
-          video_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lessons_module_id_fkey"
-            columns: ["module_id"]
-            isOneToOne: false
-            referencedRelation: "modules"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+
       modules: {
         Row: {
           course_id: string | null

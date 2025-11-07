@@ -11,7 +11,9 @@ interface LessonData {
   id: string;
   title: string;
   description: string;
-  video_url: string;
+  video_url?: string;
+  video1_url?: string;
+  video2_url?: string;
   material_url?: string;
   duration_minutes?: number;
 }
@@ -33,13 +35,11 @@ const Lesson = () => {
 
   const loadLesson = async () => {
     if (!id) return;
-
     try {
-      // Load lesson data
       const { data: lessonData, error: lessonError } = await supabase
-        .from('lessons')
-        .select('*')
-        .eq('id', id)
+        .from("lessons")
+        .select("*")
+        .eq("id", id)
         .maybeSingle();
 
       if (lessonError) throw lessonError;
@@ -49,23 +49,22 @@ const Lesson = () => {
           description: "Lección no encontrada",
           variant: "destructive",
         });
-        navigate('/dashboard');
+        navigate("/dashboard");
         return;
       }
 
       setLesson(lessonData);
 
-      // Check if already completed
       const { data: progressData } = await supabase
-        .from('user_progress')
-        .select('completed')
-        .eq('user_id', user!.id)
-        .eq('lesson_id', id)
+        .from("user_progress")
+        .select("completed")
+        .eq("user_id", user!.id)
+        .eq("lesson_id", id)
         .maybeSingle();
 
       setCompleted(progressData?.completed || false);
     } catch (error: any) {
-      console.error('Error loading lesson:', error);
+      console.error("Error loading lesson:", error);
       toast({
         title: "Error",
         description: "No se pudo cargar la lección",
@@ -78,30 +77,26 @@ const Lesson = () => {
 
   const handleComplete = async () => {
     if (!user || !id || completed) return;
-
     try {
-      // Mark lesson as complete - but don't unlock next lesson yet
-      // Next lesson unlocks only after passing the exam
-      const { error } = await supabase
-        .from('user_progress')
-        .upsert({
+      const { error } = await supabase.from("user_progress").upsert(
+        {
           user_id: user.id,
           lesson_id: id,
-          completed: false, // Will be set to true after passing exam
+          completed: false,
           completed_at: null,
-        }, {
-          onConflict: 'user_id,lesson_id'
-        });
-
+        },
+        { onConflict: "user_id,lesson_id" }
+      );
       if (error) throw error;
 
       setCompleted(true);
       toast({
         title: "¡Lección vista!",
-        description: "Ahora realiza el examen para completar esta lección y desbloquear la siguiente.",
+        description:
+          "Ahora realiza el examen para completar esta lección y desbloquear la siguiente.",
       });
     } catch (error: any) {
-      console.error('Error completing lesson:', error);
+      console.error("Error completing lesson:", error);
       toast({
         title: "Error",
         description: "No se pudo marcar la lección como vista",
@@ -126,9 +121,7 @@ const Lesson = () => {
     );
   }
 
-  if (!lesson) {
-    return null;
-  }
+  if (!lesson) return null;
 
   return (
     <div className="min-h-screen bg-gradient-dark">
@@ -150,82 +143,76 @@ const Lesson = () => {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="glass-card p-8 mb-6">
           <h1 className="text-4xl font-bold mb-2">{lesson.title}</h1>
-          <p className="text-muted-foreground text-lg">{lesson.description || 'Aprende los conceptos fundamentales de este módulo'}</p>
+          <p className="text-muted-foreground text-lg">
+            {lesson.description ||
+              "Aprende los conceptos fundamentales de este módulo"}
+          </p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Video */}
-            <div className="glass-card p-6">
-              <div className="aspect-video bg-background rounded-lg overflow-hidden mb-4">
-                {lesson.video_url ? (
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    src={lesson.video_url}
-                    title="Lesson Video"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="border-0"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-muted/20">
-                    <p className="text-muted-foreground">Video no disponible</p>
+            {/* Video principal */}
+            {[lesson.video_url, lesson.video1_url, lesson.video2_url]
+              .filter(Boolean)
+              .map((video, index) => (
+                <div key={index} className="glass-card p-6">
+                  <div className="aspect-video bg-background rounded-lg overflow-hidden mb-4">
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src={video as string}
+                      title={`Video ${index + 1}`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="border-0"
+                    />
                   </div>
-                )}
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-lg">Video de la Clase</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Duración: {lesson.duration_minutes || 45} minutos
-                  </p>
+                  <h3 className="font-semibold text-lg">
+                    {index === 0
+                      ? "Video principal"
+                      : `Video adicional ${index}`}
+                  </h3>
                 </div>
-                {!completed && (
-                  <Button
-                    onClick={handleComplete}
-                    className="btn-gradient-primary gap-2"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Marcar como Vista
-                  </Button>
-                )}
-                {completed && (
-                  <Button
-                    onClick={handleExam}
-                    className="btn-gradient-secondary gap-2"
-                  >
-                    Realizar Examen
-                  </Button>
-                )}
-              </div>
+              ))}
+
+            {/* Botones de acción */}
+            <div className="flex items-center justify-between">
+              {!completed && (
+                <Button
+                  onClick={handleComplete}
+                  className="btn-gradient-primary gap-2"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Marcar como Vista
+                </Button>
+              )}
+              {completed && (
+                <Button
+                  onClick={handleExam}
+                  className="btn-gradient-secondary gap-2"
+                >
+                  Realizar Examen
+                </Button>
+              )}
             </div>
 
-            {/* Description */}
+            {/* Descripción */}
             <div className="glass-card p-6">
-              <h3 className="text-xl font-bold mb-4">Descripción del Módulo</h3>
-              <div className="prose prose-invert max-w-none">
-                <p className="text-muted-foreground leading-relaxed">
-                  Esta clase introductoria te proporcionará las bases fundamentales
-                  necesarias para comprender los conceptos más avanzados que veremos
-                  en módulos posteriores. Aprenderás sobre los principios básicos,
-                  las mejores prácticas y cómo aplicar estos conocimientos en
-                  situaciones del mundo real.
-                </p>
-                <p className="text-muted-foreground leading-relaxed mt-4">
-                  Al finalizar esta lección, serás capaz de identificar los
-                  conceptos clave y estarás preparado para profundizar en temas
-                  más complejos. Recuerda revisar los materiales complementarios
-                  disponibles en la sección lateral.
-                </p>
-              </div>
+              <h3 className="text-xl font-bold mb-4">
+                Descripción del Módulo
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Esta clase te proporcionará las bases fundamentales necesarias
+                para comprender los conceptos más avanzados de los siguientes
+                módulos.
+              </p>
             </div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Materials */}
+            {/* Materiales */}
             <div className="glass-card p-6">
               <h3 className="text-xl font-bold mb-4">Materiales</h3>
               {lesson.material_url ? (
@@ -255,29 +242,20 @@ const Lesson = () => {
               )}
             </div>
 
-            {/* Progress Card */}
+            {/* Progreso */}
             <div className="glass-card p-6">
               <h3 className="text-xl font-bold mb-4">Tu Progreso</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Estado de la clase
-                  </span>
-                  <span
-                    className={`text-sm font-semibold ${
-                      completed ? "text-success" : "text-primary"
-                    }`}
-                  >
-                    {completed ? "Completada" : "En Progreso"}
-                  </span>
-                </div>
-                {completed && (
-                  <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
-                    <p className="text-sm text-primary">
-                      ¡Listo! Ahora realiza el examen para completar esta lección y desbloquear la siguiente.
-                    </p>
-                  </div>
-                )}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Estado de la clase
+                </span>
+                <span
+                  className={`text-sm font-semibold ${
+                    completed ? "text-success" : "text-primary"
+                  }`}
+                >
+                  {completed ? "Completada" : "En Progreso"}
+                </span>
               </div>
             </div>
           </div>
