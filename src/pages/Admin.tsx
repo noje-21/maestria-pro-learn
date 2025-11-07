@@ -7,6 +7,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LessonVideosManager } from "@/components/admin/LessonVideosManager";
+import { LessonMaterialsManager } from "@/components/admin/LessonMaterialsManager";
+import { StudentProgressView } from "@/components/admin/StudentProgressView";
 
 interface Profile {
   id: string;
@@ -206,7 +209,7 @@ const Admin = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="pending" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="pending">
               Pendientes ({pendingProfiles.length})
             </TabsTrigger>
@@ -215,6 +218,15 @@ const Admin = () => {
             </TabsTrigger>
             <TabsTrigger value="rejected">
               Rechazados ({rejectedProfiles.length})
+            </TabsTrigger>
+            <TabsTrigger value="videos">
+              Videos
+            </TabsTrigger>
+            <TabsTrigger value="materials">
+              Materiales
+            </TabsTrigger>
+            <TabsTrigger value="progress">
+              Progreso
             </TabsTrigger>
           </TabsList>
 
@@ -304,6 +316,18 @@ const Admin = () => {
                 </Card>
               ))
             )}
+          </TabsContent>
+
+          <TabsContent value="videos">
+            <LessonVideosManager />
+          </TabsContent>
+
+          <TabsContent value="materials">
+            <LessonMaterialsManager />
+          </TabsContent>
+
+          <TabsContent value="progress">
+            <StudentProgressView />
           </TabsContent>
         </Tabs>
       </div>

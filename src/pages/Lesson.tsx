@@ -11,11 +11,20 @@ interface LessonData {
   id: string;
   title: string;
   description: string;
-  video_url?: string;
-  video1_url?: string;
-  video2_url?: string;
-  material_url?: string;
   duration_minutes?: number;
+}
+
+interface Video {
+  id: string;
+  video_url: string;
+  title: string | null;
+  order_number: number;
+}
+
+interface Material {
+  id: string;
+  title: string;
+  file_url: string;
 }
 
 const Lesson = () => {
@@ -26,6 +35,8 @@ const Lesson = () => {
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [lesson, setLesson] = useState<LessonData | null>(null);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
 
   useEffect(() => {
     if (user && id) {
@@ -55,6 +66,27 @@ const Lesson = () => {
 
       setLesson(lessonData);
 
+      // Load videos
+      const { data: videosData, error: videosError } = await supabase
+        .from("lesson_videos")
+        .select("*")
+        .eq("lesson_id", id)
+        .order("order_number");
+
+      if (videosError) throw videosError;
+      setVideos(videosData || []);
+
+      // Load materials
+      const { data: materialsData, error: materialsError } = await supabase
+        .from("lesson_materials")
+        .select("*")
+        .eq("lesson_id", id)
+        .order("created_at");
+
+      if (materialsError) throw materialsError;
+      setMaterials(materialsData || []);
+
+      // Load progress
       const { data: progressData } = await supabase
         .from("user_progress")
         .select("completed")
@@ -78,28 +110,24 @@ const Lesson = () => {
   const handleComplete = async () => {
     if (!user || !id || completed) return;
     try {
-      const { error } = await supabase.from("user_progress").upsert(
-        {
-          user_id: user.id,
-          lesson_id: id,
-          completed: false,
-          completed_at: null,
-        },
-        { onConflict: "user_id,lesson_id" }
-      );
+      // Use secure RPC function to mark lesson as viewed
+      const { data, error } = await supabase.rpc("mark_lesson_viewed", {
+        _lesson_id: id,
+      });
+
       if (error) throw error;
 
       setCompleted(true);
       toast({
         title: "¡Lección vista!",
         description:
-          "Ahora realiza el examen para completar esta lección y desbloquear la siguiente.",
+          "Ahora realiza el examen para completar esta lección.",
       });
     } catch (error: any) {
-      console.error("Error completing lesson:", error);
+      console.error("Error marking lesson as viewed:", error);
       toast({
         title: "Error",
-        description: "No se pudo marcar la lección como vista",
+        description: error.message || "No se pudo marcar la lección como vista",
         variant: "destructive",
       });
     }
@@ -152,29 +180,33 @@ const Lesson = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Video principal */}
-            {[lesson.video_url, lesson.video1_url, lesson.video2_url]
-              .filter(Boolean)
-              .map((video, index) => (
-                <div key={index} className="glass-card p-6">
+            {/* Videos */}
+            {videos.length === 0 ? (
+              <div className="glass-card p-6">
+                <p className="text-center text-muted-foreground">
+                  No hay videos disponibles para esta lección
+                </p>
+              </div>
+            ) : (
+              videos.map((video, index) => (
+                <div key={video.id} className="glass-card p-6">
                   <div className="aspect-video bg-background rounded-lg overflow-hidden mb-4">
                     <iframe
                       width="100%"
                       height="100%"
-                      src={video as string}
-                      title={`Video ${index + 1}`}
+                      src={video.video_url}
+                      title={video.title || `Video ${index + 1}`}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                       className="border-0"
                     />
                   </div>
                   <h3 className="font-semibold text-lg">
-                    {index === 0
-                      ? "Video principal"
-                      : `Video adicional ${index}`}
+                    {video.title || `Video ${index + 1}`}
                   </h3>
                 </div>
-              ))}
+              ))
+            )}
 
             {/* Botones de acción */}
             <div className="flex items-center justify-between">
@@ -215,29 +247,34 @@ const Lesson = () => {
             {/* Materiales */}
             <div className="glass-card p-6">
               <h3 className="text-xl font-bold mb-4">Materiales</h3>
-              {lesson.material_url ? (
-                <a
-                  href={lesson.material_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-lg bg-card hover:bg-card-hover transition-colors border border-border"
-                >
-                  <FileText className="h-5 w-5 text-primary" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">
-                      Material de la Clase
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Descargar PDF
-                    </div>
-                  </div>
-                  <Download className="h-4 w-4 text-muted-foreground" />
-                </a>
-              ) : (
+              {materials.length === 0 ? (
                 <div className="p-4 bg-muted/20 rounded-lg border border-border text-center">
                   <p className="text-sm text-muted-foreground">
                     No hay materiales disponibles para esta lección
                   </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {materials.map((material) => (
+                    <a
+                      key={material.id}
+                      href={material.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-lg bg-card hover:bg-card-hover transition-colors border border-border"
+                    >
+                      <FileText className="h-5 w-5 text-primary" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">
+                          {material.title}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Descargar
+                        </div>
+                      </div>
+                      <Download className="h-4 w-4 text-muted-foreground" />
+                    </a>
+                  ))}
                 </div>
               )}
             </div>
