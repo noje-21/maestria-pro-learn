@@ -12,6 +12,8 @@ import { LessonMaterialsManager } from "@/components/admin/LessonMaterialsManage
 import { StudentProgressView } from "@/components/admin/StudentProgressView";
 import SimposioRegistrations from "@/components/admin/SimposioRegistrations";
 import { ModuleVisibilityManager } from "@/components/admin/ModuleVisibilityManager";
+import { LessonImageManager } from "@/components/admin/LessonImageManager";
+import { ExamQuestionsManager } from "@/components/admin/ExamQuestionsManager";
 
 interface Profile {
   id: string;
@@ -167,7 +169,7 @@ const Admin = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Card className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -211,29 +213,35 @@ const Admin = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="pending" className="w-full">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="pending">
-              Pendientes ({pendingProfiles.length})
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-1">
+            <TabsTrigger value="pending" className="text-xs md:text-sm">
+              Pendientes
             </TabsTrigger>
-            <TabsTrigger value="approved">
-              Aprobados ({approvedProfiles.length})
+            <TabsTrigger value="approved" className="text-xs md:text-sm">
+              Aprobados
             </TabsTrigger>
-            <TabsTrigger value="rejected">
-              Rechazados ({rejectedProfiles.length})
+            <TabsTrigger value="rejected" className="text-xs md:text-sm">
+              Rechazados
             </TabsTrigger>
-            <TabsTrigger value="videos">
+            <TabsTrigger value="videos" className="text-xs md:text-sm">
               Videos
             </TabsTrigger>
-            <TabsTrigger value="materials">
+            <TabsTrigger value="materials" className="text-xs md:text-sm">
               Materiales
             </TabsTrigger>
-            <TabsTrigger value="progress">
+            <TabsTrigger value="images" className="text-xs md:text-sm">
+              Imágenes
+            </TabsTrigger>
+            <TabsTrigger value="exams" className="text-xs md:text-sm">
+              Exámenes
+            </TabsTrigger>
+            <TabsTrigger value="progress" className="text-xs md:text-sm">
               Progreso
             </TabsTrigger>
-            <TabsTrigger value="visibility">
+            <TabsTrigger value="visibility" className="text-xs md:text-sm">
               Visibilidad
             </TabsTrigger>
-            <TabsTrigger value="simposio">
+            <TabsTrigger value="simposio" className="text-xs md:text-sm">
               Simposio
             </TabsTrigger>
           </TabsList>
@@ -332,6 +340,14 @@ const Admin = () => {
 
           <TabsContent value="materials">
             <LessonMaterialsManager />
+          </TabsContent>
+
+          <TabsContent value="images">
+            <LessonImageManager />
+          </TabsContent>
+
+          <TabsContent value="exams">
+            <ExamQuestionsManager />
           </TabsContent>
 
           <TabsContent value="progress">

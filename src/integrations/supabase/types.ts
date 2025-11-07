@@ -129,6 +129,7 @@ export type Database = {
           correct_answer: string
           created_at: string | null
           exam_id: string | null
+          hint: string | null
           id: string
           option_a: string
           option_b: string
@@ -140,6 +141,7 @@ export type Database = {
           correct_answer: string
           created_at?: string | null
           exam_id?: string | null
+          hint?: string | null
           id?: string
           option_a: string
           option_b: string
@@ -151,6 +153,7 @@ export type Database = {
           correct_answer?: string
           created_at?: string | null
           exam_id?: string | null
+          hint?: string | null
           id?: string
           option_a?: string
           option_b?: string
@@ -276,6 +279,7 @@ export type Database = {
           description: string | null
           duration_minutes: number | null
           id: string
+          image_url: string | null
           is_active: boolean | null
           lesson_number: number
           material_url: string | null
@@ -289,6 +293,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           lesson_number: number
           material_url?: string | null
@@ -302,6 +307,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           lesson_number?: number
           material_url?: string | null

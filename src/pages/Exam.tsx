@@ -17,6 +17,13 @@ interface Question {
   option_c: string;
   option_d: string;
   correct_answer: string;
+  hint: string | null;
+}
+
+interface ShuffledOption {
+  key: string;
+  text: string;
+  letter: string;
 }
 
 const Exam = () => {
@@ -25,14 +32,39 @@ const Exam = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [shuffledQuestions, setShuffledQuestions] = useState<Question[]>([]);
+  const [shuffledOptions, setShuffledOptions] = useState<Record<string, ShuffledOption[]>>({});
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(true);
   const [examId, setExamId] = useState<string>("");
+  const [attempts, setAttempts] = useState(0);
+
+  // Función para aleatorizar arrays
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  // Función para crear opciones mezcladas
+  const createShuffledOptions = (question: Question): ShuffledOption[] => {
+    const options = [
+      { key: 'option_a', text: question.option_a, letter: 'A' },
+      { key: 'option_b', text: question.option_b, letter: 'B' },
+      { key: 'option_c', text: question.option_c, letter: 'C' },
+      { key: 'option_d', text: question.option_d, letter: 'D' },
+    ];
+    return shuffleArray(options);
+  };
 
   useEffect(() => {
     loadExam();
+    loadAttempts();
   }, [lessonId]);
 
   const loadExam = async () => {
@@ -67,6 +99,17 @@ const Exam = () => {
 
       if (questionsError) throw questionsError;
       setQuestions(questionsData || []);
+      
+      // Aleatorizar preguntas
+      const shuffled = shuffleArray(questionsData || []);
+      setShuffledQuestions(shuffled);
+      
+      // Crear opciones mezcladas para cada pregunta
+      const optionsMap: Record<string, ShuffledOption[]> = {};
+      shuffled.forEach(q => {
+        optionsMap[q.id] = createShuffledOptions(q);
+      });
+      setShuffledOptions(optionsMap);
 
     } catch (error: any) {
       console.error('Error loading exam:', error);
@@ -77,6 +120,31 @@ const Exam = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAttempts = async () => {
+    if (!lessonId || !user) return;
+
+    try {
+      const { data: exam } = await supabase
+        .from('exams')
+        .select('id')
+        .eq('lesson_id', lessonId)
+        .maybeSingle();
+
+      if (!exam) return;
+
+      const { data, error } = await supabase
+        .from('exam_attempts')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('exam_id', exam.id);
+
+      if (error) throw error;
+      setAttempts(data?.length || 0);
+    } catch (error: any) {
+      console.error('Error loading attempts:', error);
     }
   };
 
@@ -165,6 +233,18 @@ const Exam = () => {
     setAnswers({});
     setSubmitted(false);
     setScore(0);
+    
+    // Aleatorizar de nuevo
+    const shuffled = shuffleArray(questions);
+    setShuffledQuestions(shuffled);
+    
+    const optionsMap: Record<string, ShuffledOption[]> = {};
+    shuffled.forEach(q => {
+      optionsMap[q.id] = createShuffledOptions(q);
+    });
+    setShuffledOptions(optionsMap);
+    
+    loadAttempts();
   };
 
   if (loading) {
@@ -196,51 +276,70 @@ const Exam = () => {
 
       {/* Content */}
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="glass-card p-8">
+        <div className="glass-card p-4 md:p-8">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Examen del Módulo</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl md:text-4xl font-bold mb-2">Examen del Módulo</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
               Necesitas 80% o más para aprobar y desbloquear la siguiente clase
             </p>
+            {attempts > 0 && !submitted && (
+              <p className="text-xs md:text-sm text-primary mt-2">
+                Intento #{attempts + 1}
+              </p>
+            )}
           </div>
 
           {!submitted ? (
-            <div className="space-y-8">
-              {questions.map((question, idx) => (
-                <div key={question.id} className="space-y-4">
-                  <h3 className="text-lg font-semibold">
-                    {idx + 1}. {question.question_text}
-                  </h3>
-                  <RadioGroup
-                    value={answers[question.id]}
-                    onValueChange={(value) =>
-                      setAnswers({ ...answers, [question.id]: value })
-                    }
-                  >
-                    {['option_a', 'option_b', 'option_c', 'option_d'].map((optKey, optIdx) => (
-                      <div
-                        key={optKey}
-                        className="flex items-center space-x-2 p-3 rounded-lg hover:bg-card transition-colors"
-                      >
-                        <RadioGroupItem
-                          value={optKey}
-                          id={`q${question.id}-${optKey}`}
-                        />
-                        <Label
-                          htmlFor={`q${question.id}-${optKey}`}
-                          className="flex-1 cursor-pointer"
-                        >
-                          {question[optKey as keyof Question]}
-                        </Label>
+            <div className="space-y-6 md:space-y-8">
+              {shuffledQuestions.map((question, idx) => {
+                const options = shuffledOptions[question.id] || [];
+                const hasFailedBefore = attempts > 0;
+                
+                return (
+                  <div key={question.id} className="space-y-4">
+                    <h3 className="text-base md:text-lg font-semibold">
+                      {idx + 1}. {question.question_text}
+                    </h3>
+                    
+                    {hasFailedBefore && question.hint && (
+                      <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                        <p className="text-xs md:text-sm text-primary">
+                          💡 <span className="font-medium">Pista:</span> {question.hint}
+                        </p>
                       </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-              ))}
+                    )}
+                    
+                    <RadioGroup
+                      value={answers[question.id]}
+                      onValueChange={(value) =>
+                        setAnswers({ ...answers, [question.id]: value })
+                      }
+                    >
+                      {options.map((opt) => (
+                        <div
+                          key={opt.key}
+                          className="flex items-center space-x-2 p-3 rounded-lg hover:bg-card transition-colors"
+                        >
+                          <RadioGroupItem
+                            value={opt.key}
+                            id={`q${question.id}-${opt.key}`}
+                          />
+                          <Label
+                            htmlFor={`q${question.id}-${opt.key}`}
+                            className="flex-1 cursor-pointer text-sm md:text-base"
+                          >
+                            {opt.text}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                );
+              })}
 
               <Button
                 onClick={handleSubmit}
-                disabled={Object.keys(answers).length !== questions.length}
+                disabled={Object.keys(answers).length !== shuffledQuestions.length}
                 className="w-full btn-gradient-primary"
                 size="lg"
               >
@@ -281,15 +380,15 @@ const Exam = () => {
 
               {/* Answer Review */}
               <div className="space-y-4">
-                <h3 className="text-xl font-bold">Revisión de Respuestas</h3>
-                {questions.map((question, idx) => {
+                <h3 className="text-lg md:text-xl font-bold">Revisión de Respuestas</h3>
+                {shuffledQuestions.map((question, idx) => {
                   const userAnswer = answers[question.id];
                   const correctKey = getOptionKey(question.correct_answer);
                   const isCorrect = userAnswer === correctKey;
                   return (
                     <div
                       key={question.id}
-                      className={`p-4 rounded-lg border ${
+                      className={`p-3 md:p-4 rounded-lg border ${
                         isCorrect
                           ? "bg-success/5 border-success/30"
                           : "bg-destructive/5 border-destructive/30"
@@ -297,15 +396,15 @@ const Exam = () => {
                     >
                       <div className="flex items-start gap-2 mb-2">
                         {isCorrect ? (
-                          <CheckCircle2 className="h-5 w-5 text-success mt-0.5" />
+                          <CheckCircle2 className="h-4 md:h-5 w-4 md:w-5 text-success mt-0.5 flex-shrink-0" />
                         ) : (
-                          <XCircle className="h-5 w-5 text-destructive mt-0.5" />
+                          <XCircle className="h-4 md:h-5 w-4 md:w-5 text-destructive mt-0.5 flex-shrink-0" />
                         )}
-                        <div className="flex-1">
-                          <p className="font-semibold mb-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm md:text-base font-semibold mb-2">
                             {idx + 1}. {question.question_text}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs md:text-sm text-muted-foreground">
                             Tu respuesta:{" "}
                             <span
                               className={
@@ -316,10 +415,17 @@ const Exam = () => {
                             </span>
                           </p>
                           {!isCorrect && (
-                            <p className="text-sm text-success mt-1">
-                              Respuesta correcta:{" "}
-                              {question[correctKey as keyof Question]}
-                            </p>
+                            <>
+                              <p className="text-xs md:text-sm text-success mt-1">
+                                Respuesta correcta:{" "}
+                                {question[correctKey as keyof Question]}
+                              </p>
+                              {question.hint && (
+                                <p className="text-xs text-primary/80 mt-2 italic">
+                                  💡 {question.hint}
+                                </p>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -329,7 +435,7 @@ const Exam = () => {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 {score >= 80 ? (
                   <Button
                     onClick={() => navigate("/dashboard")}
