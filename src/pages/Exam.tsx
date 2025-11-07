@@ -98,6 +98,18 @@ const Exam = () => {
         .eq('exam_id', exam.id);
 
       if (questionsError) throw questionsError;
+      
+      // Validar que el examen tenga preguntas
+      if (!questionsData || questionsData.length === 0) {
+        toast({
+          title: "Examen en construcción",
+          description: "Este examen aún no tiene preguntas configuradas. Por favor contacta al administrador.",
+          variant: "destructive",
+        });
+        navigate(`/lesson/${lessonId}`);
+        return;
+      }
+      
       setQuestions(questionsData || []);
       
       // Aleatorizar preguntas
