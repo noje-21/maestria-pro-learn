@@ -49,18 +49,18 @@ const Dashboard = () => {
       } = await supabase.from('user_roles').select('role').eq('user_id', user!.id).eq('role', 'admin').maybeSingle();
       setIsAdmin(!!userRole);
 
-      // Cargar módulos
+      // Cargar módulos (solo los activos)
       const {
         data: modulesData,
         error: modulesError
-      } = await supabase.from('modules').select('*').order('module_number');
+      } = await supabase.from('modules').select('*').eq('is_active', true).order('module_number');
       if (modulesError) throw modulesError;
 
-      // Cargar lecciones
+      // Cargar lecciones (solo las activas)
       const {
         data: lessonsData,
         error: lessonsError
-      } = await supabase.from('lessons').select('*').order('lesson_number');
+      } = await supabase.from('lessons').select('*').eq('is_active', true).order('lesson_number');
       if (lessonsError) throw lessonsError;
 
       // Cargar progreso del usuario

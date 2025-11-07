@@ -11,6 +11,7 @@ import { LessonVideosManager } from "@/components/admin/LessonVideosManager";
 import { LessonMaterialsManager } from "@/components/admin/LessonMaterialsManager";
 import { StudentProgressView } from "@/components/admin/StudentProgressView";
 import SimposioRegistrations from "@/components/admin/SimposioRegistrations";
+import { ModuleVisibilityManager } from "@/components/admin/ModuleVisibilityManager";
 
 interface Profile {
   id: string;
@@ -210,7 +211,7 @@ const Admin = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="pending" className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="pending">
               Pendientes ({pendingProfiles.length})
             </TabsTrigger>
@@ -228,6 +229,9 @@ const Admin = () => {
             </TabsTrigger>
             <TabsTrigger value="progress">
               Progreso
+            </TabsTrigger>
+            <TabsTrigger value="visibility">
+              Visibilidad
             </TabsTrigger>
             <TabsTrigger value="simposio">
               Simposio
@@ -332,6 +336,10 @@ const Admin = () => {
 
           <TabsContent value="progress">
             <StudentProgressView />
+          </TabsContent>
+
+          <TabsContent value="visibility">
+            <ModuleVisibilityManager />
           </TabsContent>
 
           <TabsContent value="simposio">
