@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BookOpen, GraduationCap, Award, Users2, Calendar, MapPin } from "lucide-react";
+import { ArrowRight, BookOpen, GraduationCap, Award, Users2, Calendar, MapPin, Instagram, Facebook, Linkedin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import simposioImage from "@/assets/simposio-2025.jpg";
+import logoMlcp from "@/assets/logo-mlcp.jpg";
 const Landing = () => {
   const navigate = useNavigate();
   return (
@@ -12,11 +13,11 @@ const Landing = () => {
       {/* Navigation */}
       <nav className="relative z-10 border-b border-border backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-black gradient-text">MCP</span>
+          <div className="flex items-center gap-3">
+            <img src={logoMlcp} alt="MLCP Logo" className="h-14 w-14 md:h-16 md:w-16 rounded-full object-cover" />
+            <span className="text-xl md:text-2xl font-black gradient-text">MLCP</span>
           </div>
-          <Button variant="outline" onClick={() => navigate("/auth")} className="border-primary/50 hover:bg-primary/10">
+          <Button variant="outline" onClick={() => navigate("/auth")} className="border-primary/50 hover:bg-primary/10 text-xs md:text-sm">
             Iniciar Sesión
           </Button>
         </div>
@@ -192,9 +193,61 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-border py-8 mt-20">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 Maestría Latinoamericana en Circulación Pulmonar. Todos los derechos reservados.</p>
+      <footer className="relative z-10 border-t border-border py-12 mt-20">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col items-center space-y-6 max-w-2xl mx-auto">
+            {/* Logo */}
+            <img src={logoMlcp} alt="MLCP Logo" className="h-20 w-20 md:h-24 md:w-24 rounded-full object-cover" />
+            
+            {/* Powered by text */}
+            <div className="text-center space-y-2">
+              <p className="text-sm font-bold text-foreground">Powered by:</p>
+              <p className="text-base md:text-lg font-semibold text-foreground">
+                Maestría Latinoamericana en Circulación Pulmonar
+              </p>
+            </div>
+
+            {/* Contact info */}
+            <div className="text-center space-y-1 text-sm text-muted-foreground">
+              <p>Correo: <a href="mailto:magisterenhipertensionpulmonar@gmail.com" className="text-primary hover:underline">magisterenhipertensionpulmonar@gmail.com</a></p>
+              <p>Sitio web: <a href="https://www.maestriacp.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.maestriacp.com</a></p>
+            </div>
+
+            {/* Social media icons */}
+            <div className="flex items-center gap-4 pt-2">
+              <a 
+                href="https://www.instagram.com/magisterencirculacionpulmonar?igsh=MW82b2YzdGo2ajcxdA%3D%3D&utm_source=qr" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-all hover:scale-110"
+              >
+                <Instagram className="h-5 w-5 text-primary" />
+              </a>
+              <a 
+                href="https://www.facebook.com/share/1K5djkRfr8/?mibextid=wwXIfr" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-all hover:scale-110"
+              >
+                <Facebook className="h-5 w-5 text-primary" />
+              </a>
+              <a 
+                href="https://www.linkedin.com/in/hipertension-pulmonar-655a43253?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-all hover:scale-110"
+              >
+                <Linkedin className="h-5 w-5 text-primary" />
+              </a>
+            </div>
+
+            {/* Copyright */}
+            <div className="border-t border-border w-full pt-6 mt-4">
+              <p className="text-center text-xs text-muted-foreground">
+                © 2025 Maestría Latinoamericana en Circulación Pulmonar. Todos los derechos reservados.
+              </p>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

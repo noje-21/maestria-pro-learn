@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GraduationCap, Mail, Lock, ArrowLeft, User } from "lucide-react";
+import { GraduationCap, Mail, Lock, ArrowLeft, User, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +17,7 @@ const Auth = () => {
   const { toast } = useToast();
 
   const [fullName, setFullName] = useState("");
+  const [country, setCountry] = useState("");
   const { signIn, signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,7 +40,7 @@ const Auth = () => {
         await signIn(email, password);
       } else {
         // Validate sign up
-        const validation = signUpSchema.safeParse({ email, password, fullName });
+        const validation = signUpSchema.safeParse({ email, password, fullName, country });
         if (!validation.success) {
           toast({
             title: "Error de validación",
@@ -49,7 +50,7 @@ const Auth = () => {
           setLoading(false);
           return;
         }
-        await signUp(email, password, fullName);
+        await signUp(email, password, fullName, country);
       }
     } catch (error: any) {
       console.error('Auth error:', error);
@@ -91,21 +92,39 @@ const Auth = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Nombre Completo</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="Dr. Juan Pérez"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10 bg-background/50"
-                    required
-                  />
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Nombre Completo</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="fullName"
+                      type="text"
+                      placeholder="Dr. Juan Pérez"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="pl-10 bg-background/50"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="country">País</Label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="country"
+                      type="text"
+                      placeholder="Argentina, Colombia, México..."
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className="pl-10 bg-background/50"
+                      required
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             <div className="space-y-2">

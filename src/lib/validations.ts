@@ -12,6 +12,10 @@ export const signUpSchema = z.object({
     .min(1, "El nombre es requerido")
     .max(100, "Nombre muy largo")
     .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "El nombre solo puede contener letras y espacios"),
+  country: z
+    .string()
+    .min(1, "El país es requerido")
+    .max(100, "País muy largo"),
 });
 
 export const signInSchema = z.object({
@@ -27,6 +31,11 @@ export const profileUpdateSchema = z.object({
     .max(100, "Nombre muy largo")
     .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "El nombre solo puede contener letras y espacios"),
   avatar_url: z.string().url("URL inválida").optional().or(z.literal("")),
+  country: z
+    .string()
+    .min(1, "El país es requerido")
+    .max(100, "País muy largo")
+    .optional(),
 });
 
 // Exam validations

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, User, Mail, LogOut, Award, Edit2, Save, X } from "lucide-react";
+import { ArrowLeft, User, Mail, LogOut, Award, Edit2, Save, X, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,7 @@ interface ProfileData {
   full_name: string;
   email: string;
   avatar_url?: string;
+  country?: string;
 }
 
 interface ProgressStats {
@@ -32,6 +33,7 @@ const Profile = () => {
     full_name: "",
     email: "",
     avatar_url: "",
+    country: "",
   });
   const [stats, setStats] = useState<ProgressStats>({
     totalProgress: 0,
@@ -63,6 +65,7 @@ const Profile = () => {
           full_name: profileData.full_name || "",
           email: profileData.email || user.email || "",
           avatar_url: profileData.avatar_url || "",
+          country: profileData.country || "",
         });
       } else {
         // Fallback to user data
@@ -70,6 +73,7 @@ const Profile = () => {
           full_name: user.user_metadata?.full_name || "",
           email: user.email || "",
           avatar_url: "",
+          country: user.user_metadata?.country || "",
         });
       }
 
@@ -117,6 +121,7 @@ const Profile = () => {
       const validation = profileUpdateSchema.safeParse({
         full_name: profile.full_name,
         avatar_url: profile.avatar_url,
+        country: profile.country,
       });
 
       if (!validation.success) {
@@ -134,6 +139,7 @@ const Profile = () => {
           id: user.id,
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
+          country: profile.country,
           updated_at: new Date().toISOString(),
         });
 
@@ -269,6 +275,21 @@ const Profile = () => {
                   <p className="text-xs text-muted-foreground mt-1">
                     El correo electrónico no se puede modificar
                   </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="country">País</Label>
+                  <div className="relative mt-2">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="country"
+                      value={profile.country || ""}
+                      onChange={(e) => setProfile({ ...profile, country: e.target.value })}
+                      className="pl-10 bg-background/50"
+                      readOnly={!editing}
+                      placeholder="Tu país"
+                    />
+                  </div>
                 </div>
 
                 <Button
