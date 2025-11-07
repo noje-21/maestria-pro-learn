@@ -182,10 +182,10 @@ const Landing = () => {
         <div className="glass-card p-12 max-w-4xl mx-auto text-center space-y-6">
           <h2 className="text-3xl md:text-4xl font-bold">¿Listo para transformar tu práctica clínica?</h2>
           <p className="text-xl text-muted-foreground">
-            Únete a la maestría que está formando a los especialistas en circulación pulmonar del futuro.
+            Únete a al simposio que está formando a los especialistas en circulación pulmonar del futuro.
           </p>
-          <Button size="lg" className="btn-gradient-primary px-8 py-6 text-lg" onClick={() => navigate("/auth")}>
-            Acceder al Campus Virtual
+          <Button size="lg" className="btn-gradient-primary px-8 py-6 text-lg" onClick={() => navigate("/simposio")}>
+            Acceder al Simposio
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
