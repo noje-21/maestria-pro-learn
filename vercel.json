@@ -1,6 +1,3 @@
 {
-  "rewrites": [
-    { "source": "/maestria/(.*)", "destination": "https://maestria-cp.vercel.app/" },
-    { "source": "/(.*)", "destination": "/" }
-  ]
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
 }
