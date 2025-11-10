@@ -43,7 +43,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Event Carousel */}
+      {/* Event Carousel - Moved to top */}
       <section className="relative z-10 container mx-auto px-4 py-10">
         <EventCarousel />
       </section>

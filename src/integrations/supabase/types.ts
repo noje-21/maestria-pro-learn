@@ -381,6 +381,8 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          reset_code: string | null
+          reset_code_expires_at: string | null
           status: string | null
           updated_at: string | null
         }
@@ -391,6 +393,8 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          reset_code?: string | null
+          reset_code_expires_at?: string | null
           status?: string | null
           updated_at?: string | null
         }
@@ -401,6 +405,8 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          reset_code?: string | null
+          reset_code_expires_at?: string | null
           status?: string | null
           updated_at?: string | null
         }

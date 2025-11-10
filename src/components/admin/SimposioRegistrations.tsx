@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import BulkEmailSender from "./BulkEmailSender";
 
 type SimposioRegistro = {
   id: string;
@@ -110,7 +112,14 @@ const SimposioRegistrations = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="border-primary/20 shadow-lg">
+      <Tabs defaultValue="registros" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="registros">Registros</TabsTrigger>
+          <TabsTrigger value="emails">Enviar correos</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="registros" className="mt-6">
+          <Card className="border-primary/20 shadow-lg">
         <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
           <CardTitle className="text-2xl text-primary">Registros del Simposio</CardTitle>
           <CardDescription>
@@ -192,6 +201,12 @@ const SimposioRegistrations = () => {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="emails" className="mt-6">
+          <BulkEmailSender registros={filteredRegistros} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

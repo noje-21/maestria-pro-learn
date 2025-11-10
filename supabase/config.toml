@@ -2,3 +2,15 @@ project_id = "lwjalklsuddlwvhcumex"
 
 [functions.ai-tutor]
 verify_jwt = true
+
+[functions.send-simposio-confirmation]
+verify_jwt = false
+
+[functions.send-password-reset]
+verify_jwt = false
+
+[functions.verify-reset-code]
+verify_jwt = false
+
+[functions.send-bulk-emails]
+verify_jwt = true
