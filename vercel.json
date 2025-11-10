@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/simposio/(.*)", "destination": "https://pulmo-maestria-web.vercel.app/$1" },
+    { "source": "/simposio/(.*)", "destination": "https://maestria-cp.vercel.app/" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
