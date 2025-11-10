@@ -149,7 +149,7 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <GraduationCap className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold gradient-text">MaestríaMCP</span>
+            <span className="text-2xl font-bold gradient-text">MCP</span>
           </div>
           <div className="flex items-center gap-2">
             {isAdmin && <Button onClick={() => navigate("/admin")} className="btn-gradient-primary gap-2">
