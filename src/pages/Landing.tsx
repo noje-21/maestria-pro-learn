@@ -22,6 +22,11 @@ const Landing = () => {
         </div>
       </nav>
 
+      {/* Event Carousel - Top position */}
+      <section className="relative z-10 container mx-auto px-4 py-10">
+        <EventCarousel />
+      </section>
+
       {/* Hero Section */}
       <section className="relative z-10 container mx-auto px-4 py-20 md:py-32">
         <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
@@ -41,11 +46,6 @@ const Landing = () => {
             </Button>
           </div>
         </div>
-      </section>
-
-      {/* Event Carousel - Moved to top */}
-      <section className="relative z-10 container mx-auto px-4 py-10">
-        <EventCarousel />
       </section>
 
       {/* Badge Section */}

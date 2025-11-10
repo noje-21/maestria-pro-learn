@@ -1,0 +1,110 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { Resend } from "npm:resend@2.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface BulkEmailRequest {
+  subject: string;
+  message: string;
+  connectionLink?: string;
+  recipients: Array<{
+    nombre: string;
+    correo: string;
+  }>;
+  testMode?: boolean;
+  testEmail?: string;
+}
+
+const handler = async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { subject, message, connectionLink, recipients, testMode, testEmail }: BulkEmailRequest =
+      await req.json();
+
+    console.log(`Bulk email request - Recipients: ${recipients.length}, Test mode: ${testMode}`);
+
+    // If test mode, send only to test email
+    const emailsToSend = testMode && testEmail
+      ? [{ nombre: "Test User", correo: testEmail }]
+      : recipients;
+
+    const results = [];
+
+    for (const recipient of emailsToSend) {
+      try {
+        let htmlContent = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #213ECC;">Maestría Latinoamericana en Circulación Pulmonar</h2>
+            <p>Hola ${recipient.nombre},</p>
+            <div style="margin: 20px 0; line-height: 1.6;">
+              ${message.replace(/\n/g, "<br>")}
+            </div>
+        `;
+
+        if (connectionLink) {
+          htmlContent += `
+            <div style="margin: 30px 0; padding: 20px; background-color: #f4f4f4; border-radius: 5px;">
+              <p style="margin: 0 0 10px 0; font-weight: bold;">Enlace de conexión:</p>
+              <a href="${connectionLink}" style="color: #213ECC; word-break: break-all;">${connectionLink}</a>
+            </div>
+          `;
+        }
+
+        htmlContent += `
+            <p style="color: #666; font-size: 14px; margin-top: 30px;">
+              Saludos cordiales,<br>
+              Equipo de la Maestría Latinoamericana en Circulación Pulmonar
+            </p>
+          </div>
+        `;
+
+        const emailResponse = await resend.emails.send({
+          from: "Maestría Latinoamericana <onboarding@resend.dev>",
+          to: [recipient.correo],
+          subject: subject,
+          html: htmlContent,
+        });
+
+        console.log(`Email sent to ${recipient.correo}:`, emailResponse);
+        results.push({ email: recipient.correo, success: true });
+      } catch (error: any) {
+        console.error(`Error sending email to ${recipient.correo}:`, error);
+        results.push({ email: recipient.correo, success: false, error: error.message });
+      }
+    }
+
+    const successCount = results.filter((r) => r.success).length;
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: `Correos enviados exitosamente: ${successCount}/${results.length}`,
+        results,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
+  } catch (error: any) {
+    console.error("Error in bulk email function:", error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
+  }
+};
+
+serve(handler);
