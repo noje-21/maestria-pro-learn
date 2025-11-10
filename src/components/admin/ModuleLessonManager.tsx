@@ -223,8 +223,26 @@ export const ModuleLessonManager = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center p-12">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Cargando módulos y lecciones...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!modules || modules.length === 0) {
+    return (
+      <div className="text-center p-12 space-y-4">
+        <p className="text-muted-foreground">No hay módulos disponibles</p>
+        <Button
+          onClick={() => setIsAddingModule(true)}
+          className="btn-gradient-primary gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Crear Primer Módulo
+        </Button>
       </div>
     );
   }

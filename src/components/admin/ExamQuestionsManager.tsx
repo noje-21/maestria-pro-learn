@@ -57,6 +57,7 @@ export const ExamQuestionsManager = () => {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
   const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
   const [newQuestion, setNewQuestion] = useState({
@@ -70,8 +71,12 @@ export const ExamQuestionsManager = () => {
   });
 
   useEffect(() => {
-    loadLessons();
-    loadExams();
+    const loadData = async () => {
+      setInitialLoading(true);
+      await Promise.all([loadLessons(), loadExams()]);
+      setInitialLoading(false);
+    };
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -328,9 +333,20 @@ export const ExamQuestionsManager = () => {
     setShowPreview(true);
   };
 
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Cargando exámenes...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
-      <Card className="p-4 sm:p-6">
+      <Card className="p-4 sm:p-6 border-primary/20 shadow-lg">
         <h3 className="text-xl sm:text-2xl font-bold mb-4">Gestionar Exámenes y Preguntas</h3>
 
         <div className="space-y-4">

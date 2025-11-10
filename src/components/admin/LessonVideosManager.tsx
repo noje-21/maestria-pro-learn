@@ -40,6 +40,7 @@ export const LessonVideosManager = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [newVideo, setNewVideo] = useState({ url: "", title: "" });
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);
@@ -56,6 +57,7 @@ export const LessonVideosManager = () => {
 
   const loadLessons = async () => {
     try {
+      setInitialLoading(true);
       const { data, error } = await supabase
         .from("lessons")
         .select("id, title")
@@ -70,6 +72,8 @@ export const LessonVideosManager = () => {
         description: "No se pudieron cargar las lecciones",
         variant: "destructive",
       });
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -212,6 +216,17 @@ export const LessonVideosManager = () => {
     }
     return url;
   };
+
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Cargando lecciones...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

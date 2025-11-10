@@ -32,6 +32,7 @@ export const LessonMaterialsManager = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [newMaterial, setNewMaterial] = useState({ url: "", title: "" });
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
     loadLessons();
@@ -45,6 +46,7 @@ export const LessonMaterialsManager = () => {
 
   const loadLessons = async () => {
     try {
+      setInitialLoading(true);
       const { data, error } = await supabase
         .from("lessons")
         .select("id, title")
@@ -59,6 +61,8 @@ export const LessonMaterialsManager = () => {
         description: "No se pudieron cargar las lecciones",
         variant: "destructive",
       });
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -149,9 +153,20 @@ export const LessonMaterialsManager = () => {
     }
   };
 
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Cargando materiales...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <Card className="p-6">
+      <Card className="p-6 border-primary/20 shadow-lg">
         <h3 className="text-xl font-bold mb-4">Gestionar Materiales de Lecciones</h3>
 
         <div className="space-y-4">

@@ -3,9 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import maestria2025 from "@/assets/maestria-2025.jpg";
+import maestria2025 from "@/assets/maestria-2025-new.jpg";
 import campusVirtual from "@/assets/campus-virtual.jpg";
-import simposio2025 from "@/assets/simposio-2025-v2.jpg";
+import simposio2025 from "@/assets/simposio-2025-new.jpg";
 
 interface Slide {
   id: number;

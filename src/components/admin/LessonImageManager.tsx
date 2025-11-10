@@ -26,6 +26,7 @@ export const LessonImageManager = () => {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
     loadLessons();
@@ -40,6 +41,7 @@ export const LessonImageManager = () => {
 
   const loadLessons = async () => {
     try {
+      setInitialLoading(true);
       const { data, error } = await supabase
         .from("lessons")
         .select("id, title, image_url")
@@ -54,6 +56,8 @@ export const LessonImageManager = () => {
         description: "No se pudieron cargar las lecciones",
         variant: "destructive",
       });
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -177,9 +181,20 @@ export const LessonImageManager = () => {
     }
   };
 
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Cargando imágenes...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <Card className="p-4 md:p-6">
+      <Card className="p-4 md:p-6 border-primary/20 shadow-lg">
         <h3 className="text-lg md:text-xl font-bold mb-4">Gestionar Imágenes de Lecciones</h3>
 
         <div className="space-y-4">
