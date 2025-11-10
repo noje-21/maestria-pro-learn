@@ -5,8 +5,7 @@ import simposioImage from "@/assets/simposio-2025.jpg";
 import logoMlcp from "@/assets/logo-mlcp.jpg";
 const Landing = () => {
   const navigate = useNavigate();
-  return (
-    <div className="min-h-screen bg-gradient-dark relative overflow-hidden">
+  return <div className="min-h-screen bg-gradient-dark relative overflow-hidden">
       {/* Glow Effect Background */}
       <div className="absolute inset-0 bg-gradient-glow pointer-events-none" />
 
@@ -15,7 +14,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={logoMlcp} alt="MLCP Logo" className="h-14 w-14 md:h-16 md:w-16 rounded-full object-cover" />
-            <span className="text-xl md:text-2xl font-black gradient-text">MLCP</span>
+            <span className="text-xl md:text-2xl font-black gradient-text">MCP</span>
           </div>
           <Button variant="outline" onClick={() => navigate("/auth")} className="border-primary/50 hover:bg-primary/10 text-xs md:text-sm">
             Iniciar Sesión
@@ -119,12 +118,9 @@ const Landing = () => {
       {/* Features Section */}
       <section className="relative z-10 container mx-auto px-4 py-20">
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          <div
-            className="glass-card p-8 space-y-4 animate-slide-up"
-            style={{
-              animationDelay: "0.1s",
-            }}
-          >
+          <div className="glass-card p-8 space-y-4 animate-slide-up" style={{
+          animationDelay: "0.1s"
+        }}>
             <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
               <BookOpen className="h-6 w-6 text-primary" />
             </div>
@@ -135,12 +131,9 @@ const Landing = () => {
             </p>
           </div>
 
-          <div
-            className="glass-card p-8 space-y-4 animate-slide-up"
-            style={{
-              animationDelay: "0.2s",
-            }}
-          >
+          <div className="glass-card p-8 space-y-4 animate-slide-up" style={{
+          animationDelay: "0.2s"
+        }}>
             <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center">
               <Users2 className="h-6 w-6 text-secondary" />
             </div>
@@ -150,12 +143,9 @@ const Landing = () => {
             </p>
           </div>
 
-          <div
-            className="glass-card p-8 space-y-4 animate-slide-up"
-            style={{
-              animationDelay: "0.3s",
-            }}
-          >
+          <div className="glass-card p-8 space-y-4 animate-slide-up" style={{
+          animationDelay: "0.3s"
+        }}>
             <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
               <Award className="h-6 w-6 text-primary" />
             </div>
@@ -170,11 +160,7 @@ const Landing = () => {
       {/* Simposio Section */}
       <section className="relative z-10 container mx-auto px-4 py-10">
         <div className="max-w-5xl mx-auto">
-          <img
-            src={simposioImage}
-            alt="4to Simposio Latinoamericano de Hipertensión Pulmonar"
-            className="w-full rounded-2xl shadow-md"
-          />
+          <img src={simposioImage} alt="4to Simposio Latinoamericano de Hipertensión Pulmonar" className="w-full rounded-2xl shadow-md" />
         </div>
       </section>
 
@@ -215,28 +201,13 @@ const Landing = () => {
 
             {/* Social media icons */}
             <div className="flex items-center gap-4 pt-2">
-              <a 
-                href="https://www.instagram.com/magisterencirculacionpulmonar?igsh=MW82b2YzdGo2ajcxdA%3D%3D&utm_source=qr" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-all hover:scale-110"
-              >
+              <a href="https://www.instagram.com/magisterencirculacionpulmonar?igsh=MW82b2YzdGo2ajcxdA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-all hover:scale-110">
                 <Instagram className="h-5 w-5 text-primary" />
               </a>
-              <a 
-                href="https://www.facebook.com/share/1K5djkRfr8/?mibextid=wwXIfr" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-all hover:scale-110"
-              >
+              <a href="https://www.facebook.com/share/1K5djkRfr8/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-all hover:scale-110">
                 <Facebook className="h-5 w-5 text-primary" />
               </a>
-              <a 
-                href="https://www.linkedin.com/in/hipertension-pulmonar-655a43253?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-all hover:scale-110"
-              >
+              <a href="https://www.linkedin.com/in/hipertension-pulmonar-655a43253?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-all hover:scale-110">
                 <Linkedin className="h-5 w-5 text-primary" />
               </a>
             </div>
@@ -250,7 +221,6 @@ const Landing = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
 export default Landing;
