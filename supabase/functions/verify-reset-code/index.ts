@@ -20,6 +20,8 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { email, code, newPassword }: VerifyResetRequest = await req.json();
 
+    console.log(`Verifying reset code for email: ${email}`);
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -28,11 +30,14 @@ const handler = async (req: Request): Promise<Response> => {
     // Get user profile with reset code
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, reset_code, reset_code_expires_at")
+      .select("id, email, reset_code, reset_code_expires_at")
       .eq("email", email)
-      .single();
+      .maybeSingle();
+
+    console.log(`Profile lookup result:`, { profile, profileError });
 
     if (profileError || !profile) {
+      console.error("Profile error:", profileError);
       return new Response(
         JSON.stringify({ success: false, error: "Usuario no encontrado" }),
         {
@@ -44,6 +49,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if code is valid
     if (!profile.reset_code || profile.reset_code !== code) {
+      console.log(`Invalid code. Expected: ${profile.reset_code}, Got: ${code}`);
       return new Response(
         JSON.stringify({ success: false, error: "Código de verificación inválido" }),
         {
@@ -55,6 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if code has expired
     if (!profile.reset_code_expires_at || new Date(profile.reset_code_expires_at) < new Date()) {
+      console.log(`Code expired. Expires at: ${profile.reset_code_expires_at}`);
       return new Response(
         JSON.stringify({ success: false, error: "El código de verificación ha expirado" }),
         {
@@ -71,6 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     if (updateError) {
+      console.error("Error updating password:", updateError);
       throw updateError;
     }
 

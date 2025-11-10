@@ -2,3 +2,6 @@ project_id = "lwjalklsuddlwvhcumex"
 
 [functions.ai-tutor]
 verify_jwt = true
+
+[functions.verify-reset-code]
+verify_jwt = false
