@@ -171,43 +171,51 @@ const Admin = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <Card className="p-4 sm:p-6">
+          <Card className="p-4 sm:p-6 border-primary/20 shadow-lg hover:shadow-glow transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Total Usuarios</p>
-                <p className="text-xl sm:text-2xl md:text-3xl font-bold">{stats.totalUsers}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">Total Usuarios</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">{stats.totalUsers}</p>
               </div>
-              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <div className="p-3 rounded-xl bg-primary/10">
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              </div>
             </div>
           </Card>
 
-          <Card className="p-4 sm:p-6">
+          <Card className="p-4 sm:p-6 border-yellow-500/20 shadow-lg hover:shadow-[0_0_20px_rgba(234,179,8,0.3)] transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Pendientes</p>
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">Pendientes</p>
                 <p className="text-xl sm:text-2xl md:text-3xl font-bold text-yellow-500">{stats.pendingUsers}</p>
               </div>
-              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500" />
+              <div className="p-3 rounded-xl bg-yellow-500/10">
+                <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500" />
+              </div>
             </div>
           </Card>
 
-          <Card className="p-4 sm:p-6">
+          <Card className="p-4 sm:p-6 border-success/20 shadow-lg hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Aprobados</p>
-                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-500">{stats.approvedUsers}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">Aprobados</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-success">{stats.approvedUsers}</p>
               </div>
-              <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
+              <div className="p-3 rounded-xl bg-success/10">
+                <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-success" />
+              </div>
             </div>
           </Card>
 
-          <Card className="p-4 sm:p-6">
+          <Card className="p-4 sm:p-6 border-secondary/20 shadow-lg hover:shadow-glow-secondary transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Rechazados</p>
-                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-red-500">{stats.rejectedUsers}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">Rechazados</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-secondary">{stats.rejectedUsers}</p>
               </div>
-              <XCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
+              <div className="p-3 rounded-xl bg-secondary/10">
+                <XCircle className="h-6 w-6 sm:h-8 sm:w-8 text-secondary" />
+              </div>
             </div>
           </Card>
         </div>

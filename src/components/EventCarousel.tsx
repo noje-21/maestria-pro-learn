@@ -45,7 +45,7 @@ const EventCarousel = () => {
 
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
-    }, 4000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [slides.length, isHovered]);
@@ -82,18 +82,8 @@ const EventCarousel = () => {
             <img
               src={slides[currentIndex].image}
               alt={slides[currentIndex].alt}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain bg-background"
             />
-            {/* Overlay on hover */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileHover={{ opacity: 1 }}
-              className="absolute inset-0 bg-black/20 flex items-center justify-center"
-            >
-              <span className="text-white text-lg md:text-2xl font-bold bg-primary/80 px-6 py-3 rounded-full">
-                Ver más
-              </span>
-            </motion.div>
           </motion.div>
         </AnimatePresence>
 

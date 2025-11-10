@@ -15,6 +15,7 @@ type SimposioRegistro = {
   pais: string;
   telefono: string | null;
   modalidad: string;
+  documento: string;
   created_at: string;
 };
 
@@ -75,7 +76,7 @@ const SimposioRegistrations = () => {
       return;
     }
 
-    const headers = ["Nombre", "Correo", "País", "Teléfono", "Modalidad", "Fecha de Registro"];
+    const headers = ["Nombre", "Correo", "País", "Documento/DNI", "Teléfono", "Modalidad", "Fecha de Registro"];
     const csvContent = [
       headers.join(","),
       ...filteredRegistros.map((reg) =>
@@ -83,6 +84,7 @@ const SimposioRegistrations = () => {
           `"${reg.nombre}"`,
           `"${reg.correo}"`,
           `"${reg.pais}"`,
+          `"${reg.documento}"`,
           `"${reg.telefono || "N/A"}"`,
           `"${reg.modalidad}"`,
           `"${new Date(reg.created_at).toLocaleString()}"`,
@@ -108,14 +110,14 @@ const SimposioRegistrations = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Registros del Simposio</CardTitle>
+      <Card className="border-primary/20 shadow-lg">
+        <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardTitle className="text-2xl text-primary">Registros del Simposio</CardTitle>
           <CardDescription>
             Vista de todos los registros al 4to Simposio Latinoamericano de Hipertensión Pulmonar
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -139,46 +141,54 @@ const SimposioRegistrations = () => {
               {searchTerm ? "No se encontraron registros con ese criterio" : "No hay registros todavía"}
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Correo</TableHead>
-                    <TableHead>País</TableHead>
-                    <TableHead>Teléfono</TableHead>
-                    <TableHead>Modalidad</TableHead>
-                    <TableHead>Fecha</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRegistros.map((registro) => (
-                    <TableRow key={registro.id}>
-                      <TableCell className="font-medium">{registro.nombre}</TableCell>
-                      <TableCell>{registro.correo}</TableCell>
-                      <TableCell>{registro.pais}</TableCell>
-                      <TableCell>{registro.telefono || "N/A"}</TableCell>
-                      <TableCell>
-                        <Badge variant={registro.modalidad === "presencial" ? "default" : "secondary"}>
-                          {registro.modalidad}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(registro.created_at).toLocaleDateString("es-AR", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </TableCell>
+            <div className="rounded-xl border border-border/50 overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="font-semibold">Nombre</TableHead>
+                      <TableHead className="font-semibold">Correo</TableHead>
+                      <TableHead className="font-semibold">País</TableHead>
+                      <TableHead className="font-semibold">Documento/DNI</TableHead>
+                      <TableHead className="font-semibold">Teléfono</TableHead>
+                      <TableHead className="font-semibold">Modalidad</TableHead>
+                      <TableHead className="font-semibold">Fecha</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredRegistros.map((registro, index) => (
+                      <TableRow key={registro.id} className={index % 2 === 0 ? "bg-background" : "bg-muted/10"}>
+                        <TableCell className="font-medium">{registro.nombre}</TableCell>
+                        <TableCell>{registro.correo}</TableCell>
+                        <TableCell>{registro.pais}</TableCell>
+                        <TableCell className="font-mono text-sm">{registro.documento}</TableCell>
+                        <TableCell>{registro.telefono || "N/A"}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={registro.modalidad === "presencial" ? "default" : "secondary"}
+                            className={registro.modalidad === "presencial" ? "bg-primary" : "bg-secondary"}
+                          >
+                            {registro.modalidad}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(registro.created_at).toLocaleDateString("es-AR", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
 
-          <div className="text-sm text-muted-foreground">
-            Total de registros: <span className="font-semibold">{filteredRegistros.length}</span>
+          <div className="text-sm text-muted-foreground flex items-center gap-2 pt-2 border-t border-border/50">
+            <span>Total de registros:</span>
+            <span className="font-bold text-primary text-lg">{filteredRegistros.length}</span>
           </div>
         </CardContent>
       </Card>

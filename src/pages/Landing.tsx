@@ -25,11 +25,6 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="relative z-10 container mx-auto px-4 py-20 md:py-32">
         <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full text-sm text-primary">
-            <Award className="h-4 w-4" />
-            <span>Único en Latinoamérica</span>
-          </div>
-
           <h1 className="text-5xl md:text-7xl font-black leading-tight">
             Maestría Latinoamericana en <span className="gradient-text">Circulación Pulmonar</span>
           </h1>
@@ -51,6 +46,16 @@ const Landing = () => {
       {/* Event Carousel */}
       <section className="relative z-10 container mx-auto px-4 py-10">
         <EventCarousel />
+      </section>
+
+      {/* Badge Section */}
+      <section className="relative z-10 container mx-auto px-4 py-10">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full text-sm text-primary">
+            <Award className="h-4 w-4" />
+            <span>Único en Latinoamérica</span>
+          </div>
+        </div>
       </section>
 
       {/* About Program Section */}
