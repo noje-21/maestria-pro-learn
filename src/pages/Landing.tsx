@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BookOpen, GraduationCap, Award, Users2, Calendar, MapPin, Instagram, Facebook, Linkedin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import simposioImage from "@/assets/simposio-2025.jpg";
 import logoMlcp from "@/assets/logo-mlcp.jpg";
+import EventCarousel from "@/components/EventCarousel";
 const Landing = () => {
   const navigate = useNavigate();
   return <div className="min-h-screen bg-gradient-dark relative overflow-hidden">
@@ -46,6 +46,11 @@ const Landing = () => {
             </Button>
           </div>
         </div>
+      </section>
+
+      {/* Event Carousel */}
+      <section className="relative z-10 container mx-auto px-4 py-10">
+        <EventCarousel />
       </section>
 
       {/* About Program Section */}
@@ -157,22 +162,15 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Simposio Section */}
-      <section className="relative z-10 container mx-auto px-4 py-10">
-        <div className="max-w-5xl mx-auto">
-          <img src={simposioImage} alt="4to Simposio Latinoamericano de Hipertensión Pulmonar" className="w-full rounded-2xl shadow-md" />
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="relative z-10 container mx-auto px-4 py-20">
         <div className="glass-card p-12 max-w-4xl mx-auto text-center space-y-6">
           <h2 className="text-3xl md:text-4xl font-bold">¿Listo para transformar tu práctica clínica?</h2>
           <p className="text-xl text-muted-foreground">
-            Únete a al simposio que está formando a los especialistas en circulación pulmonar del futuro.
+            Únete al programa que está formando a los especialistas en circulación pulmonar del futuro.
           </p>
-          <Button size="lg" className="btn-gradient-primary px-8 py-6 text-lg" onClick={() => navigate("/simposio")}>
-            Registro para el Simposio
+          <Button size="lg" className="btn-gradient-primary px-8 py-6 text-lg" onClick={() => navigate("/auth")}>
+            Acceder al Campus Virtual
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>

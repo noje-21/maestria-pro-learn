@@ -15,6 +15,10 @@ const simposioSchema = z.object({
   nombre: z.string().min(3, "El nombre debe tener al menos 3 caracteres").max(200, "El nombre es muy largo"),
   correo: z.string().email("Correo electrónico inválido").max(255, "Correo muy largo"),
   pais: z.string().min(2, "Por favor selecciona un país").max(100, "País inválido"),
+  documento: z.string()
+    .min(1, "El documento es obligatorio")
+    .max(15, "El documento no puede tener más de 15 caracteres")
+    .regex(/^[0-9]+$/, "El documento debe contener solo números"),
   telefono: z.string().max(50, "Teléfono muy largo").optional().or(z.literal("")),
   modalidad: z.string().min(1, "Selecciona una modalidad"),
 });
@@ -24,9 +28,11 @@ const Simposio = () => {
     nombre: "",
     correo: "",
     pais: "",
+    documento: "",
     telefono: "",
     modalidad: "",
   });
+  const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -40,20 +46,33 @@ const Simposio = () => {
 
       setLoading(true);
 
+      // Save to database
       const { error } = await supabase.from("simposio_registros").insert([validatedData]);
 
       if (error) throw error;
 
-      toast({
-        title: "¡Registro exitoso!",
-        description: "Te has registrado correctamente al 4to Simposio Latinoamericano de Hipertensión Pulmonar.",
-      });
+      // Send confirmation email
+      try {
+        await supabase.functions.invoke("send-simposio-confirmation", {
+          body: {
+            email: validatedData.correo,
+            nombre: validatedData.nombre,
+          },
+        });
+      } catch (emailError) {
+        console.error("Error sending confirmation email:", emailError);
+        // Don't fail the registration if email fails
+      }
+
+      // Show success message
+      setShowSuccess(true);
 
       // Reset form
       setFormData({
         nombre: "",
         correo: "",
         pais: "",
+        documento: "",
         telefono: "",
         modalidad: "",
       });
@@ -118,7 +137,19 @@ const Simposio = () => {
               <CardDescription>Completa tus datos para registrarte al evento gratuito</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              {showSuccess ? (
+                <div className="text-center py-8 space-y-4">
+                  <div className="text-5xl">✅</div>
+                  <h3 className="text-2xl font-bold text-primary">Gracias por su participación</h3>
+                  <p className="text-muted-foreground">
+                    Pronto le enviaremos el link de conexión a su correo electrónico.
+                  </p>
+                  <Button onClick={() => setShowSuccess(false)} className="mt-4">
+                    Registrar otra persona
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="nombre">Nombre completo *</Label>
                   <Input
@@ -154,6 +185,23 @@ const Simposio = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="documento">Documento / DNI *</Label>
+                  <Input
+                    id="documento"
+                    value={formData.documento}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, "");
+                      if (value.length <= 15) {
+                        setFormData({ ...formData, documento: value });
+                      }
+                    }}
+                    placeholder="12345678"
+                    required
+                    maxLength={15}
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="telefono">Teléfono (opcional)</Label>
                   <Input
                     id="telefono"
@@ -181,6 +229,7 @@ const Simposio = () => {
                   {loading ? "Registrando..." : "Registrarme al Simposio"}
                 </Button>
               </form>
+              )}
             </CardContent>
           </Card>
         </div>

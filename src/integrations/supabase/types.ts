@@ -410,6 +410,7 @@ export type Database = {
         Row: {
           correo: string
           created_at: string
+          documento: string
           id: string
           modalidad: string
           nombre: string
@@ -419,6 +420,7 @@ export type Database = {
         Insert: {
           correo: string
           created_at?: string
+          documento?: string
           id?: string
           modalidad: string
           nombre: string
@@ -428,6 +430,7 @@ export type Database = {
         Update: {
           correo?: string
           created_at?: string
+          documento?: string
           id?: string
           modalidad?: string
           nombre?: string
