@@ -1,16 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-  ArrowRight,
-  BookOpen,
-  GraduationCap,
-  Award,
-  Users2,
-  Calendar,
-  MapPin,
-  Instagram,
-  Facebook,
-  Linkedin,
-} from "lucide-react";
+import { ArrowRight, BookOpen, Award, Users2, Calendar, MapPin, Instagram, Facebook, Linkedin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logoMlcp from "@/assets/logo-mlcp.jpg";
 import EventCarousel from "@/components/EventCarousel";
@@ -20,11 +9,11 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-gradient-dark relative overflow-hidden">
-      {/* Glow Effect Background */}
+      {/* Glow Background */}
       <div className="absolute inset-0 bg-gradient-glow pointer-events-none" />
 
-      {/* Navigation */}
-      <nav className="relative z-10 border-b border-border backdrop-blur-xl">
+      {/* Navbar - Transparente sobre el carrusel */}
+      <nav className="absolute top-0 left-0 z-20 w-full border-b border-border/30 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={logoMlcp} alt="MLCP Logo" className="h-12 w-12 md:h-16 md:w-16 rounded-full object-cover" />
@@ -40,39 +29,25 @@ const Landing = () => {
         </div>
       </nav>
 
-      {/* Event Carousel - Full Screen */}
-      <section
-        className="
-          relative z-10 w-full h-screen 
-          flex justify-center items-center 
-          bg-background/30 backdrop-blur-sm border-b border-border overflow-hidden
-        "
-      >
-        <div
-          className="
-            w-full 
-            sm:w-[90%] 
-            md:w-[80%] 
-            lg:w-[70%] 
-            aspect-[16/9] 
-            sm:aspect-[16/10] 
-            md:aspect-[16/8] 
-            lg:aspect-[16/7]
-            rounded-2xl overflow-hidden shadow-2xl
-            transition-all duration-500 ease-in-out
-          "
-        >
+      {/* HERO CARRUSEL - Pantalla completa */}
+      <section className="relative z-10 w-full h-screen overflow-hidden">
+        {/* Carrusel */}
+        <div className="absolute inset-0">
           <EventCarousel />
         </div>
 
-        {/* Indicador para desplazarse hacia abajo */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-muted-foreground animate-bounce">
-          <ArrowRight className="rotate-90 h-6 w-6" />
+        {/* Degradado inferior para transición visual */}
+        <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-background to-transparent z-10"></div>
+
+        {/* Flecha animada para bajar */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center text-muted-foreground animate-bounce">
+          <ArrowRight className="rotate-90 h-8 w-8" />
+          <span className="text-xs mt-1 opacity-80">Desplázate hacia abajo</span>
         </div>
       </section>
 
-      {/* Hero Section */}
-      <section className="relative z-10 container mx-auto px-4 py-16 md:py-28 text-center">
+      {/* HERO SECTION */}
+      <section className="relative z-10 container mx-auto px-4 py-24 md:py-32 text-center">
         <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-fade-in">
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-black leading-tight">
             Maestría Latinoamericana en <span className="gradient-text">Circulación Pulmonar</span>
@@ -96,7 +71,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Badge Section */}
+      {/* BADGE */}
       <section className="relative z-10 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full text-sm text-primary">
@@ -106,7 +81,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* About Program Section */}
+      {/* ABOUT */}
       <section className="relative z-10 container mx-auto px-4 py-16">
         <div className="glass-card p-6 sm:p-8 md:p-12 max-w-5xl mx-auto space-y-8">
           <div className="text-center space-y-3">
@@ -166,7 +141,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* FEATURES */}
       <section className="relative z-10 container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {[
@@ -199,7 +174,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA */}
       <section className="relative z-10 container mx-auto px-4 py-16">
         <div className="glass-card p-8 sm:p-12 max-w-4xl mx-auto text-center space-y-6">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">¿Listo para transformar tu práctica clínica?</h2>
@@ -213,19 +188,17 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* FOOTER */}
       <footer className="relative z-10 border-t border-border py-10 mt-12">
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center space-y-6 max-w-2xl mx-auto">
             <img src={logoMlcp} alt="MLCP Logo" className="h-16 w-16 md:h-20 md:w-20 rounded-full object-cover" />
-
             <div className="text-center space-y-2">
               <p className="text-sm font-bold text-foreground">Powered by:</p>
               <p className="text-base md:text-lg font-semibold text-foreground">
                 Maestría Latinoamericana en Circulación Pulmonar
               </p>
             </div>
-
             <div className="text-center text-sm text-muted-foreground space-y-1">
               <p>
                 Correo:{" "}
