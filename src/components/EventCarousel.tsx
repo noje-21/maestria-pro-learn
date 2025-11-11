@@ -7,10 +7,13 @@ import { useNavigate } from "react-router-dom";
 import maestria2025 from "@/assets/maestria-2025-new.jpg";
 import campusVirtual from "@/assets/campus-virtual.jpg";
 import simposio2025 from "@/assets/simposio-2025-new.jpg";
+import simposio2025Mobile from "@/assets/simposio-2025-mobile.jpg";
+import maestria2025Mobile from "@/assets/maestria-2025-mobile.jpg";
 
 interface Slide {
   id: number;
   image: string;
+  imageMobile?: string;
   alt: string;
   action: () => void;
 }
@@ -26,12 +29,14 @@ const EventCarousel = () => {
     {
       id: 1,
       image: simposio2025,
+      imageMobile: simposio2025Mobile,
       alt: "4to Simposio Latinoamericano de Hipertensión Pulmonar",
       action: () => navigate("/simposio"),
     },
     {
       id: 2,
       image: maestria2025,
+      imageMobile: maestria2025Mobile,
       alt: "Maestría Latinoamericana en Circulación Pulmonar 2025",
       action: () => {},
     },
@@ -121,10 +126,12 @@ const EventCarousel = () => {
           onClick={slides[currentIndex].action}
         >
           <img
-            src={slides[currentIndex].image}
+            src={isMobile && slides[currentIndex].imageMobile 
+              ? slides[currentIndex].imageMobile 
+              : slides[currentIndex].image}
             alt={slides[currentIndex].alt}
             className={`w-full h-full transition-transform duration-700 hover:scale-[1.01] ${
-              isMobile ? "object-fill" : "object-contain"
+              isMobile ? "object-cover" : "object-contain"
             }`}
             loading="lazy"
             draggable={false}
