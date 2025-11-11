@@ -89,7 +89,7 @@ const EventCarousel = () => {
   return (
     <div
       className={`relative w-full mx-auto overflow-hidden shadow-2xl bg-black ${
-        isMobile ? "rounded-none border-[6px] border-primary" : "rounded-2xl border-2 border-primary/20"
+        isMobile ? "rounded-none" : "rounded-2xl border-2 border-primary/20"
       }`}
       style={{
         aspectRatio: isMobile ? undefined : "16/9",
@@ -109,12 +109,7 @@ const EventCarousel = () => {
               <img
                 src={isMobile && slide.imageMobile ? slide.imageMobile : slide.image}
                 alt={slide.alt}
-                className={`w-full h-full select-none ${
-                  isMobile ? "object-cover" : "object-contain"
-                }`}
-                style={{
-                  minHeight: isMobile ? "100dvh" : undefined,
-                }}
+                className="w-full h-full select-none object-contain"
                 draggable={false}
               />
             </div>
