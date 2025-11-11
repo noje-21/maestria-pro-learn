@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 
 import maestria2025 from "@/assets/maestria-2025-new.jpg";
 import campusVirtual from "@/assets/campus-virtual.jpg";
 import simposio2025 from "@/assets/simposio-2025-new.jpg";
 import simposio2025Mobile from "@/assets/simposio-2025-mobile.jpg";
 import maestria2025Mobile from "@/assets/maestria-2025-mobile.jpg";
+import campusVirtualMobile from "@/assets/campus-virtual-mobile.jpg";
 
 interface Slide {
   id: number;
@@ -20,9 +20,6 @@ interface Slide {
 
 const EventCarousel = () => {
   const navigate = useNavigate();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState(1);
-  const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   const slides: Slide[] = [
@@ -45,12 +42,38 @@ const EventCarousel = () => {
     {
       id: 3,
       image: campusVirtual,
+      imageMobile: campusVirtualMobile,
       alt: "Campus Virtual MLCP",
       action: () => navigate("/auth"),
     },
   ];
 
-  // Detectar si es móvil
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { 
+      loop: true,
+      duration: 30,
+      dragFree: false,
+    },
+    [Autoplay({ delay: 7000, stopOnInteraction: false })]
+  );
+
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+    return () => {
+      emblaApi.off("select", onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
+  // Detect mobile
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     handleResize();
@@ -58,130 +81,57 @@ const EventCarousel = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Auto cambio
-  useEffect(() => {
-    if (isHovered) return;
-    const interval = setInterval(() => {
-      setDirection(1);
-      setCurrentIndex((prev) => (prev + 1) % slides.length);
-    }, 7000);
-    return () => clearInterval(interval);
-  }, [slides.length, isHovered]);
-
-  const goToNext = () => {
-    setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % slides.length);
-  };
-
-  const goToPrevious = () => {
-    setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
-  };
-
-  const goToSlide = (index: number) => {
-    setDirection(index > currentIndex ? 1 : -1);
-    setCurrentIndex(index);
-  };
-
-  const variants = {
-    enter: (dir: number) => ({
-      x: dir > 0 ? 100 : -100,
-      opacity: 0,
-      scale: 0.98,
-    }),
-    center: { x: 0, opacity: 1, scale: 1 },
-    exit: (dir: number) => ({
-      x: dir > 0 ? -100 : 100,
-      opacity: 0,
-      scale: 0.98,
-    }),
-  };
+  const scrollTo = useCallback(
+    (index: number) => emblaApi && emblaApi.scrollTo(index),
+    [emblaApi]
+  );
 
   return (
     <div
-      className={`relative w-full mx-auto overflow-hidden shadow-2xl flex items-center justify-center bg-black ${
-        isMobile ? "rounded-none" : "rounded-2xl"
+      className={`relative w-full mx-auto overflow-hidden shadow-2xl bg-black ${
+        isMobile ? "rounded-none border-[6px] border-primary" : "rounded-2xl border-2 border-primary/20"
       }`}
       style={{
         aspectRatio: isMobile ? undefined : "16/9",
-        height: isMobile ? "100dvh" : undefined, // fuerza a ocupar toda la altura del móvil
+        height: isMobile ? "100dvh" : undefined,
         width: "100%",
         maxHeight: isMobile ? "none" : "600px",
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      <AnimatePresence initial={false} custom={direction} mode="wait">
-        <motion.div
-          key={currentIndex}
-          custom={direction}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{
-            x: { type: "spring", stiffness: 200, damping: 25 },
-            opacity: { duration: 0.5 },
-            scale: { duration: 0.5 },
-          }}
-          className="absolute inset-0 flex items-center justify-center cursor-pointer"
-          onClick={slides[currentIndex].action}
-        >
-          <img
-            src={
-              isMobile && slides[currentIndex].imageMobile
-                ? slides[currentIndex].imageMobile
-                : slides[currentIndex].image
-            }
-            alt={slides[currentIndex].alt}
-            className={`w-full h-full transition-transform duration-700 hover:scale-[1.01] ${
-              isMobile ? "object-fill" : "object-contain"
-            }`}
-            style={{
-              minHeight: isMobile ? "100dvh" : undefined,
-              backgroundColor: "black",
-            }}
-            loading="lazy"
-            draggable={false}
-          />
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Botones */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background/90 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10"
-        onClick={(e) => {
-          e.stopPropagation();
-          goToPrevious();
-        }}
-      >
-        <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background/90 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10"
-        onClick={(e) => {
-          e.stopPropagation();
-          goToNext();
-        }}
-      >
-        <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
-      </Button>
+      <div ref={emblaRef} className="overflow-hidden h-full">
+        <div className="flex h-full touch-pan-y">
+          {slides.map((slide) => (
+            <div
+              key={slide.id}
+              className="flex-[0_0_100%] min-w-0 relative h-full cursor-pointer"
+              onClick={slide.action}
+            >
+              <img
+                src={isMobile && slide.imageMobile ? slide.imageMobile : slide.image}
+                alt={slide.alt}
+                className={`w-full h-full select-none ${
+                  isMobile ? "object-cover" : "object-contain"
+                }`}
+                style={{
+                  minHeight: isMobile ? "100dvh" : undefined,
+                }}
+                draggable={false}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Indicadores */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-        {slides.map((_, i) => (
-          <motion.button
-            key={i}
-            onClick={() => goToSlide(i)}
-            whileHover={{ scale: 1.2 }}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+        {slides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => scrollTo(index)}
             className={`h-2 rounded-full transition-all duration-300 ${
-              i === currentIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30"
+              index === selectedIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/50"
             }`}
+            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
       </div>
