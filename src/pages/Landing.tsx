@@ -51,7 +51,7 @@ const Landing = () => {
         <div
           className="
             w-full 
-            sm:w-[90%] 
+            sm:w-[120%] 
             md:w-[80%] 
             lg:w-[70%] 
             aspect-[16/16] 
