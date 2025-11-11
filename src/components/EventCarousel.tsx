@@ -102,7 +102,8 @@ const EventCarousel = () => {
       }`}
       style={{
         aspectRatio: isMobile ? undefined : "16/9",
-        height: isMobile ? "100dvw" : undefined, // usa altura dinámica del viewport (sin barras)
+        height: isMobile ? "100dvh" : undefined, // 🔹 ocupar todo el alto visible del móvil
+        minHeight: isMobile ? "100vh" : undefined, // 🔹 por compatibilidad con navegadores iOS/Android
         width: "100%",
         maxHeight: isMobile ? "none" : "600px",
       }}
@@ -126,13 +127,18 @@ const EventCarousel = () => {
           onClick={slides[currentIndex].action}
         >
           <img
-            src={isMobile && slides[currentIndex].imageMobile 
-              ? slides[currentIndex].imageMobile 
-              : slides[currentIndex].image}
+            src={
+              isMobile && slides[currentIndex].imageMobile
+                ? slides[currentIndex].imageMobile
+                : slides[currentIndex].image
+            }
             alt={slides[currentIndex].alt}
             className={`w-full h-full transition-transform duration-700 hover:scale-[1.01] ${
               isMobile ? "object-cover" : "object-contain"
             }`}
+            style={{
+              objectPosition: "center center",
+            }}
             loading="lazy"
             draggable={false}
           />
