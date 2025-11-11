@@ -62,7 +62,7 @@ const Auth = () => {
         await signUp(email, password, fullName, country);
       }
     } catch (error: any) {
-      console.error('Auth error:', error);
+      console.error("Auth error:", error);
     } finally {
       setLoading(false);
     }
@@ -132,7 +132,8 @@ const Auth = () => {
 
       toast({
         title: "Contraseña actualizada",
-        description: "Tu contraseña ha sido actualizada correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.",
+        description:
+          "Tu contraseña ha sido actualizada correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.",
       });
 
       // Reset form and go back to login
@@ -158,7 +159,7 @@ const Auth = () => {
     return (
       <div className="min-h-screen bg-gradient-dark relative overflow-hidden flex items-center justify-center">
         <div className="absolute inset-0 bg-gradient-glow pointer-events-none" />
-        
+
         <div className="relative z-10 w-full max-w-md mx-4">
           <Button
             variant="ghost"
@@ -183,7 +184,7 @@ const Auth = () => {
                 {resetStep === "email" ? "Recuperar contraseña" : "Verificar código"}
               </h1>
               <p className="text-muted-foreground">
-                {resetStep === "email" 
+                {resetStep === "email"
                   ? "Ingresa tu correo electrónico registrado"
                   : "Ingresa el código enviado a tu correo"}
               </p>
@@ -207,11 +208,7 @@ const Auth = () => {
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full btn-gradient-primary"
-                  disabled={loading}
-                >
+                <Button type="submit" className="w-full btn-gradient-primary" disabled={loading}>
                   {loading ? "Enviando..." : "Enviar código"}
                 </Button>
               </form>
@@ -265,11 +262,7 @@ const Auth = () => {
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full btn-gradient-primary"
-                  disabled={loading}
-                >
+                <Button type="submit" className="w-full btn-gradient-primary" disabled={loading}>
                   {loading ? "Verificando..." : "Actualizar contraseña"}
                 </Button>
               </form>
@@ -283,13 +276,9 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-gradient-dark relative overflow-hidden flex items-center justify-center">
       <div className="absolute inset-0 bg-gradient-glow pointer-events-none" />
-      
+
       <div className="relative z-10 w-full max-w-md mx-4">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="mb-4"
-        >
+        <Button variant="ghost" onClick={() => navigate("/")} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Volver
         </Button>
@@ -301,13 +290,9 @@ const Auth = () => {
                 <GraduationCap className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold">
-              {isLogin ? "Bienvenido de nuevo" : "Crear cuenta"}
-            </h1>
+            <h1 className="text-3xl font-bold">{isLogin ? "Bienvenido de nuevo" : "Crear cuenta"}</h1>
             <p className="text-muted-foreground">
-              {isLogin
-                ? "Ingresa tus credenciales para continuar"
-                : "Regístrate para comenzar tu aprendizaje"}
+              {isLogin ? "Ingresa tus credenciales para continuar" : "Regístrate para comenzar tu aprendizaje"}
             </p>
           </div>
 
@@ -394,17 +379,12 @@ const Auth = () => {
               </div>
             )}
 
-            <Button
-              type="submit"
-              className="w-full btn-gradient-primary"
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full btn-gradient-primary" disabled={loading}>
               {loading ? "Procesando..." : isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
             </Button>
           </form>
 
-
-          <div className="text-center text-sm">
+          {/*<div className="text-center text-sm">
             <span className="text-muted-foreground">
               {isLogin ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}
             </span>{" "}
@@ -416,7 +396,7 @@ const Auth = () => {
             >
               {isLogin ? "Regístrate" : "Inicia sesión"}
             </Button>
-          </div>
+          </div>*/}
         </div>
       </div>
     </div>
