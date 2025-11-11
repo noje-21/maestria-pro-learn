@@ -43,7 +43,7 @@ const EventCarousel = () => {
     },
   ];
 
-  // Detectar si la pantalla es móvil
+  // Detectar si es móvil
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     handleResize();
@@ -51,7 +51,7 @@ const EventCarousel = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Auto cambio de imagen
+  // Auto cambio
   useEffect(() => {
     if (isHovered) return;
     const interval = setInterval(() => {
@@ -94,9 +94,10 @@ const EventCarousel = () => {
     <div
       className="relative w-full mx-auto overflow-hidden rounded-2xl shadow-2xl flex items-center justify-center bg-black"
       style={{
-        aspectRatio: isMobile ? undefined : "16/9", // Quitar relación fija en móviles
-        height: isMobile ? "280px" : undefined, // Altura adaptable en móvil
-        maxHeight: isMobile ? "400px" : "600px",
+        // 💡 En móviles, ocupa todo el ancho y alto disponibles
+        aspectRatio: isMobile ? undefined : "16/9",
+        height: isMobile ? "100vw" : undefined, // altura igual al ancho del viewport
+        maxHeight: isMobile ? "none" : "600px",
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -121,7 +122,7 @@ const EventCarousel = () => {
             src={slides[currentIndex].image}
             alt={slides[currentIndex].alt}
             className={`w-full h-full transition-transform duration-700 hover:scale-[1.01] ${
-              isMobile ? "object-cover" : "object-contain"
+              isMobile ? "object-fill" : "object-contain"
             }`}
             loading="lazy"
             draggable={false}
@@ -129,7 +130,7 @@ const EventCarousel = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Botones de navegación */}
+      {/* Botones */}
       <Button
         variant="ghost"
         size="icon"
@@ -154,7 +155,7 @@ const EventCarousel = () => {
         <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
       </Button>
 
-      {/* Indicadores inferiores */}
+      {/* Indicadores */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
         {slides.map((_, i) => (
           <motion.button
