@@ -43,7 +43,6 @@ const EventCarousel = () => {
     },
   ];
 
-  // Detectar si es móvil
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     handleResize();
@@ -51,7 +50,6 @@ const EventCarousel = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Auto cambio
   useEffect(() => {
     if (isHovered) return;
     const interval = setInterval(() => {
@@ -92,14 +90,17 @@ const EventCarousel = () => {
 
   return (
     <div
-      className={`relative w-full mx-auto overflow-hidden shadow-2xl flex items-center justify-center bg-black ${
-        isMobile ? "rounded-none" : "rounded-2xl"
+      className={`relative w-full mx-auto overflow-hidden flex items-center justify-center bg-black ${
+        isMobile ? "rounded-none shadow-none" : "rounded-2xl shadow-2xl"
       }`}
       style={{
         aspectRatio: isMobile ? undefined : "16/9",
-        height: isMobile ? "100dvw" : undefined, // usa altura dinámica del viewport (sin barras)
+        height: isMobile ? "100vh" : undefined,
+        minHeight: isMobile ? "100vh" : undefined,
         width: "100%",
         maxHeight: isMobile ? "none" : "600px",
+        margin: 0,
+        padding: 0,
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -126,6 +127,13 @@ const EventCarousel = () => {
             className={`w-full h-full transition-transform duration-700 hover:scale-[1.01] ${
               isMobile ? "object-fill" : "object-contain"
             }`}
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "block",
+              margin: 0,
+              padding: 0,
+            }}
             loading="lazy"
             draggable={false}
           />
@@ -133,29 +141,33 @@ const EventCarousel = () => {
       </AnimatePresence>
 
       {/* Botones */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background/90 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10"
-        onClick={(e) => {
-          e.stopPropagation();
-          goToPrevious();
-        }}
-      >
-        <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
-      </Button>
+      {!isMobile && (
+        <>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background/90 rounded-full backdrop-blur-md h-10 w-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              goToPrevious();
+            }}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background/90 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10"
-        onClick={(e) => {
-          e.stopPropagation();
-          goToNext();
-        }}
-      >
-        <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
-      </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background/90 rounded-full backdrop-blur-md h-10 w-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              goToNext();
+            }}
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+        </>
+      )}
 
       {/* Indicadores */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
