@@ -46,7 +46,7 @@ const Landing = () => {
           relative z-10 w-full 
           flex justify-center items-center 
           bg-background/30 backdrop-blur-sm border-b border-border overflow-hidden
-          ${window.innerWidth < 640 ? "py-0 h-[100dvh]" : "py-16 sm:py-20 md:py-28"}
+          ${window.innerWidth < 640 ? "py-2" : "py-16 sm:py-20 md:py-28"}
         `}
       >
         <div
@@ -54,7 +54,7 @@ const Landing = () => {
             transition-all duration-500 ease-in-out shadow-2xl overflow-hidden
             ${
               window.innerWidth < 640
-                ? "w-full h-full rounded-none bg-black"
+                ? "w-[96%] h-[90dvh] mx-auto rounded-xl bg-black"
                 : "w-[90%] sm:w-[85%] md:w-[70%] lg:w-[55%] aspect-[16/9] rounded-2xl bg-white"
             }
           `}
