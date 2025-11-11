@@ -97,14 +97,13 @@ const EventCarousel = () => {
 
   return (
     <div
-      className={`relative w-full mx-auto overflow-hidden shadow-2xl flex items-center justify-center bg-black ${
-        isMobile ? "rounded-none" : "rounded-2xl"
-      }`}
+      className={`relative w-full mx-auto overflow-hidden shadow-2xl flex items-center justify-center bg-black
+        border-[6px] md:border-[8px] border-primary/70 rounded-2xl
+      `}
       style={{
-        aspectRatio: isMobile ? undefined : "16/9",
-        height: isMobile ? "100dvh" : undefined, // fuerza a ocupar toda la altura del móvil
-        width: "100%",
-        maxHeight: isMobile ? "none" : "600px",
+        aspectRatio: isMobile ? "9/16" : "16/9",
+        maxHeight: isMobile ? "90dvh" : "600px",
+        width: isMobile ? "94%" : "100%",
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -132,13 +131,7 @@ const EventCarousel = () => {
                 : slides[currentIndex].image
             }
             alt={slides[currentIndex].alt}
-            className={`w-full h-full transition-transform duration-700 hover:scale-[1.01] ${
-              isMobile ? "object-fill" : "object-contain"
-            }`}
-            style={{
-              minHeight: isMobile ? "100dvh" : undefined,
-              backgroundColor: "black",
-            }}
+            className="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.01]"
             loading="lazy"
             draggable={false}
           />
