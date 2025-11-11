@@ -102,8 +102,7 @@ const EventCarousel = () => {
       }`}
       style={{
         aspectRatio: isMobile ? undefined : "16/9",
-        height: isMobile ? "100dvh" : undefined, // 🔹 ocupar todo el alto visible del móvil
-        minHeight: isMobile ? "100vh" : undefined, // 🔹 por compatibilidad con navegadores iOS/Android
+        height: isMobile ? "100dvh" : undefined, // fuerza a ocupar toda la altura del móvil
         width: "100%",
         maxHeight: isMobile ? "none" : "600px",
       }}
@@ -134,10 +133,11 @@ const EventCarousel = () => {
             }
             alt={slides[currentIndex].alt}
             className={`w-full h-full transition-transform duration-700 hover:scale-[1.01] ${
-              isMobile ? "object-cover" : "object-contain"
+              isMobile ? "object-fill" : "object-contain"
             }`}
             style={{
-              objectPosition: "center center",
+              minHeight: isMobile ? "100dvh" : undefined,
+              backgroundColor: "black",
             }}
             loading="lazy"
             draggable={false}
