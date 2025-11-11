@@ -55,7 +55,7 @@ const Landing = () => {
             ${
               window.innerWidth < 640
                 ? "w-[96%] h-[90dvh] mx-auto rounded-xl bg-black"
-                : "w-[90%] sm:w-[70%] md:w-[70%] lg:w-[55%] aspect-[16/9] rounded-2xl bg-white"
+                : "w-[90%] sm:w-[85%] md:w-[70%] lg:w-[55%] aspect-[16/9] rounded-2xl bg-white"
             }
           `}
         >
