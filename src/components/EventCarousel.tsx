@@ -92,11 +92,13 @@ const EventCarousel = () => {
 
   return (
     <div
-      className="relative w-full mx-auto overflow-hidden rounded-2xl shadow-2xl flex items-center justify-center bg-black"
+      className={`relative w-full mx-auto overflow-hidden shadow-2xl flex items-center justify-center bg-black ${
+        isMobile ? "rounded-none" : "rounded-2xl"
+      }`}
       style={{
-        // 💡 En móviles, ocupa todo el ancho y alto disponibles
         aspectRatio: isMobile ? undefined : "16/9",
-        height: isMobile ? "100vw" : undefined, // altura igual al ancho del viewport
+        height: isMobile ? "100dvw" : undefined, // usa altura dinámica del viewport (sin barras)
+        width: "100%",
         maxHeight: isMobile ? "none" : "600px",
       }}
       onMouseEnter={() => setIsHovered(true)}
