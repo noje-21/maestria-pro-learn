@@ -43,23 +43,19 @@ const Landing = () => {
       {/* Event Carousel - Full Screen */}
       <section
         className="
-            relative z-10 w-full h-screen 
-            flex justify-center items-center 
-            bg-background/30 backdrop-blur-sm border-b border-border overflow-hidden
-          "
+          relative z-10 w-full 
+          flex justify-center items-center 
+          bg-background/30 backdrop-blur-sm border-b border-border overflow-hidden
+          py-16 sm:py-20 md:py-28
+        "
       >
         <div
           className="
-            w-full 
-            sm:w-[120%] 
-            md:w-[80%] 
-            lg:w-[70%] 
-            aspect-[16/10] 
-            sm:aspect-[16/10] 
-            md:aspect-[16/8] 
-            lg:aspect-[16/7]
+            w-[90%] sm:w-[85%] md:w-[70%] lg:w-[55%]
+            aspect-[9/16] sm:aspect-[4/5] md:aspect-[16/9]
             rounded-2xl overflow-hidden shadow-2xl
             transition-all duration-500 ease-in-out
+            bg-white
           "
         >
           <EventCarousel />
