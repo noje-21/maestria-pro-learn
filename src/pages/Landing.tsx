@@ -42,32 +42,30 @@ const Landing = () => {
 
       {/* Event Carousel - Full Screen */}
       <section
-        className={`
+        className="
           relative z-10 w-full 
           flex justify-center items-center 
           bg-background/30 backdrop-blur-sm border-b border-border overflow-hidden
-          ${window.innerWidth < 640 ? "py-2" : "py-16 sm:py-20 md:py-28"}
-        `}
+          py-16 sm:py-20 md:py-28
+        "
       >
         <div
-          className={`
-            transition-all duration-500 ease-in-out shadow-2xl overflow-hidden
-            ${
-              window.innerWidth < 640
-                ? "w-[96%] h-[90dvh] mx-auto rounded-xl bg-black"
-                : "w-[90%] sm:w-[85%] md:w-[70%] lg:w-[55%] aspect-[16/9] rounded-2xl bg-white"
-            }
-          `}
+          className="
+            w-[90%] sm:w-[80%] md:w-[65%] lg:w-[50%]
+            aspect-[16/9]
+            rounded-3xl overflow-hidden shadow-2xl
+            bg-white
+            border-[6px] md:border-[8px] border-primary/70   /* 🔥 borde triple de grosor */
+            mx-auto transition-all duration-500 ease-in-out
+          "
         >
           <EventCarousel />
         </div>
 
         {/* Indicador para desplazarse hacia abajo */}
-        {window.innerWidth >= 640 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-muted-foreground animate-bounce">
-            <ArrowRight className="rotate-90 h-6 w-6" />
-          </div>
-        )}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-muted-foreground animate-bounce">
+          <ArrowRight className="rotate-90 h-6 w-6" />
+        </div>
       </section>
 
       {/* Hero Section */}
