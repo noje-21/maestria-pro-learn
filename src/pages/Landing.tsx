@@ -40,30 +40,34 @@ const Landing = () => {
         </div>
       </nav>
 
-      {/* Event Carousel - Mobile Friendly */}
-      <section className="relative z-10 w-full bg-background/30 backdrop-blur-sm border-b border-border overflow-hidden">
+      {/* Event Carousel - Full Screen */}
+      <section
+        className="
+          relative z-10 w-full h-screen 
+          flex justify-center items-center 
+          bg-background/30 backdrop-blur-sm border-b border-border overflow-hidden
+        "
+      >
         <div
           className="
-            container mx-auto px-2 sm:px-4 py-6 sm:py-10 
-            flex justify-center items-center
+            w-full 
+            sm:w-[90%] 
+            md:w-[80%] 
+            lg:w-[70%] 
+            aspect-[16/9] 
+            sm:aspect-[16/10] 
+            md:aspect-[16/8] 
+            lg:aspect-[16/7]
+            rounded-2xl overflow-hidden shadow-2xl
+            transition-all duration-500 ease-in-out
           "
         >
-          <div
-            className="
-              w-full 
-              sm:w-[90%] 
-              md:w-[80%] 
-              lg:w-[70%] 
-              aspect-[16/9] 
-              sm:aspect-[16/10] 
-              md:aspect-[16/8]
-              lg:aspect-[16/7]
-              rounded-2xl overflow-hidden shadow-xl 
-              transition-all duration-500 ease-in-out
-            "
-          >
-            <EventCarousel />
-          </div>
+          <EventCarousel />
+        </div>
+
+        {/* Indicador para desplazarse hacia abajo */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-muted-foreground animate-bounce">
+          <ArrowRight className="rotate-90 h-6 w-6" />
         </div>
       </section>
 
