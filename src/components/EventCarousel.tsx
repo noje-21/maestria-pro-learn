@@ -42,7 +42,6 @@ const EventCarousel = () => {
     },
   ];
 
-  // Auto-slide con pausa en hover
   useEffect(() => {
     if (isHovered) return;
     const interval = setInterval(() => {
@@ -67,7 +66,6 @@ const EventCarousel = () => {
     setCurrentIndex(index);
   };
 
-  // Variants de Framer Motion para animaciones suaves
   const variants = {
     enter: (dir: number) => ({
       x: dir > 0 ? 100 : -100,
@@ -84,67 +82,73 @@ const EventCarousel = () => {
 
   return (
     <div
-      className="relative w-full h-[80vh] sm:h-[85vh] md:h-[90vh] lg:h-[95vh] max-w-7xl mx-auto overflow-hidden"
+      className="relative w-full mx-auto overflow-hidden rounded-2xl shadow-2xl bg-gradient-to-b from-gray-900/80 via-gray-900/40 to-gray-900/10 flex items-center justify-center"
+      style={{
+        aspectRatio: "16/9",
+        maxHeight: "600px",
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative w-full h-full rounded-3xl shadow-2xl overflow-hidden bg-black/5">
-        <AnimatePresence initial={false} custom={direction} mode="wait">
-          <motion.div
-            key={currentIndex}
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{
-              x: { type: "spring", stiffness: 200, damping: 25 },
-              opacity: { duration: 0.5 },
-              scale: { duration: 0.5 },
-            }}
-            className="absolute inset-0 cursor-pointer"
-            onClick={slides[currentIndex].action}
-          >
-            <img
-              src={slides[currentIndex].image}
-              alt={slides[currentIndex].alt}
-              className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
-              loading="lazy"
-              draggable={false}
-            />
-            {/* Capa degradada para efecto visual */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent"></div>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Botones de navegación */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-background/60 hover:bg-background/80 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10 transition-transform hover:scale-110"
-          onClick={(e) => {
-            e.stopPropagation();
-            goToPrevious();
+      <AnimatePresence initial={false} custom={direction} mode="wait">
+        <motion.div
+          key={currentIndex}
+          custom={direction}
+          variants={variants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{
+            x: { type: "spring", stiffness: 200, damping: 25 },
+            opacity: { duration: 0.5 },
+            scale: { duration: 0.5 },
           }}
+          className="absolute inset-0 flex items-center justify-center cursor-pointer"
+          onClick={slides[currentIndex].action}
         >
-          <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
-        </Button>
+          {/* La imagen se centra y mantiene completa */}
+          <img
+            src={slides[currentIndex].image}
+            alt={slides[currentIndex].alt}
+            className="
+              max-w-full max-h-full
+              object-contain
+              transition-transform duration-700
+              hover:scale-[1.01]
+            "
+            loading="lazy"
+            draggable={false}
+          />
+        </motion.div>
+      </AnimatePresence>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-background/60 hover:bg-background/80 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10 transition-transform hover:scale-110"
-          onClick={(e) => {
-            e.stopPropagation();
-            goToNext();
-          }}
-        >
-          <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
-        </Button>
-      </div>
+      {/* Botones */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background/90 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10"
+        onClick={(e) => {
+          e.stopPropagation();
+          goToPrevious();
+        }}
+      >
+        <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
+      </Button>
 
-      {/* Indicadores inferiores */}
-      <div className="flex justify-center gap-2 mt-4">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background/90 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10"
+        onClick={(e) => {
+          e.stopPropagation();
+          goToNext();
+        }}
+      >
+        <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
+      </Button>
+
+      {/* Indicadores */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
         {slides.map((_, i) => (
           <motion.button
             key={i}
