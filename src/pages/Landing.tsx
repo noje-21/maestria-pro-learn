@@ -54,7 +54,7 @@ const Landing = () => {
             sm:w-[120%] 
             md:w-[80%] 
             lg:w-[70%] 
-            aspect-[16/16] 
+            aspect-[10/10] 
             sm:aspect-[16/10] 
             md:aspect-[16/8] 
             lg:aspect-[16/7]
