@@ -42,6 +42,7 @@ const EventCarousel = () => {
         window.location.href = "https://cp.maestriacp.com/";
     },
     },
+    {
       id: 3,
       image: campusVirtual,
       alt: "Campus Virtual MLCP",
