@@ -43,10 +43,10 @@ const Landing = () => {
       {/* Event Carousel - Full Screen */}
       <section
         className="
-          relative z-10 w-full h-screen 
-          flex justify-center items-center 
-          bg-background/30 backdrop-blur-sm border-b border-border overflow-hidden
-        "
+            relative z-10 w-full h-screen 
+            flex justify-center items-center 
+            bg-background/30 backdrop-blur-sm border-b border-border overflow-hidden
+          "
       >
         <div
           className="
