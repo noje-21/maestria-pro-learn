@@ -52,7 +52,7 @@ const Landing = () => {
           className="
             w-full 
             sm:w-[90%] 
-            md:w-[80%] 
+            md:w-[90%] 
             lg:w-[70%] 
             aspect-[16/9] 
             sm:aspect-[16/10] 
