@@ -67,7 +67,7 @@ const EventCarousel = () => {
     setCurrentIndex(index);
   };
 
-  // Variants de Framer Motion para animaciones suaves
+  // Variants para animaciones suaves
   const variants = {
     enter: (dir: number) => ({
       x: dir > 0 ? 100 : -100,
@@ -84,11 +84,12 @@ const EventCarousel = () => {
 
   return (
     <div
-      className="relative w-full max-w-7xl mx-auto overflow-hidden"
+      className="relative w-full h-full overflow-hidden"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative aspect-[16/9] rounded-3xl shadow-2xl overflow-hidden bg-black/5">
+      {/* Ajuste de proporción responsiva */}
+      <div className="relative w-full h-full aspect-[9/16] sm:aspect-[4/5] md:aspect-[16/9] rounded-2xl overflow-hidden bg-black/5">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={currentIndex}
@@ -108,12 +109,26 @@ const EventCarousel = () => {
             <img
               src={slides[currentIndex].image}
               alt={slides[currentIndex].alt}
-              className="w-full h-full object-cover md:object-center transition-transform duration-700 hover:scale-105"
+              className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
               loading="lazy"
               draggable={false}
             />
-            {/* Capa degradada para texto o efecto visual */}
+            {/* Capa degradada */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent"></div>
+
+            {/* Texto centrado opcional */}
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-center text-white px-4">
+              <p className="text-sm sm:text-base md:text-lg font-semibold drop-shadow-md">{slides[currentIndex].alt}</p>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  slides[currentIndex].action();
+                }}
+                className="mt-3 bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-full text-sm sm:text-base"
+              >
+                Más información
+              </Button>
+            </div>
           </motion.div>
         </AnimatePresence>
 
