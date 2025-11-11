@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-
 import maestria2025 from "@/assets/maestria-2025-new.jpg";
 import campusVirtual from "@/assets/campus-virtual.jpg";
 import simposio2025 from "@/assets/simposio-2025-new.jpg";
@@ -18,7 +17,6 @@ interface Slide {
 const EventCarousel = () => {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState(1);
   const [isHovered, setIsHovered] = useState(false);
 
   const slides: Slide[] = [
@@ -32,7 +30,7 @@ const EventCarousel = () => {
       id: 2,
       image: maestria2025,
       alt: "Maestría Latinoamericana en Circulación Pulmonar 2025",
-      action: () => {},
+      action: () => {}, // En espera
     },
     {
       id: 3,
@@ -42,78 +40,48 @@ const EventCarousel = () => {
     },
   ];
 
-  // Auto-slide con pausa en hover
   useEffect(() => {
     if (isHovered) return;
     const interval = setInterval(() => {
-      setDirection(1);
-      setCurrentIndex((prev) => (prev + 1) % slides.length);
-    }, 7000);
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
+    }, 8000);
     return () => clearInterval(interval);
   }, [slides.length, isHovered]);
 
-  const goToNext = () => {
-    setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % slides.length);
-  };
-
-  const goToPrevious = () => {
-    setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
-  };
-
-  const goToSlide = (index: number) => {
-    setDirection(index > currentIndex ? 1 : -1);
-    setCurrentIndex(index);
-  };
-
-  // Variants de Framer Motion para animaciones suaves
-  const variants = {
-    enter: (dir: number) => ({
-      x: dir > 0 ? 100 : -100,
-      opacity: 0,
-      scale: 0.98,
-    }),
-    center: { x: 0, opacity: 1, scale: 1 },
-    exit: (dir: number) => ({
-      x: dir > 0 ? -100 : 100,
-      opacity: 0,
-      scale: 0.98,
-    }),
-  };
+  const goToNext = () => setCurrentIndex((prev) => (prev + 1) % slides.length);
+  const goToPrevious = () => setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+  const goToSlide = (index: number) => setCurrentIndex(index);
 
   return (
     <div
-      className="relative w-full max-w-7xl mx-auto overflow-hidden"
+      className="relative w-full max-w-7xl mx-auto overflow-hidden rounded-2xl shadow-2xl"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative aspect-[16/9] rounded-3xl shadow-2xl overflow-hidden bg-black/5">
-        <AnimatePresence initial={false} custom={direction} mode="wait">
+      <div className="relative min-w-full h-[80vh] sm:h-[75vh] md:h-[70vh] lg:h-[70vh] xl:h-[75vh]">
+        <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{
-              x: { type: "spring", stiffness: 200, damping: 25 },
-              opacity: { duration: 0.5 },
-              scale: { duration: 0.5 },
-            }}
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
             className="absolute inset-0 cursor-pointer"
             onClick={slides[currentIndex].action}
           >
             <img
               src={slides[currentIndex].image}
               alt={slides[currentIndex].alt}
-              className="w-full h-full object-cover md:object-center transition-transform duration-700 hover:scale-105"
-              loading="lazy"
-              draggable={false}
+              className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
             />
-            {/* Capa degradada para texto o efecto visual */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent"></div>
+
+            {/* Overlay text */}
+            <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-6 sm:p-10 text-white backdrop-blur-[1px]">
+              <h2 className="text-lg sm:text-2xl md:text-3xl font-bold mb-2 drop-shadow-lg">
+                {slides[currentIndex].alt}
+              </h2>
+              <p className="text-sm sm:text-base md:text-lg opacity-90">Toca para más información</p>
+            </div>
           </motion.div>
         </AnimatePresence>
 
@@ -121,38 +89,38 @@ const EventCarousel = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-background/60 hover:bg-background/80 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10 transition-transform hover:scale-110"
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background/90 rounded-full h-8 w-8 sm:h-10 sm:w-10"
           onClick={(e) => {
             e.stopPropagation();
             goToPrevious();
           }}
         >
-          <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
+          <ChevronLeft className="h-4 w-4 sm:h-6 sm:w-6" />
         </Button>
 
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-background/60 hover:bg-background/80 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10 transition-transform hover:scale-110"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background/90 rounded-full h-8 w-8 sm:h-10 sm:w-10"
           onClick={(e) => {
             e.stopPropagation();
             goToNext();
           }}
         >
-          <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
+          <ChevronRight className="h-4 w-4 sm:h-6 sm:w-6" />
         </Button>
       </div>
 
-      {/* Indicadores inferiores */}
-      <div className="flex justify-center gap-2 mt-4">
-        {slides.map((_, i) => (
-          <motion.button
-            key={i}
-            onClick={() => goToSlide(i)}
-            whileHover={{ scale: 1.2 }}
+      {/* Indicadores (puntos) */}
+      <div className="flex justify-center gap-2 mt-4 pb-2">
+        {slides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
             className={`h-2 rounded-full transition-all duration-300 ${
-              i === currentIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30"
+              index === currentIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/60"
             }`}
+            aria-label={`Ir a la diapositiva ${index + 1}`}
           />
         ))}
       </div>
