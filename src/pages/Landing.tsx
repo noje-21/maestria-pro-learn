@@ -54,8 +54,8 @@ const Landing = () => {
             transition-all duration-500 ease-in-out shadow-2xl overflow-hidden
             ${
               window.innerWidth < 640
-                ? "w-[96%] h-[90dvh] mx-auto rounded-xl bg-black"
-                : "w-[90%] sm:w-[85%] md:w-[70%] lg:w-[55%] aspect-[16/9] rounded-2xl bg-white"
+                ? "w-[96%] h-[70dvh] mx-auto rounded-xl bg-black"
+                : "w-[90%] sm:w-[70%] md:w-[70%] lg:w-[55%] aspect-[16/9] rounded-2xl bg-white"
             }
           `}
         >
