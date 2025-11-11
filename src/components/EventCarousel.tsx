@@ -20,6 +20,7 @@ const EventCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const slides: Slide[] = [
     {
@@ -42,7 +43,15 @@ const EventCarousel = () => {
     },
   ];
 
-  // Auto-slide con pausa al pasar el cursor
+  // Detectar si la pantalla es móvil
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Auto cambio de imagen
   useEffect(() => {
     if (isHovered) return;
     const interval = setInterval(() => {
@@ -85,8 +94,9 @@ const EventCarousel = () => {
     <div
       className="relative w-full mx-auto overflow-hidden rounded-2xl shadow-2xl flex items-center justify-center bg-black"
       style={{
-        height: "60vh", // altura adaptable
-        maxHeight: "600px",
+        aspectRatio: isMobile ? undefined : "16/9", // Quitar relación fija en móviles
+        height: isMobile ? "280px" : undefined, // Altura adaptable en móvil
+        maxHeight: isMobile ? "400px" : "600px",
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -107,24 +117,19 @@ const EventCarousel = () => {
           className="absolute inset-0 flex items-center justify-center cursor-pointer"
           onClick={slides[currentIndex].action}
         >
-          {/* Imagen que se fuerza a llenar todo el contenedor */}
           <img
             src={slides[currentIndex].image}
             alt={slides[currentIndex].alt}
-            className="
-              w-full h-full
-              object-fill   /* 💥 Fuerza el ajuste total, aunque se deforme */
-              bg-black
-              transition-transform duration-700
-              hover:scale-[1.01]
-            "
+            className={`w-full h-full transition-transform duration-700 hover:scale-[1.01] ${
+              isMobile ? "object-cover" : "object-contain"
+            }`}
             loading="lazy"
             draggable={false}
           />
         </motion.div>
       </AnimatePresence>
 
-      {/* Botón Izquierdo */}
+      {/* Botones de navegación */}
       <Button
         variant="ghost"
         size="icon"
@@ -137,7 +142,6 @@ const EventCarousel = () => {
         <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
       </Button>
 
-      {/* Botón Derecho */}
       <Button
         variant="ghost"
         size="icon"
