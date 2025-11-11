@@ -42,7 +42,7 @@ const EventCarousel = () => {
     },
   ];
 
-  // Auto-slide con pausa en hover
+  // Auto-slide con pausa al pasar el mouse
   useEffect(() => {
     if (isHovered) return;
     const interval = setInterval(() => {
@@ -67,7 +67,7 @@ const EventCarousel = () => {
     setCurrentIndex(index);
   };
 
-  // Variants para animaciones suaves
+  // Animaciones con Framer Motion
   const variants = {
     enter: (dir: number) => ({
       x: dir > 0 ? 100 : -100,
@@ -84,12 +84,11 @@ const EventCarousel = () => {
 
   return (
     <div
-      className="relative w-full h-full overflow-hidden"
+      className="relative w-full h-full mx-auto overflow-hidden"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Ajuste de proporción responsiva */}
-      <div className="relative w-full h-full aspect-[9/16] sm:aspect-[4/5] md:aspect-[16/9] rounded-2xl overflow-hidden bg-black/5">
+      <div className="relative w-full h-full rounded-2xl shadow-2xl overflow-hidden bg-black/10 flex items-center justify-center">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={currentIndex}
@@ -103,32 +102,16 @@ const EventCarousel = () => {
               opacity: { duration: 0.5 },
               scale: { duration: 0.5 },
             }}
-            className="absolute inset-0 cursor-pointer"
+            className="absolute inset-0 flex items-center justify-center cursor-pointer"
             onClick={slides[currentIndex].action}
           >
             <img
               src={slides[currentIndex].image}
               alt={slides[currentIndex].alt}
-              className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
+              className="w-full h-full object-contain bg-black transition-transform duration-700 hover:scale-[1.02]"
               loading="lazy"
               draggable={false}
             />
-            {/* Capa degradada */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent"></div>
-
-            {/* Texto centrado opcional */}
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-center text-white px-4">
-              <p className="text-sm sm:text-base md:text-lg font-semibold drop-shadow-md">{slides[currentIndex].alt}</p>
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  slides[currentIndex].action();
-                }}
-                className="mt-3 bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-full text-sm sm:text-base"
-              >
-                Más información
-              </Button>
-            </div>
           </motion.div>
         </AnimatePresence>
 
@@ -136,7 +119,7 @@ const EventCarousel = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-background/60 hover:bg-background/80 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10 transition-transform hover:scale-110"
+          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background/90 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10 transition-transform hover:scale-110"
           onClick={(e) => {
             e.stopPropagation();
             goToPrevious();
@@ -148,7 +131,7 @@ const EventCarousel = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-background/60 hover:bg-background/80 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10 transition-transform hover:scale-110"
+          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-background/70 hover:bg-background/90 rounded-full backdrop-blur-md h-8 w-8 md:h-10 md:w-10 transition-transform hover:scale-110"
           onClick={(e) => {
             e.stopPropagation();
             goToNext();
@@ -159,7 +142,7 @@ const EventCarousel = () => {
       </div>
 
       {/* Indicadores inferiores */}
-      <div className="flex justify-center gap-2 mt-4">
+      <div className="flex justify-center gap-2 mt-3">
         {slides.map((_, i) => (
           <motion.button
             key={i}
