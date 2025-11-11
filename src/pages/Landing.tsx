@@ -41,9 +41,29 @@ const Landing = () => {
       </nav>
 
       {/* Event Carousel - Mobile Friendly */}
-      <section className="relative z-10 container mx-auto px-2 sm:px-4 py-6 sm:py-10">
-        <div className="rounded-2xl overflow-hidden shadow-lg bg-background/30 backdrop-blur-sm border border-border">
-          <EventCarousel />
+      <section className="relative z-10 w-full bg-background/30 backdrop-blur-sm border-b border-border overflow-hidden">
+        <div
+          className="
+            container mx-auto px-2 sm:px-4 py-6 sm:py-10 
+            flex justify-center items-center
+          "
+        >
+          <div
+            className="
+              w-full 
+              sm:w-[90%] 
+              md:w-[80%] 
+              lg:w-[70%] 
+              aspect-[16/9] 
+              sm:aspect-[16/10] 
+              md:aspect-[16/8]
+              lg:aspect-[16/7]
+              rounded-2xl overflow-hidden shadow-xl 
+              transition-all duration-500 ease-in-out
+            "
+          >
+            <EventCarousel />
+          </div>
         </div>
       </section>
 
