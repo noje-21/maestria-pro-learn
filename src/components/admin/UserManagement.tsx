@@ -160,6 +160,24 @@ export const UserManagement = () => {
         throw new Error("No hay sesión activa");
       }
 
+      // Pre-chequeo: evitar 409 si ya existe en profiles
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", newUser.email)
+        .maybeSingle();
+
+      if (profileCheckError) throw profileCheckError;
+
+      if (existingProfile) {
+        toast({
+          title: "Correo ya registrado",
+          description: "Este correo ya existe en el sistema. Elimina primero al usuario o usa Recuperar contraseña.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Call edge function to create user
       const { data, error } = await supabase.functions.invoke("create-user", {
         body: {
@@ -195,9 +213,17 @@ export const UserManagement = () => {
       loadUsers();
     } catch (error: any) {
       console.error("Error adding user:", error);
+      const rawMsg = String(error?.message || "");
+      const isEmailExists =
+        rawMsg.includes("El usuario ya existe") ||
+        rawMsg.includes("already been registered") ||
+        rawMsg.includes("User already registered");
+
       toast({
-        title: "Error",
-        description: error.message || "No se pudo crear el usuario",
+        title: isEmailExists ? "Correo ya registrado" : "Error",
+        description: isEmailExists
+          ? "Este correo ya está registrado. Si es un reingreso, elimina primero al usuario desde el panel o usa Recuperar contraseña."
+          : rawMsg || "No se pudo crear el usuario",
         variant: "destructive",
       });
     }
