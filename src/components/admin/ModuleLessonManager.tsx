@@ -223,10 +223,10 @@ export const ModuleLessonManager = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12">
+      <div className="flex items-center justify-center p-12 bg-background/50 rounded-lg border border-border">
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Cargando módulos y lecciones...</p>
+          <p className="text-foreground font-medium">Cargando módulos y lecciones...</p>
         </div>
       </div>
     );
@@ -234,8 +234,8 @@ export const ModuleLessonManager = () => {
 
   if (!modules || modules.length === 0) {
     return (
-      <div className="text-center p-12 space-y-4">
-        <p className="text-muted-foreground">No hay módulos disponibles</p>
+      <div className="text-center p-12 space-y-4 bg-background/50 rounded-lg border border-border">
+        <p className="text-foreground font-medium">No hay módulos disponibles</p>
         <Button
           onClick={() => setIsAddingModule(true)}
           className="btn-gradient-primary gap-2"

@@ -139,8 +139,11 @@ export const ModuleVisibilityManager = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center p-12 bg-background/50 rounded-lg border border-border">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+          <p className="text-foreground font-medium">Cargando módulos...</p>
+        </div>
       </div>
     );
   }
