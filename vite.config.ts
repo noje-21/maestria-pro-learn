@@ -8,11 +8,17 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    // 👇 Esta línea es CLAVE para que Google Translate no rompa el enrutado
+    historyApiFallback: true,
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  // 👇 También lo agregamos en build preview por seguridad
+  preview: {
+    historyApiFallback: true,
   },
 }));
