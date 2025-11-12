@@ -98,6 +98,26 @@ const handler = async (req: Request): Promise<Response> => {
           }
         );
       }
+
+      // User exists in Auth but not in profiles (orphaned) - delete from Auth first
+      console.log(`Cleaning orphaned auth user: ${email}`);
+      const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(existingAuthUser.id);
+      
+      if (deleteAuthError) {
+        console.error("Error cleaning orphaned auth user:", deleteAuthError);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: "No se pudo limpiar el usuario existente en Auth. Intenta nuevamente."
+          }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+      
+      console.log(`Orphaned auth user cleaned successfully: ${email}`);
     }
 
     // Create user in auth
