@@ -17,8 +17,4 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // 👇 También lo agregamos en build preview por seguridad
-  preview: {
-    historyApiFallback: true,
-  },
 }));
