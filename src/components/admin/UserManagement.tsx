@@ -101,33 +101,40 @@ export const UserManagement = () => {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      // Delete from profiles (trigger will handle user_roles cleanup)
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", userId);
-
-      if (profileError) throw profileError;
-
-      // Delete from auth.users (requires admin API)
-      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-
-      if (authError) {
-        console.error("Error deleting auth user:", authError);
-        // Continue anyway as profile is deleted
+      // Call edge function to delete user from both profiles and auth
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session.session) {
+        throw new Error("No hay sesión activa");
       }
 
-      toast({
-        title: "Usuario eliminado",
-        description: "El usuario ha sido eliminado correctamente",
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        body: { userId },
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
+        },
       });
+
+      if (error) throw error;
+
+      if (data?.warning) {
+        toast({
+          title: "Usuario eliminado con advertencia",
+          description: data.warning,
+        });
+      } else {
+        toast({
+          title: "Usuario eliminado",
+          description: "El usuario ha sido eliminado completamente",
+        });
+      }
 
       loadUsers();
     } catch (error: any) {
       console.error("Error deleting user:", error);
       toast({
         title: "Error",
-        description: "No se pudo eliminar el usuario",
+        description: error.message || "No se pudo eliminar el usuario",
         variant: "destructive",
       });
     } finally {
@@ -146,39 +153,31 @@ export const UserManagement = () => {
     }
 
     try {
-      // Create user in auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: newUser.email,
-        password: newUser.password,
-        options: {
-          data: {
-            full_name: newUser.fullName,
-          },
+      // Get current session
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session.session) {
+        throw new Error("No hay sesión activa");
+      }
+
+      // Call edge function to create user
+      const { data, error } = await supabase.functions.invoke("create-user", {
+        body: {
+          email: newUser.email,
+          password: newUser.password,
+          fullName: newUser.fullName,
+          country: "",
+          role: newUser.role,
+        },
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
         },
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("No se pudo crear el usuario");
+      if (error) throw error;
 
-      // Wait a moment for trigger to create profile
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Update profile status to approved
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ status: "approved" })
-        .eq("id", authData.user.id);
-
-      if (profileError) throw profileError;
-
-      // Add role if not student (student is default from trigger)
-      if (newUser.role !== "student") {
-        const { error: roleError } = await supabase.from("user_roles").upsert({
-          user_id: authData.user.id,
-          role: newUser.role as any,
-        });
-
-        if (roleError) throw roleError;
+      if (!data?.success) {
+        throw new Error(data?.error || "No se pudo crear el usuario");
       }
 
       toast({

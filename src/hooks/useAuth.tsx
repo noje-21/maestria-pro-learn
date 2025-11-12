@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName: string, country?: string) => {
     const redirectUrl = `${window.location.origin}/dashboard`;
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -72,14 +72,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       },
     });
+    
     if (error) {
-      toast({
-        title: "Error de registro",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Si el usuario ya existe, mostrar mensaje más claro
+      if (error.message.includes("already registered") || error.message.includes("User already registered")) {
+        toast({
+          title: "Correo ya registrado",
+          description: "Este correo ya está registrado. Intenta iniciar sesión o recuperar tu contraseña.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error de registro",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
       throw error;
     }
+
+    // Check if user was created (not just returned existing)
+    if (data.user && !data.user.identities?.length) {
+      toast({
+        title: "Correo ya registrado",
+        description: "Este correo ya está registrado. Intenta iniciar sesión.",
+        variant: "destructive",
+      });
+      throw new Error("User already exists");
+    }
+
     toast({
       title: "Registro exitoso",
       description: "Bienvenido a MLCP",
