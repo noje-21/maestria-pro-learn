@@ -82,7 +82,7 @@ const Landing = () => {
             hipertensión pulmonar de la región.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center pt-4">
+          <div className="hidden flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center pt-4">
             <Button
               size="lg"
               className="btn-gradient-primary px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg"
