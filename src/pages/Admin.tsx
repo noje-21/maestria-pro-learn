@@ -15,6 +15,7 @@ import { ModuleVisibilityManager } from "@/components/admin/ModuleVisibilityMana
 import { LessonImageManager } from "@/components/admin/LessonImageManager";
 import { ExamQuestionsManager } from "@/components/admin/ExamQuestionsManager";
 import { ModuleLessonManager } from "@/components/admin/ModuleLessonManager";
+import { UserManagement } from "@/components/admin/UserManagement";
 
 interface Profile {
   id: string;
@@ -221,9 +222,12 @@ const Admin = () => {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="pending" className="w-full">
+        <Tabs defaultValue="users" className="w-full">
           <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-4">
-            <TabsList className="inline-flex w-full min-w-max sm:grid sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-11 gap-1">
+            <TabsList className="inline-flex w-full min-w-max sm:grid sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-12 gap-1">
+              <TabsTrigger value="users" className="text-xs sm:text-sm whitespace-nowrap">
+                Usuarios
+              </TabsTrigger>
               <TabsTrigger value="pending" className="text-xs sm:text-sm whitespace-nowrap">
                 Pendientes
               </TabsTrigger>
@@ -259,6 +263,10 @@ const Admin = () => {
               </TabsTrigger>
             </TabsList>
           </div>
+
+          <TabsContent value="users">
+            <UserManagement />
+          </TabsContent>
 
           <TabsContent value="pending" className="space-y-3 sm:space-y-4">
             {pendingProfiles.length === 0 ? (
