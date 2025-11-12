@@ -384,10 +384,8 @@ const Auth = () => {
             </Button>
           </form>
 
-          {/*<div className="text-center text-sm">
-            <span className="text-muted-foreground">
-              {isLogin ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}
-            </span>{" "}
+          <div className="text-center text-sm">
+            <span className="text-muted-foreground">{isLogin ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}</span>{" "}
             <Button
               type="button"
               variant="link"
@@ -396,7 +394,7 @@ const Auth = () => {
             >
               {isLogin ? "Regístrate" : "Inicia sesión"}
             </Button>
-          </div>*/}
+          </div>
         </div>
       </div>
     </div>
