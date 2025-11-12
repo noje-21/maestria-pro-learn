@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import maestria2025 from "@/assets/maestria-2025-new.jpg";
 import campusVirtual from "@/assets/campus-virtual.jpg";
@@ -49,12 +50,12 @@ const EventCarousel = () => {
   ];
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
-    { 
+    {
       loop: true,
       duration: 30,
       dragFree: false,
     },
-    [Autoplay({ delay: 7000, stopOnInteraction: false })]
+    [Autoplay({ delay: 7000, stopOnInteraction: false })],
   );
 
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -68,12 +69,10 @@ const EventCarousel = () => {
     if (!emblaApi) return;
     onSelect();
     emblaApi.on("select", onSelect);
-    return () => {
-      emblaApi.off("select", onSelect);
-    };
+    return () => emblaApi.off("select", onSelect);
   }, [emblaApi, onSelect]);
 
-  // Detect mobile
+  // Detectar si es móvil
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     handleResize();
@@ -81,10 +80,10 @@ const EventCarousel = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const scrollTo = useCallback(
-    (index: number) => emblaApi && emblaApi.scrollTo(index),
-    [emblaApi]
-  );
+  const scrollTo = useCallback((index: number) => emblaApi && emblaApi.scrollTo(index), [emblaApi]);
+
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
   return (
     <div
@@ -117,6 +116,24 @@ const EventCarousel = () => {
         </div>
       </div>
 
+      {/* Botón Izquierdo */}
+      <button
+        onClick={scrollPrev}
+        className="absolute top-1/2 left-4 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition"
+        aria-label="Anterior"
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </button>
+
+      {/* Botón Derecho */}
+      <button
+        onClick={scrollNext}
+        className="absolute top-1/2 right-4 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition"
+        aria-label="Siguiente"
+      >
+        <ChevronRight className="w-6 h-6" />
+      </button>
+
       {/* Indicadores */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
         {slides.map((_, index) => (
@@ -126,7 +143,7 @@ const EventCarousel = () => {
             className={`h-2 rounded-full transition-all duration-300 ${
               index === selectedIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/50"
             }`}
-            aria-label={`Go to slide ${index + 1}`}
+            aria-label={`Ir al slide ${index + 1}`}
           />
         ))}
       </div>
