@@ -201,7 +201,9 @@ const Landing = () => {
       {/* CTA Section */}
       <section className="relative z-10 container mx-auto px-4 py-16">
         <div className="glass-card p-8 sm:p-12 max-w-4xl mx-auto text-center space-y-6">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">¿Listo para transformar tu práctica clínica?</h2>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+            Transforma tu práctica médica y amplía tu visión clínica
+          </h2>
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
             Únete al programa que está formando a los especialistas en circulación pulmonar del futuro.
           </p>
