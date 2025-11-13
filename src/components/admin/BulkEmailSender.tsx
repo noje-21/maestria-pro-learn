@@ -2,13 +2,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Send, TestTube } from "lucide-react";
+import { Mail, Send, TestTube, Eye, Save } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 type Recipient = {
   id: string;
@@ -27,7 +29,36 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
   const [connectionLink, setConnectionLink] = useState("");
   const [selectedRecipients, setSelectedRecipients] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const { toast } = useToast();
+
+  // Configuración del editor Quill
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ color: [] }, { background: [] }],
+      [{ list: "ordered" }, { list: "bullet" }],
+      [{ align: [] }],
+      ["link", "image"],
+      ["clean"],
+    ],
+  };
+
+  const formats = [
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "color",
+    "background",
+    "list",
+    "bullet",
+    "align",
+    "link",
+    "image",
+  ];
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -155,16 +186,19 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="message">Mensaje *</Label>
-            <Textarea
-              id="message"
-              placeholder="Escribe tu mensaje aquí..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={6}
-              className="resize-none"
-            />
-            <p className="text-xs text-muted-foreground">
-              Puedes usar saltos de línea para dar formato al mensaje
+            <div className="border border-border rounded-lg overflow-hidden bg-background shadow-sm">
+              <ReactQuill
+                theme="snow"
+                value={message}
+                onChange={setMessage}
+                modules={modules}
+                formats={formats}
+                placeholder="Escribe tu mensaje aquí... Usa la barra de herramientas para dar formato"
+                className="min-h-[250px]"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground flex items-center gap-2">
+              <span>💡 Usa la barra de herramientas para formato enriquecido: negritas, colores, listas, enlaces e imágenes</span>
             </p>
           </div>
 
@@ -223,16 +257,62 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
             </div>
           </ScrollArea>
 
-          <p className="text-sm text-muted-foreground">
-            {selectedRecipients.size} participante(s) seleccionado(s)
-          </p>
+          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50">
+            <p className="text-sm font-medium">
+              <span className="text-xl font-bold text-primary">{selectedRecipients.size}</span> participante(s) seleccionado(s)
+            </p>
+            <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" disabled={!message.trim()}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Vista previa
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Vista previa del correo</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="border-b pb-3">
+                    <p className="text-sm text-muted-foreground">De:</p>
+                    <p className="font-medium">Maestría Latinoamericana en Circulación Pulmonar</p>
+                    <p className="text-sm text-muted-foreground mt-2">Asunto:</p>
+                    <p className="font-semibold text-lg">{subject || "(Sin asunto)"}</p>
+                  </div>
+                  <div className="border rounded-lg p-6 bg-background">
+                    <div 
+                      className="prose prose-sm max-w-none dark:prose-invert"
+                      dangerouslySetInnerHTML={{ __html: message }}
+                    />
+                    {connectionLink && (
+                      <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
+                        <p className="font-semibold mb-2">Enlace de conexión:</p>
+                        <a 
+                          href={connectionLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary underline break-all hover:text-primary/80"
+                        >
+                          {connectionLink}
+                        </a>
+                      </div>
+                    )}
+                    <div className="mt-6 pt-4 border-t text-sm text-muted-foreground">
+                      <p>Saludos cordiales,</p>
+                      <p className="font-semibold">Equipo de la Maestría Latinoamericana en Circulación Pulmonar</p>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 pt-2">
           <Button
             onClick={() => handleSendEmails(true)}
             variant="outline"
-            disabled={loading}
+            disabled={loading || !subject.trim() || !message.trim()}
             className="flex-1"
           >
             <TestTube className="h-4 w-4 mr-2" />
@@ -240,8 +320,8 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
           </Button>
           <Button
             onClick={() => handleSendEmails(false)}
-            disabled={loading || selectedRecipients.size === 0}
-            className="flex-1 btn-gradient-primary"
+            disabled={loading || selectedRecipients.size === 0 || !subject.trim() || !message.trim()}
+            className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg"
           >
             <Send className="h-4 w-4 mr-2" />
             {loading ? "Enviando..." : `Enviar a ${selectedRecipients.size} participante(s)`}

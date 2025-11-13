@@ -49,13 +49,13 @@ const handler = async (req: Request): Promise<Response> => {
       try {
         console.log(`📤 Intentando enviar a: ${recipient.correo}`);
 
-        // HTML base del correo
+        // HTML base del correo - El mensaje ya viene en HTML del editor
         let htmlContent = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #213ECC;">Maestría Latinoamericana en Circulación Pulmonar</h2>
-            <p>Hola ${recipient.nombre},</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #213ECC; margin-bottom: 20px;">Maestría Latinoamericana en Circulación Pulmonar</h2>
+            <p style="font-size: 16px; margin-bottom: 10px;">Hola ${recipient.nombre},</p>
             <div style="margin: 20px 0; line-height: 1.6;">
-              ${message.replace(/\n/g, "<br>")}
+              ${message}
             </div>
         `;
 
