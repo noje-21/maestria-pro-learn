@@ -82,7 +82,30 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error al invocar función:", error);
+        throw error;
+      }
+
+      // Revisar si hubo errores de Resend en la respuesta
+      if (data?.errors && data.errors.length > 0) {
+        const errorMessages = data.errors.map((e: any) => `${e.email}: ${e.error}`).join("\n");
+        toast({
+          title: "Algunos correos fallaron",
+          description: data.message + "\n\nDetalles:\n" + errorMessages,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!data?.success) {
+        toast({
+          title: "Error al enviar correos",
+          description: data?.error || data?.message || "Ocurrió un error desconocido",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: isTest ? "Correo de prueba enviado" : "Correos enviados",
