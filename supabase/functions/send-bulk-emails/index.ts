@@ -1,12 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface BulkEmailRequest {
@@ -33,18 +32,15 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("❌ RESEND_API_KEY no está configurada");
       throw new Error("RESEND_API_KEY no está configurada en los secrets");
     }
-    
+
     console.log("✅ RESEND_API_KEY encontrada:", apiKey.substring(0, 10) + "...");
 
-    const { subject, message, connectionLink, recipients, testMode, testEmail }: BulkEmailRequest =
-      await req.json();
+    const { subject, message, connectionLink, recipients, testMode, testEmail }: BulkEmailRequest = await req.json();
 
     console.log(`📨 Bulk email request - Recipients: ${recipients.length}, Test mode: ${testMode}`);
 
     // Si es modo prueba
-    const emailsToSend = testMode && testEmail
-      ? [{ nombre: "Test User", correo: testEmail }]
-      : recipients;
+    const emailsToSend = testMode && testEmail ? [{ nombre: "Test User", correo: testEmail }] : recipients;
 
     const results = [];
     const errors = [];
@@ -52,7 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
     for (const recipient of emailsToSend) {
       try {
         console.log(`📤 Intentando enviar a: ${recipient.correo}`);
-        
+
         // HTML base del correo
         let htmlContent = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -90,18 +86,18 @@ const handler = async (req: Request): Promise<Response> => {
         });
 
         console.log(`✅ Email sent to ${recipient.correo}:`, JSON.stringify(emailResponse));
-        
+
         // Verificar si hay error en la respuesta
         if (emailResponse.error) {
           console.error(`❌ Error de Resend para ${recipient.correo}:`, emailResponse.error);
           errors.push({
             email: recipient.correo,
-            error: emailResponse.error.message || "Error desconocido de Resend"
+            error: emailResponse.error.message || "Error desconocido de Resend",
           });
-          results.push({ 
-            email: recipient.correo, 
-            success: false, 
-            error: emailResponse.error.message 
+          results.push({
+            email: recipient.correo,
+            success: false,
+            error: emailResponse.error.message,
           });
         } else {
           results.push({ email: recipient.correo, success: true, id: emailResponse.data?.id });
@@ -110,7 +106,7 @@ const handler = async (req: Request): Promise<Response> => {
         console.error(`❌ Error enviando a ${recipient.correo}:`, error);
         errors.push({
           email: recipient.correo,
-          error: error.message || "Error desconocido"
+          error: error.message || "Error desconocido",
         });
         results.push({ email: recipient.correo, success: false, error: error.message });
       }
@@ -129,9 +125,9 @@ const handler = async (req: Request): Promise<Response> => {
           results,
           errors,
         }),
-        { 
-          status: failureCount === results.length ? 400 : 200, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        {
+          status: failureCount === results.length ? 400 : 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         },
       );
     }
@@ -147,10 +143,10 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("🔥 Error en función de envío masivo:", error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
+      JSON.stringify({
+        success: false,
         error: error.message,
-        details: "Revisa los logs de la función para más información"
+        details: "Revisa los logs de la función para más información",
       }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } },
     );
