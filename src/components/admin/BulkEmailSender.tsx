@@ -39,32 +39,154 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
   const quillRef = useRef<ReactQuill>(null);
   const { toast } = useToast();
 
-  // Configuración del editor Quill
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ["bold", "italic", "underline", "strike"],
-      [{ color: [] }, { background: [] }],
-      [{ list: "ordered" }, { list: "bullet" }],
-      [{ align: [] }],
-      ["link", "image"],
-      ["clean"],
-    ],
+  // Validar correos manuales
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
   };
 
+  const parseManualRecipients = useCallback(() => {
+    if (!manualRecipients.trim()) return [];
+    
+    const emails = manualRecipients
+      .split(/[,;\s]+/)
+      .map(email => email.trim())
+      .filter(email => email.length > 0);
+    
+    const validEmails: Array<{ nombre: string; correo: string }> = [];
+    const invalidEmails: string[] = [];
+    
+    emails.forEach(email => {
+      if (validateEmail(email)) {
+        validEmails.push({ nombre: email.split('@')[0], correo: email });
+      } else {
+        invalidEmails.push(email);
+      }
+    });
+    
+    if (invalidEmails.length > 0) {
+      toast({
+        title: "Correos inválidos detectados",
+        description: `Los siguientes correos no son válidos: ${invalidEmails.join(', ')}`,
+        variant: "destructive",
+      });
+      return null;
+    }
+    
+    return validEmails;
+  }, [manualRecipients, toast]);
+
+  // Contador total de destinatarios
+  const totalRecipients = useMemo(() => {
+    const dbRecipients = selectedRecipients.size;
+    const manualEmails = manualRecipients.split(/[,;\s]+/).filter(e => e.trim().length > 0).length;
+    return dbRecipients + manualEmails;
+  }, [selectedRecipients, manualRecipients]);
+
+  // Manejador de subida de imágenes
+  const handleImageUpload = useCallback(async () => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/jpeg,image/png,image/gif,image/webp');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Imagen demasiado grande",
+          description: "El tamaño máximo es 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setUploadingImage(true);
+
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { data, error } = await supabase.storage
+          .from('email-assets')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (error) throw error;
+
+        const { data: urlData } = supabase.storage
+          .from('email-assets')
+          .getPublicUrl(data.path);
+
+        const quill = quillRef.current?.getEditor();
+        if (quill) {
+          const range = quill.getSelection(true);
+          quill.insertEmbed(range.index, 'image', urlData.publicUrl);
+          quill.setSelection(range.index + 1, 0);
+        }
+
+        toast({
+          title: "Imagen subida",
+          description: "La imagen se agregó al correo correctamente",
+        });
+      } catch (error: any) {
+        console.error('Error uploading image:', error);
+        toast({
+          title: "Error al subir imagen",
+          description: error.message || "No se pudo subir la imagen",
+          variant: "destructive",
+        });
+      } finally {
+        setUploadingImage(false);
+      }
+    };
+  }, [toast]);
+
+  // Manejador de emojis
+  const handleEmojiSelect = useCallback((emoji: any) => {
+    const quill = quillRef.current?.getEditor();
+    if (quill) {
+      const range = quill.getSelection(true);
+      quill.insertText(range.index, emoji.native);
+      quill.setSelection(range.index + emoji.native.length, 0);
+    }
+    setEmojiPickerOpen(false);
+  }, []);
+
+  // Configuración del editor Quill mejorada (estilo Gmail)
+  const modules = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, false] }],
+        [{ 'font': [] }],
+        [{ 'size': ['small', false, 'large', 'huge'] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'script': 'sub'}, { 'script': 'super' }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'indent': '-1'}, { 'indent': '+1' }],
+        [{ 'align': [] }],
+        ['link'],
+        ['blockquote', 'code-block'],
+        ['clean']
+      ],
+    },
+  }), []);
+
   const formats = [
-    "header",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "color",
-    "background",
-    "list",
-    "bullet",
-    "align",
-    "link",
-    "image",
+    'header', 'font', 'size',
+    'bold', 'italic', 'underline', 'strike',
+    'color', 'background',
+    'script',
+    'list', 'bullet', 'indent',
+    'align',
+    'link', 'image',
+    'blockquote', 'code-block'
   ];
 
   const handleSelectAll = (checked: boolean) => {
@@ -85,6 +207,14 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
     setSelectedRecipients(newSelected);
   };
 
+  // Guardar borrador (funcionalidad futura - requiere regeneración de tipos)
+  const handleSaveDraft = async () => {
+    toast({
+      title: "Función próximamente",
+      description: "La funcionalidad de guardar borradores estará disponible pronto",
+    });
+  };
+
   const handleSendEmails = async (isTest: boolean = false) => {
     if (!subject.trim() || !message.trim()) {
       toast({
@@ -95,10 +225,18 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
       return;
     }
 
-    if (!isTest && selectedRecipients.size === 0) {
+    // Parsear destinatarios manuales
+    const manualEmailsList = parseManualRecipients();
+    if (manualEmailsList === null) return; // Error en validación
+
+    // Combinar destinatarios de BD con manuales
+    const dbRecipients = registros.filter((r) => selectedRecipients.has(r.id));
+    const allRecipients = [...dbRecipients, ...manualEmailsList];
+
+    if (!isTest && allRecipients.length === 0) {
       toast({
         title: "Error",
-        description: "Debes seleccionar al menos un destinatario",
+        description: "Debes seleccionar al menos un destinatario o agregar correos manualmente",
         variant: "destructive",
       });
       return;
@@ -108,8 +246,8 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
 
     try {
       const recipients = isTest
-        ? [{ nombre: "Administrador", correo: "admin@test.com" }] // Replace with actual admin email
-        : registros.filter((r) => selectedRecipients.has(r.id));
+        ? [{ nombre: "Administrador", correo: "noje665@gmail.com" }]
+        : allRecipients;
 
       const { data, error } = await supabase.functions.invoke("send-bulk-emails", {
         body: {
@@ -125,7 +263,6 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
         throw error;
       }
 
-      // Revisar si hubo errores de Resend en la respuesta
       if (data?.errors && data.errors.length > 0) {
         const errorMessages = data.errors.map((e: any) => `${e.email}: ${e.error}`).join("\n");
         toast({
@@ -151,10 +288,10 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
       });
 
       if (!isTest) {
-        // Reset form after successful send
         setSubject("");
         setMessage("");
         setConnectionLink("");
+        setManualRecipients("");
         setSelectedRecipients(new Set());
       }
     } catch (error: any) {
@@ -176,54 +313,111 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
           Enviar correos a participantes
         </CardTitle>
         <CardDescription>
-          Envía correos personalizados a los participantes registrados en el simposio
+          Redacta y envía correos personalizados con formato enriquecido
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 p-6">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="subject">Asunto del correo *</Label>
-            <Input
-              id="subject"
-              placeholder="Ej: Información importante sobre el Simposio"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="message">Mensaje *</Label>
-            <div className="border border-border rounded-lg overflow-hidden bg-background shadow-sm">
-              <ReactQuill
-                theme="snow"
-                value={message}
-                onChange={setMessage}
-                modules={modules}
-                formats={formats}
-                placeholder="Escribe tu mensaje aquí... Usa la barra de herramientas para dar formato"
-                className="min-h-[250px]"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground flex items-center gap-2">
-              <span>💡 Usa la barra de herramientas para formato enriquecido: negritas, colores, listas, enlaces e imágenes</span>
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="link">Enlace de conexión (opcional)</Label>
-            <Input
-              id="link"
-              type="url"
-              placeholder="https://zoom.us/j/123456789 o https://meet.google.com/abc-defg-hij"
-              value={connectionLink}
-              onChange={(e) => setConnectionLink(e.target.value)}
-            />
-          </div>
+        {/* Asunto */}
+        <div className="space-y-2">
+          <Label htmlFor="subject" className="text-base font-semibold">Asunto del correo *</Label>
+          <Input
+            id="subject"
+            placeholder="Ej: Información importante sobre el Simposio"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className="border-2 focus:border-primary transition-colors"
+          />
         </div>
 
+        {/* Editor de mensaje con barra personalizada */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-base font-semibold">Mensaje *</Label>
+            <div className="flex gap-2">
+              <Popover open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-2"
+                  >
+                    <Smile className="h-4 w-4" />
+                    Emojis
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Picker
+                    data={data}
+                    onEmojiSelect={handleEmojiSelect}
+                    theme="light"
+                    locale="es"
+                  />
+                </PopoverContent>
+              </Popover>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleImageUpload}
+                disabled={uploadingImage}
+                className="h-8 gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                {uploadingImage ? "Subiendo..." : "Imagen"}
+              </Button>
+            </div>
+          </div>
+          <div className="border-2 border-border rounded-lg overflow-hidden bg-background shadow-sm hover:border-primary/50 transition-colors">
+            <ReactQuill
+              ref={quillRef}
+              theme="snow"
+              value={message}
+              onChange={setMessage}
+              modules={modules}
+              formats={formats}
+              placeholder="Escribe tu mensaje aquí... Usa la barra de herramientas para dar formato"
+              className="min-h-[300px] gmail-editor"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground flex items-center gap-2">
+            💡 Editor completo: formato enriquecido, imágenes, enlaces, listas y emojis
+          </p>
+        </div>
+
+        {/* Enlace de conexión */}
+        <div className="space-y-2">
+          <Label htmlFor="link" className="text-base font-semibold">Enlace de conexión (opcional)</Label>
+          <Input
+            id="link"
+            type="url"
+            placeholder="https://zoom.us/j/123456789 o https://meet.google.com/abc-defg-hij"
+            value={connectionLink}
+            onChange={(e) => setConnectionLink(e.target.value)}
+            className="border-2 focus:border-primary transition-colors"
+          />
+        </div>
+
+        {/* Destinatarios manuales */}
+        <div className="space-y-2">
+          <Label htmlFor="manual" className="text-base font-semibold">Destinatarios adicionales (opcional)</Label>
+          <Input
+            id="manual"
+            type="text"
+            placeholder="correo1@ejemplo.com, correo2@ejemplo.com"
+            value={manualRecipients}
+            onChange={(e) => setManualRecipients(e.target.value)}
+            className="border-2 focus:border-primary transition-colors"
+          />
+          <p className="text-xs text-muted-foreground">
+            Separa múltiples correos con comas, espacios o punto y coma
+          </p>
+        </div>
+
+        {/* Destinatarios de la base de datos */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-base font-semibold">Destinatarios</Label>
+            <Label className="text-base font-semibold">Destinatarios registrados</Label>
             <div className="flex items-center gap-2">
               <Checkbox
                 id="selectAll"
@@ -236,12 +430,12 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
             </div>
           </div>
 
-          <ScrollArea className="h-[300px] rounded-xl border border-border/50 p-4">
+          <ScrollArea className="h-[280px] rounded-xl border-2 border-border/50 p-4 bg-muted/10">
             <div className="space-y-2">
               {registros.map((registro) => (
                 <div
                   key={registro.id}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-primary/20"
                 >
                   <Checkbox
                     id={registro.id}
@@ -254,7 +448,7 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
                     htmlFor={registro.id}
                     className="flex-1 cursor-pointer font-normal"
                   >
-                    <div className="font-medium">{registro.nombre}</div>
+                    <div className="font-medium text-foreground">{registro.nombre}</div>
                     <div className="text-sm text-muted-foreground">
                       {registro.correo} • {registro.modalidad}
                     </div>
@@ -264,74 +458,90 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
             </div>
           </ScrollArea>
 
-          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50">
+          {/* Contador total */}
+          <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg border-2 border-primary/20">
             <p className="text-sm font-medium">
-              <span className="text-xl font-bold text-primary">{selectedRecipients.size}</span> participante(s) seleccionado(s)
+              <span className="text-2xl font-bold text-primary">{totalRecipients}</span> destinatario(s) en total
             </p>
-            <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" disabled={!message.trim()}>
-                  <Eye className="h-4 w-4 mr-2" />
-                  Vista previa
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Vista previa del correo</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="border-b pb-3">
-                    <p className="text-sm text-muted-foreground">De:</p>
-                    <p className="font-medium">Maestría Latinoamericana en Circulación Pulmonar</p>
-                    <p className="text-sm text-muted-foreground mt-2">Asunto:</p>
-                    <p className="font-semibold text-lg">{subject || "(Sin asunto)"}</p>
-                  </div>
-                  <div className="border rounded-lg p-6 bg-background">
-                    <div 
-                      className="prose prose-sm max-w-none dark:prose-invert"
-                      dangerouslySetInnerHTML={{ __html: message }}
-                    />
-                    {connectionLink && (
-                      <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
-                        <p className="font-semibold mb-2">Enlace de conexión:</p>
-                        <a 
-                          href={connectionLink} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-primary underline break-all hover:text-primary/80"
-                        >
-                          {connectionLink}
-                        </a>
+            <div className="flex gap-2">
+              <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={!message.trim()}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Vista previa
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Vista previa del correo</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="border-b pb-4 bg-muted/30 p-4 rounded-t-lg">
+                      <p className="text-xs text-muted-foreground mb-1">De:</p>
+                      <p className="font-medium text-sm">Maestría Latinoamericana en Circulación Pulmonar</p>
+                      <p className="text-xs text-muted-foreground mt-3 mb-1">Para:</p>
+                      <p className="text-sm text-muted-foreground">{totalRecipients} destinatario(s)</p>
+                      <p className="text-xs text-muted-foreground mt-3 mb-1">Asunto:</p>
+                      <p className="font-semibold text-lg text-foreground">{subject || "(Sin asunto)"}</p>
+                    </div>
+                    <div className="border rounded-lg p-8 bg-white dark:bg-gray-900">
+                      <div className="max-w-2xl mx-auto">
+                        <div 
+                          className="prose prose-sm max-w-none dark:prose-invert"
+                          dangerouslySetInnerHTML={{ __html: message }}
+                        />
+                        {connectionLink && (
+                          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <p className="font-semibold mb-2 text-sm text-blue-900 dark:text-blue-100">📎 Enlace de conexión:</p>
+                            <a 
+                              href={connectionLink} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 dark:text-blue-400 underline break-all hover:text-blue-800 dark:hover:text-blue-300 text-sm"
+                            >
+                              {connectionLink}
+                            </a>
+                          </div>
+                        )}
+                        <div className="mt-8 pt-6 border-t text-sm text-gray-600 dark:text-gray-400">
+                          <p>Saludos cordiales,</p>
+                          <p className="font-semibold mt-1">Equipo de la Maestría Latinoamericana en Circulación Pulmonar</p>
+                        </div>
                       </div>
-                    )}
-                    <div className="mt-6 pt-4 border-t text-sm text-muted-foreground">
-                      <p>Saludos cordiales,</p>
-                      <p className="font-semibold">Equipo de la Maestría Latinoamericana en Circulación Pulmonar</p>
                     </div>
                   </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+              <Button
+                onClick={handleSaveDraft}
+                variant="outline"
+                size="sm"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Guardar borrador
+              </Button>
+            </div>
           </div>
         </div>
 
+        {/* Botones de acción */}
         <div className="flex gap-3 pt-2">
           <Button
             onClick={() => handleSendEmails(true)}
             variant="outline"
             disabled={loading || !subject.trim() || !message.trim()}
-            className="flex-1"
+            className="flex-1 border-2 hover:border-primary/50"
           >
             <TestTube className="h-4 w-4 mr-2" />
             Enviar prueba
           </Button>
           <Button
             onClick={() => handleSendEmails(false)}
-            disabled={loading || selectedRecipients.size === 0 || !subject.trim() || !message.trim()}
-            className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg"
+            disabled={loading || totalRecipients === 0 || !subject.trim() || !message.trim()}
+            className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all"
           >
             <Send className="h-4 w-4 mr-2" />
-            {loading ? "Enviando..." : `Enviar a ${selectedRecipients.size} participante(s)`}
+            {loading ? "Enviando..." : `Enviar a ${totalRecipients} destinatario(s)`}
           </Button>
         </div>
       </CardContent>
