@@ -1,12 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "npm:resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 interface BulkEmailRequest {
@@ -30,9 +30,9 @@ const handler = async (req: Request): Promise<Response> => {
     const { subject, message, connectionLink, recipients, testMode, testEmail }: BulkEmailRequest =
       await req.json();
 
-    console.log(`Bulk email request - Recipients: ${recipients.length}, Test mode: ${testMode}`);
+    console.log(`📨 Bulk email request - Recipients: ${recipients.length}`);
 
-    // If test mode, send only to test email
+    // Si es modo prueba
     const emailsToSend = testMode && testEmail
       ? [{ nombre: "Test User", correo: testEmail }]
       : recipients;
@@ -41,6 +41,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     for (const recipient of emailsToSend) {
       try {
+        // HTML base del correo
         let htmlContent = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #213ECC;">Maestría Latinoamericana en Circulación Pulmonar</h2>
@@ -62,22 +63,24 @@ const handler = async (req: Request): Promise<Response> => {
         htmlContent += `
             <p style="color: #666; font-size: 14px; margin-top: 30px;">
               Saludos cordiales,<br>
-              Equipo de la Maestría Latinoamericana en Circulación Pulmonar
+              <b>Equipo de la Maestría Latinoamericana en Circulación Pulmonar</b>
             </p>
           </div>
         `;
 
+        // Enviar con Resend
         const emailResponse = await resend.emails.send({
-          from: "Maestría Latinoamericana <onboarding@resend.dev>",
+          from: "Maestría Latinoamericana <no-reply@maestriacp.com>", // dominio verificado
+          reply_to: "Magisterenhipertensionpulmonar@gmail.com", // respuestas van a Gmail
           to: [recipient.correo],
-          subject: subject,
+          subject,
           html: htmlContent,
         });
 
-        console.log(`Email sent to ${recipient.correo}:`, emailResponse);
+        console.log(`✅ Enviado a ${recipient.correo}`, emailResponse);
         results.push({ email: recipient.correo, success: true });
       } catch (error: any) {
-        console.error(`Error sending email to ${recipient.correo}:`, error);
+        console.error(`❌ Error enviando a ${recipient.correo}:`, error);
         results.push({ email: recipient.correo, success: false, error: error.message });
       }
     }
@@ -90,19 +93,13 @@ const handler = async (req: Request): Promise<Response> => {
         message: `Correos enviados exitosamente: ${successCount}/${results.length}`,
         results,
       }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
     );
   } catch (error: any) {
-    console.error("Error in bulk email function:", error);
+    console.error("🔥 Error en función de envío masivo:", error);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } },
     );
   }
 };
