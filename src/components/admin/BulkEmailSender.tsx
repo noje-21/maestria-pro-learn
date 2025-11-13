@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,11 +6,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Send, TestTube, Eye, Save } from "lucide-react";
+import { Mail, Send, TestTube, Eye, Save, Smile, Upload } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
 
 type Recipient = {
   id: string;
@@ -27,9 +30,13 @@ const BulkEmailSender = ({ registros }: BulkEmailSenderProps) => {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [connectionLink, setConnectionLink] = useState("");
+  const [manualRecipients, setManualRecipients] = useState("");
   const [selectedRecipients, setSelectedRecipients] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const quillRef = useRef<ReactQuill>(null);
   const { toast } = useToast();
 
   // Configuración del editor Quill

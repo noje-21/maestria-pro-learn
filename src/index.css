@@ -213,23 +213,73 @@
   }
 }
 
-/* Estilos personalizados para React Quill */
-.ql-container {
-  font-family: inherit !important;
-  font-size: 14px !important;
+/* Estilos personalizados para React Quill - Editor tipo Gmail */
+.gmail-editor .ql-editor {
+  min-height: 300px;
+  font-size: 15px;
+  line-height: 1.7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  padding: 20px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
-.ql-editor {
-  min-height: 200px !important;
-  max-height: 400px !important;
-  overflow-y: auto !important;
-}
-
-.ql-toolbar {
-  background: hsl(var(--muted)) !important;
-  border-color: hsl(var(--border)) !important;
+.gmail-editor .ql-toolbar {
   border-top-left-radius: 0.5rem;
   border-top-right-radius: 0.5rem;
+  background: hsl(var(--muted) / 0.2);
+  border: 1px solid hsl(var(--border));
+  border-bottom: 2px solid hsl(var(--border));
+  padding: 12px 8px;
+}
+
+.gmail-editor .ql-container {
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+  border-top: none;
+  font-family: inherit;
+  background: hsl(var(--background));
+}
+
+.gmail-editor .ql-editor.ql-blank::before {
+  color: hsl(var(--muted-foreground));
+  font-style: normal;
+  opacity: 0.6;
+}
+
+.gmail-editor .ql-toolbar button {
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.gmail-editor .ql-toolbar button:hover {
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+}
+
+.gmail-editor .ql-toolbar button.ql-active {
+  background: hsl(var(--primary) / 0.15);
+  color: hsl(var(--primary));
+}
+
+.gmail-editor .ql-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.gmail-editor .ql-editor a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+.gmail-editor .ql-editor blockquote {
+  border-left: 4px solid hsl(var(--primary));
+  padding-left: 16px;
+  margin-left: 0;
+  color: hsl(var(--muted-foreground));
 }
 
 .ql-container {
