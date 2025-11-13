@@ -212,3 +212,90 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilos personalizados para React Quill */
+.ql-container {
+  font-family: inherit !important;
+  font-size: 14px !important;
+}
+
+.ql-editor {
+  min-height: 200px !important;
+  max-height: 400px !important;
+  overflow-y: auto !important;
+}
+
+.ql-toolbar {
+  background: hsl(var(--muted)) !important;
+  border-color: hsl(var(--border)) !important;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.ql-container {
+  border-color: hsl(var(--border)) !important;
+  background: hsl(var(--background)) !important;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+.ql-editor.ql-blank::before {
+  color: hsl(var(--muted-foreground)) !important;
+  font-style: normal !important;
+}
+
+.ql-snow .ql-stroke {
+  stroke: hsl(var(--foreground)) !important;
+}
+
+.ql-snow .ql-fill {
+  fill: hsl(var(--foreground)) !important;
+}
+
+.ql-snow .ql-picker-label {
+  color: hsl(var(--foreground)) !important;
+}
+
+.ql-toolbar button:hover,
+.ql-toolbar button:focus {
+  color: hsl(var(--primary)) !important;
+}
+
+.ql-toolbar button:hover .ql-stroke,
+.ql-toolbar button:focus .ql-stroke {
+  stroke: hsl(var(--primary)) !important;
+}
+
+.ql-toolbar button:hover .ql-fill,
+.ql-toolbar button:focus .ql-fill {
+  fill: hsl(var(--primary)) !important;
+}
+
+.ql-toolbar .ql-active {
+  color: hsl(var(--primary)) !important;
+}
+
+.ql-toolbar .ql-active .ql-stroke {
+  stroke: hsl(var(--primary)) !important;
+}
+
+.ql-toolbar .ql-active .ql-fill {
+  fill: hsl(var(--primary)) !important;
+}
+
+/* Estilos para vista previa del correo */
+.prose {
+  color: hsl(var(--foreground)) !important;
+}
+
+.prose a {
+  color: hsl(var(--primary)) !important;
+}
+
+.prose strong {
+  color: hsl(var(--foreground)) !important;
+}
+
+.prose h1, .prose h2, .prose h3 {
+  color: hsl(var(--foreground)) !important;
+}
