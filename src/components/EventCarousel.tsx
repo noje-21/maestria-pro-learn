@@ -24,6 +24,7 @@ const EventCarousel = () => {
   const [isMobile, setIsMobile] = useState(false);
 
   const slides: Slide[] = [
+    /*
     {
       id: 1,
       image: simposio2025,
@@ -31,6 +32,7 @@ const EventCarousel = () => {
       alt: "4to Simposio Latinoamericano de Hipertensión Pulmonar",
       action: () => navigate("/simposio"),
     },
+    */
     {
       id: 2,
       image: maestria2025,
