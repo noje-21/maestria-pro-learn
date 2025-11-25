@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { GraduationCap, LogOut, User, Lock, CheckCircle2, PlayCircle, Award, Users } from "lucide-react";
+import { GraduationCap, LogOut, User, CheckCircle2, PlayCircle, Award, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ChatBot from "@/components/ChatBot";
 import { useAuth } from "@/hooks/useAuth";
@@ -73,17 +73,15 @@ const Dashboard = () => {
       // Organizar datos
       const modulesWithLessons = modulesData!.map(module => {
         const moduleLessons = lessonsData!.filter(lesson => lesson.module_id === module.id);
-        const lessonsWithProgress = moduleLessons.map((lesson, index) => {
+        const lessonsWithProgress = moduleLessons.map((lesson) => {
           const progress = progressData!.find(p => p.lesson_id === lesson.id);
           const completed = progress?.completed || false;
 
-          // La primera lección siempre está desbloqueada
-          const unlocked = index === 0 || moduleLessons[index - 1] && progressData!.find(p => p.lesson_id === moduleLessons[index - 1].id)?.completed;
           return {
             id: lesson.id,
             title: lesson.title,
             completed,
-            unlocked: unlocked || false
+            unlocked: true // Todas las lecciones están desbloqueadas
           };
         });
         const completedCount = lessonsWithProgress.filter(l => l.completed).length;
@@ -125,15 +123,7 @@ const Dashboard = () => {
     await signOut();
   };
   const handleLessonClick = (lesson: Lesson) => {
-    if (lesson.unlocked) {
-      navigate(`/lesson/${lesson.id}`);
-    } else {
-      toast({
-        title: "Lección bloqueada",
-        description: "Completa la lección anterior para desbloquear esta",
-        variant: "destructive"
-      });
-    }
+    navigate(`/lesson/${lesson.id}`);
   };
   if (loading) {
     return (
@@ -214,18 +204,15 @@ const Dashboard = () => {
 
               {/* Lessons */}
               <div className="grid md:grid-cols-3 gap-4">
-                {module.lessons.map(lesson => <button key={lesson.id} onClick={() => handleLessonClick(lesson)} disabled={!lesson.unlocked} className={`
-                      p-4 rounded-lg border text-left transition-all
-                      ${lesson.unlocked ? "border-border hover:border-primary bg-card hover:bg-card-hover cursor-pointer" : "border-border/50 bg-muted/20 cursor-not-allowed opacity-50"}
-                    `}>
+                {module.lessons.map(lesson => <button key={lesson.id} onClick={() => handleLessonClick(lesson)} className="p-4 rounded-lg border text-left transition-all border-border hover:border-primary bg-card hover:bg-card-hover cursor-pointer">
                     <div className="flex items-start gap-3">
                       <div className="mt-1">
-                        {lesson.completed ? <CheckCircle2 className="h-5 w-5 text-success" /> : lesson.unlocked ? <PlayCircle className="h-5 w-5 text-primary" /> : <Lock className="h-5 w-5 text-muted-foreground" />}
+                        {lesson.completed ? <CheckCircle2 className="h-5 w-5 text-success" /> : <PlayCircle className="h-5 w-5 text-primary" />}
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold mb-1">{lesson.title}</h3>
                         <p className="text-xs text-muted-foreground">
-                          {lesson.completed ? "Completado" : lesson.unlocked ? "Disponible" : "Bloqueado"}
+                          {lesson.completed ? "Completado" : "Disponible"}
                         </p>
                       </div>
                     </div>

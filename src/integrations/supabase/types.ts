@@ -79,6 +79,42 @@ export type Database = {
         }
         Relationships: []
       }
+      email_drafts: {
+        Row: {
+          connection_link: string | null
+          created_at: string | null
+          id: string
+          manual_recipients: string | null
+          message: string
+          selected_recipient_ids: string[] | null
+          subject: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          connection_link?: string | null
+          created_at?: string | null
+          id?: string
+          manual_recipients?: string | null
+          message: string
+          selected_recipient_ids?: string[] | null
+          subject: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          connection_link?: string | null
+          created_at?: string | null
+          id?: string
+          manual_recipients?: string | null
+          message?: string
+          selected_recipient_ids?: string[] | null
+          subject?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       exam_attempts: {
         Row: {
           answers: Json | null
