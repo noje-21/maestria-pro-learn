@@ -121,8 +121,7 @@ const Lesson = () => {
       setCompleted(true);
       toast({
         title: "¡Lección vista!",
-        description:
-          "Ahora realiza el examen para completar esta lección.",
+        description: "Ahora realiza el examen para completar esta lección.",
       });
     } catch (error: any) {
       console.error("Error marking lesson as viewed:", error);
@@ -157,11 +156,7 @@ const Lesson = () => {
       {/* Navigation */}
       <nav className="border-b border-border backdrop-blur-xl sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/dashboard")}
-            className="gap-2"
-          >
+          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Volver al Dashboard
           </Button>
@@ -184,8 +179,7 @@ const Lesson = () => {
         <div className="glass-card p-4 sm:p-6 md:p-8 mb-6">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 break-words">{lesson.title}</h1>
           <p className="text-muted-foreground text-sm sm:text-base md:text-lg break-words">
-            {lesson.description ||
-              "Aprende los conceptos fundamentales de este módulo"}
+            {lesson.description || "Aprende los conceptos fundamentales de este módulo"}
           </p>
         </div>
 
@@ -223,19 +217,13 @@ const Lesson = () => {
             {/* Botones de acción */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:justify-between">
               {!completed && (
-                <Button
-                  onClick={handleComplete}
-                  className="btn-gradient-primary gap-2 w-full sm:w-auto"
-                >
+                <Button onClick={handleComplete} className="btn-gradient-primary gap-2 w-full sm:w-auto">
                   <CheckCircle2 className="h-4 w-4" />
                   Marcar como Vista
                 </Button>
               )}
               {completed && (
-                <Button
-                  onClick={handleExam}
-                  className="btn-gradient-secondary gap-2 w-full sm:w-auto"
-                >
+                <Button onClick={handleExam} className="btn-gradient-secondary gap-2 w-full sm:w-auto">
                   Realizar Examen
                 </Button>
               )}
@@ -243,13 +231,10 @@ const Lesson = () => {
 
             {/* Descripción */}
             <div className="glass-card p-4 sm:p-6">
-              <h3 className="text-lg sm:text-xl font-bold mb-4">
-                Descripción del Módulo
-              </h3>
+              <h3 className="text-lg sm:text-xl font-bold mb-4">Descripción del Módulo</h3>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed break-words">
-                Esta clase te proporcionará las bases fundamentales necesarias
-                para comprender los conceptos más avanzados de los siguientes
-                módulos.
+                Esta clase te proporcionará las bases fundamentales necesarias para comprender los conceptos más
+                avanzados de los siguientes módulos.
               </p>
             </div>
           </div>
@@ -277,12 +262,8 @@ const Lesson = () => {
                     >
                       <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-xs sm:text-sm truncate">
-                          {material.title}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Descargar
-                        </div>
+                        <div className="font-medium text-xs sm:text-sm truncate">{material.title}</div>
+                        <div className="text-xs text-muted-foreground">Ver</div>
                       </div>
                       <Download className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
                     </a>
@@ -295,14 +276,8 @@ const Lesson = () => {
             <div className="glass-card p-4 sm:p-6">
               <h3 className="text-lg sm:text-xl font-bold mb-4">Tu Progreso</h3>
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs sm:text-sm text-muted-foreground">
-                  Estado de la clase
-                </span>
-                <span
-                  className={`text-xs sm:text-sm font-semibold ${
-                    completed ? "text-success" : "text-primary"
-                  }`}
-                >
+                <span className="text-xs sm:text-sm text-muted-foreground">Estado de la clase</span>
+                <span className={`text-xs sm:text-sm font-semibold ${completed ? "text-success" : "text-primary"}`}>
                   {completed ? "Completada" : "En Progreso"}
                 </span>
               </div>
