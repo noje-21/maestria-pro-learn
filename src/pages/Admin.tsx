@@ -16,6 +16,7 @@ import { LessonImageManager } from "@/components/admin/LessonImageManager";
 import { ExamQuestionsManager } from "@/components/admin/ExamQuestionsManager";
 import { ModuleLessonManager } from "@/components/admin/ModuleLessonManager";
 import { UserManagement } from "@/components/admin/UserManagement";
+import { CoursesManager } from "@/components/admin/CoursesManager";
 
 interface Profile {
   id: string;
@@ -225,6 +226,9 @@ const Admin = () => {
         <Tabs defaultValue="users" className="w-full">
           <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-4">
             <TabsList className="inline-flex w-full min-w-max sm:grid sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-12 gap-1">
+              <TabsTrigger value="courses" className="text-xs sm:text-sm whitespace-nowrap">
+                Cursos
+              </TabsTrigger>
               <TabsTrigger value="users" className="text-xs sm:text-sm whitespace-nowrap">
                 Usuarios
               </TabsTrigger>
@@ -263,6 +267,10 @@ const Admin = () => {
               </TabsTrigger>
             </TabsList>
           </div>
+
+          <TabsContent value="courses">
+            <CoursesManager />
+          </TabsContent>
 
           <TabsContent value="users">
             <UserManagement />

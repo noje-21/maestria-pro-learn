@@ -14,6 +14,8 @@ import Profile from "./pages/Profile";
 import Certificate from "./components/Certificate";
 import Admin from "./pages/Admin";
 import Simposio from "./pages/Simposio";
+import Courses from "./pages/Courses";
+import CourseDetail from "./pages/CourseDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +31,22 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/simposio" element={<Simposio />} />
+            <Route
+              path="/courses" 
+              element={
+                <ProtectedRoute>
+                  <Courses />
+                </ProtectedRoute>
+              } 
+            />
+            <Route
+              path="/course/:id" 
+              element={
+                <ProtectedRoute>
+                  <CourseDetail />
+                </ProtectedRoute>
+              } 
+            />
             <Route
               path="/dashboard" 
               element={
