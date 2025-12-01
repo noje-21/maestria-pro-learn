@@ -6,6 +6,51 @@ La plataforma ha sido exitosamente transformada de un sistema de maestría únic
 
 ---
 
+## 🔐 Redirección Inteligente Post-Login
+
+### Lógica Implementada
+
+El sistema ahora redirige automáticamente a los usuarios según sus inscripciones:
+
+| Escenario | Redirección |
+|-----------|-------------|
+| Sin cursos inscritos | `/courses` (Catálogo) |
+| 1 curso inscrito | `/course/:id` (Detalle del curso) |
+| Múltiples cursos | `/dashboard/courses` (Mis Cursos) |
+
+### Archivos Modificados
+
+- `src/services/authRedirectService.ts` - Servicio de redirección inteligente
+- `src/hooks/useAuth.tsx` - Integración con flujo de autenticación
+- `src/pages/MyCourses.tsx` - Nueva página "Mis Cursos"
+- `src/App.tsx` - Ruta `/dashboard/courses` añadida + Lazy loading
+
+### Función Principal
+
+```typescript
+// src/services/authRedirectService.ts
+export const getSmartRedirectPath = async (userId: string): Promise<string> => {
+  const enrollments = await getUserEnrollments(userId);
+  
+  if (enrollments.length === 0) return '/courses';
+  if (enrollments.length === 1) return `/course/${enrollments[0].course_id}`;
+  return '/dashboard/courses';
+};
+```
+
+### Cómo Probar
+
+1. **Usuario sin cursos:**
+   - Crear usuario nuevo → Registrar → Debe ir a `/courses`
+
+2. **Usuario con 1 curso:**
+   - Login con usuario inscrito en 1 curso → Debe ir a `/course/:id`
+
+3. **Usuario con múltiples cursos:**
+   - Login con usuario inscrito en 2+ cursos → Debe ir a `/dashboard/courses`
+
+---
+
 ## 🗄️ Cambios en Base de Datos
 
 ### Nuevas Tablas

@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
+import { getSmartRedirectPath } from '@/services/authRedirectService';
 
 interface AuthContextType {
   user: User | null;
@@ -43,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       toast({
         title: "Error de inicio de sesión",
@@ -56,7 +57,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       title: "Bienvenido",
       description: "Has iniciado sesión exitosamente",
     });
-    navigate('/dashboard');
+    
+    // Redirección inteligente basada en inscripciones
+    if (data.user) {
+      const redirectPath = await getSmartRedirectPath(data.user.id);
+      navigate(redirectPath);
+    }
   };
 
   const signUp = async (email: string, password: string, fullName: string, country?: string) => {
@@ -105,7 +111,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       title: "Registro exitoso",
       description: "Bienvenido a MLCP",
     });
-    navigate('/dashboard');
+    
+    // Usuarios nuevos van al catálogo de cursos
+    navigate('/courses');
   };
 
   const signOut = async () => {
