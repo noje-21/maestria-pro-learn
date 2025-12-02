@@ -242,14 +242,14 @@ const CourseDetail = () => {
               <div className="flex gap-3">
                 {course.is_enrolled ? (
                   <>
-                    <Button
-                      className="btn-gradient-primary flex-1"
-                      size="lg"
-                      onClick={() => navigate(`/dashboard?course=${course.id}`)}
-                    >
-                      <Award className="h-5 w-5 mr-2" />
-                      Ir al Curso
-                    </Button>
+                  <Button
+                    className="btn-gradient-primary flex-1"
+                    size="lg"
+                    onClick={() => navigate(`/dashboard?course=${course.id}`)}
+                  >
+                    <Award className="h-5 w-5 mr-2" />
+                    Continuar Aprendiendo
+                  </Button>
                     <Badge className="flex items-center gap-2 px-4 bg-success/10 text-success border-success/20">
                       <CheckCircle2 className="h-4 w-4" />
                       Inscrito

@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { GraduationCap, LogOut, User, BookOpen, Clock, Award } from "lucide-react";
+import { GraduationCap, LogOut, User, BookOpen, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { CourseFilters } from "@/components/courses/CourseFilters";
+import { CourseCard } from "@/components/courses/CourseCard";
+import { CourseRecommendations } from "@/components/courses/CourseRecommendations";
+import { motion } from "framer-motion";
 
 interface Course {
   id: string;
@@ -19,7 +21,10 @@ interface Course {
   end_date: string | null;
   is_enrolled: boolean;
   modules_count: number;
+  progress?: number;
 }
+
+const ITEMS_PER_PAGE = 9;
 
 const Courses = () => {
   const navigate = useNavigate();
@@ -27,10 +32,21 @@ const Courses = () => {
   const { toast } = useToast();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [levelFilter, setLevelFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadCourses();
   }, [user]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, levelFilter, sortBy]);
 
   const loadCourses = async () => {
     if (!user) return;
@@ -41,20 +57,22 @@ const Courses = () => {
         .from('courses')
         .select('*')
         .eq('is_active', true)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
+        .eq('status', 'active');
 
       if (coursesError) throw coursesError;
 
-      // Cargar inscripciones del usuario
+      // Cargar inscripciones del usuario con progreso
       const { data: enrollmentsData, error: enrollmentsError } = await supabase
         .from('user_courses')
-        .select('course_id')
-        .eq('user_id', user.id);
+        .select('course_id, progress')
+        .eq('user_id', user.id)
+        .eq('status', 'enrolled');
 
       if (enrollmentsError) throw enrollmentsError;
 
-      const enrolledCourseIds = new Set(enrollmentsData?.map(e => e.course_id) || []);
+      const enrollmentMap = new Map(
+        (enrollmentsData || []).map(e => [e.course_id, e.progress || 0])
+      );
 
       // Contar módulos por curso
       const coursesWithData = await Promise.all(
@@ -65,10 +83,13 @@ const Courses = () => {
             .eq('course_id', course.id)
             .eq('is_active', true);
 
+          const isEnrolled = enrollmentMap.has(course.id);
+          
           return {
             ...course,
-            is_enrolled: enrolledCourseIds.has(course.id),
+            is_enrolled: isEnrolled,
             modules_count: count || 0,
+            progress: isEnrolled ? enrollmentMap.get(course.id) : undefined,
           };
         })
       );
@@ -86,24 +107,62 @@ const Courses = () => {
     }
   };
 
+  // Filtered and sorted courses
+  const filteredCourses = useMemo(() => {
+    let result = [...courses];
+
+    // Search filter
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      result = result.filter(
+        c => c.title.toLowerCase().includes(search) || 
+             c.description?.toLowerCase().includes(search)
+      );
+    }
+
+    // Level filter
+    if (levelFilter && levelFilter !== "all") {
+      result = result.filter(c => c.level?.toLowerCase() === levelFilter.toLowerCase());
+    }
+
+    // Sort
+    switch (sortBy) {
+      case "newest":
+        result.sort((a, b) => new Date(b.start_date || 0).getTime() - new Date(a.start_date || 0).getTime());
+        break;
+      case "oldest":
+        result.sort((a, b) => new Date(a.start_date || 0).getTime() - new Date(b.start_date || 0).getTime());
+        break;
+      case "title_asc":
+        result.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case "title_desc":
+        result.sort((a, b) => b.title.localeCompare(a.title));
+        break;
+    }
+
+    return result;
+  }, [courses, searchTerm, levelFilter, sortBy]);
+
+  // Paginated courses
+  const paginatedCourses = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredCourses.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredCourses, currentPage]);
+
+  const totalPages = Math.ceil(filteredCourses.length / ITEMS_PER_PAGE);
+
   const handleLogout = async () => {
     await signOut();
   };
 
-  const getLevelColor = (level: string) => {
-    switch (level.toLowerCase()) {
-      case 'básico':
-        return 'bg-green-500/10 text-green-500 border-green-500/20';
-      case 'medio':
-        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'avanzado':
-        return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
-      case 'maestría':
-        return 'bg-primary/10 text-primary border-primary/20';
-      default:
-        return 'bg-muted/10 text-muted-foreground border-muted/20';
-    }
+  const clearFilters = () => {
+    setSearchTerm("");
+    setLevelFilter("all");
+    setSortBy("newest");
   };
+
+  const hasActiveFilters = searchTerm !== "" || levelFilter !== "all" || sortBy !== "newest";
 
   if (loading) {
     return (
@@ -119,15 +178,19 @@ const Courses = () => {
   return (
     <div className="min-h-screen bg-gradient-dark">
       {/* Navigation */}
-      <nav className="border-b border-border backdrop-blur-xl sticky top-0 z-40">
+      <nav className="border-b border-border backdrop-blur-xl sticky top-0 z-40 bg-background/80">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div 
+            className="flex items-center gap-2 cursor-pointer" 
+            onClick={() => navigate('/')}
+          >
             <GraduationCap className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold gradient-text">MCP</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={() => navigate("/dashboard")} variant="outline">
-              Mis Cursos
+            <Button onClick={() => navigate("/dashboard/courses")} variant="outline">
+              <BookOpen className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Mis Cursos</span>
             </Button>
             <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
               <User className="h-5 w-5" />
@@ -140,107 +203,113 @@ const Courses = () => {
       </nav>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
           <h1 className="text-4xl font-bold mb-3">Catálogo de Cursos</h1>
           <p className="text-muted-foreground text-lg">
             Explora y matricúlate en nuestros programas educativos
           </p>
-        </div>
+        </motion.div>
+
+        {/* Filters */}
+        <CourseFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          levelFilter={levelFilter}
+          onLevelChange={setLevelFilter}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          onClearFilters={clearFilters}
+          hasActiveFilters={hasActiveFilters}
+        />
+
+        {/* Results count */}
+        {filteredCourses.length > 0 && (
+          <p className="text-sm text-muted-foreground">
+            {filteredCourses.length} curso{filteredCourses.length !== 1 ? 's' : ''} encontrado{filteredCourses.length !== 1 ? 's' : ''}
+          </p>
+        )}
 
         {/* Courses Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course, idx) => (
-            <Card
-              key={course.id}
-              className="group cursor-pointer overflow-hidden border-border hover:border-primary/50 transition-all animate-slide-up hover:shadow-glow"
-              style={{ animationDelay: `${idx * 0.1}s` }}
-              onClick={() => navigate(`/course/${course.id}`)}
-            >
-              {/* Course Image */}
-              <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 relative overflow-hidden">
-                {course.image_url ? (
-                  <img
-                    src={course.image_url}
-                    alt={course.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <BookOpen className="h-16 w-16 text-primary/50" />
-                  </div>
-                )}
-                {course.is_enrolled && (
-                  <div className="absolute top-3 right-3">
-                    <Badge className="bg-success text-white border-0">
-                      Inscrito
-                    </Badge>
-                  </div>
-                )}
-              </div>
+        {paginatedCourses.length > 0 ? (
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedCourses.map((course, idx) => (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  index={idx}
+                  onClick={() => navigate(`/course/${course.id}`)}
+                />
+              ))}
+            </div>
 
-              {/* Course Content */}
-              <div className="p-6 space-y-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge className={getLevelColor(course.level)}>
-                      {course.level}
-                    </Badge>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
-                    {course.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm line-clamp-3">
-                    {course.description}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <BookOpen className="h-4 w-4" />
-                    <span>{course.modules_count} módulos</span>
-                  </div>
-                  {course.start_date && (
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      <span>{new Date(course.start_date).getFullYear()}</span>
-                    </div>
-                  )}
-                </div>
-
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-6">
                 <Button
-                  className={
-                    course.is_enrolled
-                      ? "w-full btn-gradient-primary"
-                      : "w-full"
-                  }
-                  variant={course.is_enrolled ? "default" : "outline"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/course/${course.id}`);
-                  }}
+                  variant="outline"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
                 >
-                  {course.is_enrolled ? (
-                    <>
-                      <Award className="h-4 w-4 mr-2" />
-                      Continuar Curso
-                    </>
-                  ) : (
-                    "Ver Detalles"
-                  )}
+                  Anterior
+                </Button>
+                <div className="flex items-center gap-1">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <Button
+                      key={i}
+                      variant={currentPage === i + 1 ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={currentPage === i + 1 ? "btn-gradient-primary" : ""}
+                    >
+                      {i + 1}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Siguiente
                 </Button>
               </div>
-            </Card>
-          ))}
-        </div>
-
-        {courses.length === 0 && (
-          <div className="text-center py-16">
+            )}
+          </>
+        ) : (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16"
+          >
             <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No hay cursos disponibles</h3>
-            <p className="text-muted-foreground">
-              Pronto habrá nuevos cursos disponibles
+            <h3 className="text-xl font-semibold mb-2">
+              {hasActiveFilters ? "No se encontraron cursos" : "No hay cursos disponibles"}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {hasActiveFilters 
+                ? "Intenta ajustar los filtros de búsqueda"
+                : "Pronto habrá nuevos cursos disponibles"
+              }
             </p>
+            {hasActiveFilters && (
+              <Button variant="outline" onClick={clearFilters}>
+                Limpiar filtros
+              </Button>
+            )}
+          </motion.div>
+        )}
+
+        {/* Recommendations (only show if user has some enrollments) */}
+        {user && (
+          <div className="pt-8 border-t border-border">
+            <CourseRecommendations userId={user.id} limit={4} />
           </div>
         )}
       </div>
