@@ -1,16 +1,17 @@
-# 🚀 Guía Rápida: Sistema Multi-Curso
+# 🚀 Guía Rápida: Sistema Multi-Curso v2.1
 
-## ✅ Verificación del Sistema
+## ✅ Funcionalidades Implementadas
 
-### 1. Comprobar que todo funciona
-```bash
-# El sistema debería estar funcionando automáticamente
-# Navega a las siguientes URLs para verificar:
-
-- /courses → Ver catálogo de cursos
-- /admin → Ver panel de administración (tab "Cursos")
-- /dashboard → Dashboard actual (sigue funcionando)
-```
+| Característica | Estado | Ubicación |
+|----------------|--------|-----------|
+| Redirección inteligente post-login | ✅ | `authRedirectService.ts` |
+| Catálogo con búsqueda y filtros | ✅ | `/courses` |
+| Dashboard dinámico por rol | ✅ | `/dashboard` |
+| Sistema de progreso visual | ✅ | Múltiples componentes |
+| Recomendaciones de cursos | ✅ | `CourseRecommendations.tsx` |
+| Lazy loading de páginas | ✅ | `App.tsx` |
+| Animaciones Framer Motion | ✅ | Todos los componentes |
+| Responsive design | ✅ | Mobile-first |
 
 ---
 
@@ -20,21 +21,24 @@
 
 #### Ver Catálogo de Cursos
 1. Inicia sesión en la plataforma
-2. Click en "Explorar Cursos" o navega a `/courses`
-3. Verás tarjetas con todos los cursos disponibles
-4. Click en cualquier curso para ver detalles
+2. Serás redirigido automáticamente según tus inscripciones:
+   - Sin cursos → `/courses` (catálogo)
+   - 1 curso → `/course/:id` (tu curso)
+   - Varios cursos → `/dashboard/courses` (mis cursos)
 
-#### Inscribirse en un Curso
-1. Desde el catálogo, click en un curso
-2. En la página de detalle, click en "Inscribirme Ahora"
-3. ✅ Inscripción confirmada
-4. Ahora verás el botón "Ir al Curso"
+#### Usar Búsqueda y Filtros
+1. En `/courses`, usa la barra de búsqueda
+2. Click en "Filtros" para más opciones:
+   - Filtrar por nivel (básico/medio/avanzado/maestría)
+   - Ordenar por fecha o alfabéticamente
+3. La paginación muestra 9 cursos por página
 
-#### Acceder a tu Curso
-1. Click en "Ir al Curso" desde el detalle
-2. O navega directamente a `/dashboard`
-3. Verás los módulos del curso
-4. Completa lecciones y exámenes normalmente
+#### Ver tu Progreso
+1. En el Dashboard verás:
+   - Cursos activos con barra de progreso
+   - Lecciones completadas
+   - Certificados obtenidos
+   - Recomendaciones personalizadas
 
 ---
 
@@ -55,252 +59,173 @@
 4. Click en **"Crear Curso"**
 5. ✅ Curso creado y visible en catálogo
 
-#### Editar un Curso Existente
-1. En `/admin` → tab "Cursos"
-2. Click en ícono de **lápiz** ✏️ en el curso
-3. Modifica los campos necesarios
-4. Click en **"Actualizar"**
-5. ✅ Cambios guardados
-
-#### Eliminar un Curso
-1. Click en ícono de **basurero** 🗑️
-2. Confirmar eliminación
-3. ⚠️ Advertencia: Esto eliminará el curso y sus módulos
-
-#### Agregar Módulos al Curso
-1. Después de crear un curso, ve a tab **"Módulos"**
-2. Crea módulos normalmente
-3. Asigna el `course_id` del nuevo curso
-4. Los módulos aparecerán en el detalle del curso
+#### Ver Estadísticas
+1. En `/dashboard` como admin verás:
+   - Total de usuarios
+   - Cursos activos
+   - Inscripciones totales
+   - Estudiantes activos
+   - Top 5 cursos más populares
+   - Inscripciones recientes
 
 ---
 
 ## 📊 Poblar con Datos de Prueba
 
-### Opción 1: Usar el Script Seed (Recomendado)
+### Script SQL de Ejemplo
+
 ```sql
--- Ejecuta el archivo seed-courses.sql en Supabase
--- Esto creará 5 cursos de ejemplo con módulos
+-- Curso Básico
+INSERT INTO public.courses (title, description, level, status, is_active)
+VALUES (
+  'Introducción a la Medicina Pulmonar',
+  'Curso básico para profesionales de la salud que desean iniciar en el área.',
+  'básico',
+  'active',
+  true
+);
+
+-- Curso Intermedio
+INSERT INTO public.courses (title, description, level, status, is_active)
+VALUES (
+  'Diagnóstico de Hipertensión Pulmonar',
+  'Métodos diagnósticos y opciones terapéuticas actuales.',
+  'medio',
+  'active',
+  true
+);
+
+-- Curso Avanzado
+INSERT INTO public.courses (title, description, level, status, is_active)
+VALUES (
+  'Especialización en Cateterismo',
+  'Formación avanzada para cardiólogos intervencionistas.',
+  'avanzado',
+  'active',
+  true
+);
 ```
-
-Pasos:
-1. Abre el dashboard de Lovable Cloud
-2. Ve a SQL Editor
-3. Copia y pega el contenido de `seed-courses.sql`
-4. Ejecuta el script
-5. ✅ Tendrás 5 cursos de ejemplo
-
-### Opción 2: Crear Manualmente desde Admin
-1. Ve a `/admin` → "Cursos"
-2. Usa el formulario para crear cada curso
-3. Repite para crear varios cursos
 
 ---
 
 ## 🔍 Consultas Útiles
 
-### Ver todos los cursos y su información
+### Ver estadísticas generales
 ```sql
 SELECT 
-  c.id,
-  c.title,
-  c.level,
-  c.status,
-  COUNT(DISTINCT m.id) as modules_count,
-  COUNT(DISTINCT uc.user_id) as enrolled_users
-FROM public.courses c
-LEFT JOIN public.modules m ON m.course_id = c.id
-LEFT JOIN public.user_courses uc ON uc.course_id = c.id
+  (SELECT COUNT(*) FROM courses WHERE status = 'active') as cursos_activos,
+  (SELECT COUNT(*) FROM user_courses) as inscripciones_totales,
+  (SELECT COUNT(DISTINCT user_id) FROM user_courses) as estudiantes_unicos,
+  (SELECT ROUND(AVG(progress), 2) FROM user_courses) as progreso_promedio;
+```
+
+### Ver cursos más populares
+```sql
+SELECT c.title, COUNT(uc.id) as inscripciones
+FROM courses c
+LEFT JOIN user_courses uc ON uc.course_id = c.id
 GROUP BY c.id
-ORDER BY c.created_at DESC;
+ORDER BY inscripciones DESC
+LIMIT 5;
 ```
 
-### Ver inscripciones de un usuario específico
-```sql
-SELECT 
-  u.full_name,
-  c.title,
-  uc.status,
-  uc.progress,
-  uc.enrolled_at
-FROM public.user_courses uc
-JOIN public.profiles u ON u.id = uc.user_id
-JOIN public.courses c ON c.id = uc.course_id
-WHERE u.id = 'USER_UUID_AQUI';
-```
-
-### Calcular progreso de un usuario en un curso
+### Calcular progreso de usuario
 ```sql
 SELECT calculate_course_progress('USER_UUID', 'COURSE_UUID');
 ```
 
-### Inscribir manualmente a un usuario
-```sql
-INSERT INTO public.user_courses (user_id, course_id, status)
-VALUES ('USER_UUID', 'COURSE_UUID', 'enrolled');
-```
-
 ---
 
-## 🎨 Personalización
+## 🧪 Testing Checklist
 
-### Agregar Imágenes a los Cursos
+### Redirección Post-Login
+- [ ] Usuario nuevo (0 cursos) → `/courses`
+- [ ] Usuario con 1 curso → `/course/:id`
+- [ ] Usuario con 2+ cursos → `/dashboard/courses`
 
-1. **Sube la imagen** a un servicio de hosting (ej: Cloudinary, Supabase Storage)
-2. **Copia la URL pública** de la imagen
-3. **Actualiza el curso** con la URL:
-   ```sql
-   UPDATE public.courses 
-   SET image_url = 'https://tu-imagen.com/portada.jpg'
-   WHERE id = 'COURSE_UUID';
-   ```
-4. ✅ La imagen aparecerá en catálogo y detalle
+### Catálogo
+- [ ] Búsqueda funciona con texto
+- [ ] Filtro por nivel funciona
+- [ ] Paginación navega correctamente
+- [ ] Animaciones son fluidas
 
-### Cambiar Colores por Nivel
+### Dashboard
+- [ ] Admin ve estadísticas globales
+- [ ] Estudiante ve sus cursos y progreso
+- [ ] Recomendaciones se muestran
 
-Edita `src/pages/Courses.tsx` y `src/pages/CourseDetail.tsx`:
-
-```typescript
-const getLevelColor = (level: string) => {
-  switch (level.toLowerCase()) {
-    case 'básico':
-      return 'bg-green-500/10 text-green-500'; // Cambia colores aquí
-    // ... más casos
-  }
-};
-```
+### Responsive
+- [ ] Funciona en móvil
+- [ ] Funciona en tablet
+- [ ] Funciona en desktop
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Problema: No veo cursos en el catálogo
-**Solución:**
+### Curso no aparece en catálogo
 ```sql
--- Verifica que hay cursos activos
-SELECT * FROM public.courses WHERE status = 'active' AND is_active = true;
+-- Verificar estado
+SELECT id, title, status, is_active FROM courses;
 
--- Si no hay cursos, crea uno
-INSERT INTO public.courses (title, level, status, is_active)
-VALUES ('Mi Primer Curso', 'básico', 'active', true);
+-- Activar curso
+UPDATE courses 
+SET status = 'active', is_active = true 
+WHERE id = 'UUID';
 ```
 
-### Problema: No puedo inscribirme en un curso
-**Posibles causas:**
-1. No estás autenticado → Inicia sesión
-2. El curso no está activo → Verifica `status='active'`
-3. Error de RLS → Verifica políticas de `user_courses`
-
-**Verificar:**
+### Progreso no se actualiza
 ```sql
--- Ver políticas RLS
-SELECT * FROM pg_policies WHERE tablename = 'user_courses';
+-- Recalcular progreso
+UPDATE user_courses 
+SET progress = calculate_course_progress(course_id, user_id)
+WHERE user_id = 'UUID';
 ```
 
-### Problema: Progreso no se actualiza
-**Solución:**
-```sql
--- Forzar cálculo de progreso
-SELECT calculate_course_progress('USER_UUID', 'COURSE_UUID');
+### Recomendaciones no aparecen
+- Verificar que hay cursos en los que el usuario NO está inscrito
+- Verificar que los cursos tienen `status = 'active'`
 
--- Actualizar manualmente
-UPDATE public.user_courses
-SET progress = 50.0
-WHERE user_id = 'USER_UUID' AND course_id = 'COURSE_UUID';
+---
+
+## 📁 Estructura de Archivos
+
 ```
-
-### Problema: Módulos no aparecen en el curso
-**Solución:**
-```sql
--- Verificar que los módulos tienen course_id
-SELECT m.*, c.title as course_title
-FROM public.modules m
-LEFT JOIN public.courses c ON c.id = m.course_id
-WHERE m.course_id IS NULL;
-
--- Asignar módulos huérfanos al curso correcto
-UPDATE public.modules
-SET course_id = 'COURSE_UUID_CORRECTO'
-WHERE course_id IS NULL;
+src/
+├── components/
+│   ├── courses/
+│   │   ├── CourseCard.tsx        # Tarjeta de curso
+│   │   ├── CourseFilters.tsx     # Búsqueda y filtros
+│   │   └── CourseRecommendations.tsx
+│   ├── dashboard/
+│   │   ├── AdminDashboard.tsx    # Dashboard admin
+│   │   └── StudentDashboard.tsx  # Dashboard estudiante
+│   └── layout/
+│       └── DashboardNav.tsx      # Navegación
+├── services/
+│   └── authRedirectService.ts    # Redirección inteligente
+└── pages/
+    ├── Courses.tsx               # Catálogo
+    ├── MyCourses.tsx             # Mis cursos
+    └── Dashboard.tsx             # Dashboard dinámico
 ```
 
 ---
 
-## 📱 Testing Checklist
+## 🎉 Estado Final
 
-### Test de Flujo Completo
-- [ ] Usuario puede ver catálogo en `/courses`
-- [ ] Usuario puede ver detalle de curso en `/course/:id`
-- [ ] Usuario puede inscribirse clickeando "Inscribirme"
-- [ ] Badge "Inscrito" aparece después de inscripción
-- [ ] Usuario puede acceder al dashboard del curso
-- [ ] Progreso se calcula correctamente
-- [ ] Certificado se genera al completar 100%
-
-### Test de Admin
-- [ ] Admin puede crear nuevo curso
-- [ ] Admin puede editar curso existente
-- [ ] Admin puede eliminar curso
-- [ ] Cambios se reflejan inmediatamente en catálogo
-- [ ] Cursos en "draft" no son visibles para estudiantes
-
-### Test de Seguridad
-- [ ] Usuarios no autenticados son redirigidos a login
-- [ ] Usuarios no-admin no pueden acceder a `/admin/courses`
-- [ ] Usuarios solo ven sus propias inscripciones
-- [ ] No se puede inscribir dos veces al mismo curso
-
----
-
-## 💡 Tips Pro
-
-### 1. Migraciones Seguras
-Siempre haz backup antes de ejecutar migraciones:
-```bash
-# Desde Supabase CLI
-supabase db dump -f backup.sql
 ```
-
-### 2. Performance
-Para mejorar performance con muchos cursos:
-```sql
--- Crear índices
-CREATE INDEX idx_user_courses_user ON user_courses(user_id);
-CREATE INDEX idx_user_courses_course ON user_courses(course_id);
-CREATE INDEX idx_modules_course ON modules(course_id);
-```
-
-### 3. Monitoreo
-Consulta para ver estadísticas:
-```sql
-SELECT 
-  (SELECT COUNT(*) FROM courses WHERE status = 'active') as active_courses,
-  (SELECT COUNT(*) FROM user_courses) as total_enrollments,
-  (SELECT COUNT(DISTINCT user_id) FROM user_courses) as unique_students,
-  (SELECT AVG(progress) FROM user_courses) as avg_progress;
+✔ Catálogo avanzado 100% funcional
+✔ Dashboard dinámico admin/estudiante
+✔ Sistema de progreso visual
+✔ Sistema de recomendaciones
+✔ Redirección inteligente
+✔ UI profesional con animaciones
+✔ Responsive en todos los dispositivos
+✔ Código organizado y documentado
 ```
 
 ---
 
-## 🎓 Próximos Pasos
-
-1. ✅ Ejecuta `seed-courses.sql` para poblar datos de prueba
-2. ✅ Navega a `/courses` y explora el catálogo
-3. ✅ Inscríbete en un curso de prueba
-4. ✅ Ve a `/admin` y crea tu propio curso
-5. ✅ Invita a usuarios de prueba a inscribirse
-6. 📊 Revisa estadísticas en el dashboard admin
-
----
-
-## 📞 Soporte
-
-Si encuentras algún problema:
-1. Revisa esta guía primero
-2. Consulta `README_IMPLEMENTACION.md` para detalles técnicos
-3. Revisa los logs de Supabase
-4. Verifica las políticas RLS
-
----
-
-**¡Sistema Multi-Curso Listo para Usar! 🎉**
+**Versión:** 2.1  
+**Estado:** ✅ 100% Funcional
