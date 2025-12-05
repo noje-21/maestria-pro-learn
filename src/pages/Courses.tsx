@@ -1,14 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, LogOut, User, BookOpen, Plus } from "lucide-react";
+import { GraduationCap, LogOut, User, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CourseFilters } from "@/components/courses/CourseFilters";
 import { CourseCard } from "@/components/courses/CourseCard";
+import { CourseSkeleton } from "@/components/courses/CourseSkeleton";
 import { CourseRecommendations } from "@/components/courses/CourseRecommendations";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Course {
   id: string;
@@ -52,7 +53,6 @@ const Courses = () => {
     if (!user) return;
 
     try {
-      // Cargar cursos activos
       const { data: coursesData, error: coursesError } = await supabase
         .from('courses')
         .select('*')
@@ -61,7 +61,6 @@ const Courses = () => {
 
       if (coursesError) throw coursesError;
 
-      // Cargar inscripciones del usuario con progreso
       const { data: enrollmentsData, error: enrollmentsError } = await supabase
         .from('user_courses')
         .select('course_id, progress')
@@ -74,7 +73,6 @@ const Courses = () => {
         (enrollmentsData || []).map(e => [e.course_id, e.progress || 0])
       );
 
-      // Contar módulos por curso
       const coursesWithData = await Promise.all(
         (coursesData || []).map(async (course) => {
           const { count } = await supabase
@@ -111,7 +109,6 @@ const Courses = () => {
   const filteredCourses = useMemo(() => {
     let result = [...courses];
 
-    // Search filter
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       result = result.filter(
@@ -120,12 +117,10 @@ const Courses = () => {
       );
     }
 
-    // Level filter
     if (levelFilter && levelFilter !== "all") {
       result = result.filter(c => c.level?.toLowerCase() === levelFilter.toLowerCase());
     }
 
-    // Sort
     switch (sortBy) {
       case "newest":
         result.sort((a, b) => new Date(b.start_date || 0).getTime() - new Date(a.start_date || 0).getTime());
@@ -164,38 +159,43 @@ const Courses = () => {
 
   const hasActiveFilters = searchTerm !== "" || levelFilter !== "all" || sortBy !== "newest";
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-foreground font-medium">Cargando cursos...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-dark">
       {/* Navigation */}
-      <nav className="border-b border-border backdrop-blur-xl sticky top-0 z-40 bg-background/80">
+      <nav className="border-b border-border/50 backdrop-blur-xl sticky top-0 z-40 bg-background/80">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div 
-            className="flex items-center gap-2 cursor-pointer" 
+            className="flex items-center gap-2 cursor-pointer group" 
             onClick={() => navigate('/')}
           >
-            <GraduationCap className="h-8 w-8 text-primary" />
+            <div className="p-2 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+              <GraduationCap className="h-6 w-6 text-primary" />
+            </div>
             <span className="text-2xl font-bold gradient-text">MCP</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={() => navigate("/dashboard/courses")} variant="outline">
+            <Button 
+              onClick={() => navigate("/dashboard/courses")} 
+              variant="outline"
+              className="border-border/50 hover:bg-primary/10 hover:border-primary transition-all"
+            >
               <BookOpen className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Mis Cursos</span>
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate("/profile")}
+              className="hover:bg-primary/10"
+            >
               <User className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleLogout}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleLogout}
+              className="hover:bg-destructive/10 hover:text-destructive"
+            >
               <LogOut className="h-5 w-5" />
             </Button>
           </div>
@@ -208,11 +208,14 @@ const Courses = () => {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          transition={{ duration: 0.5 }}
+          className="text-center mb-10"
         >
-          <h1 className="text-4xl font-bold mb-3">Catálogo de Cursos</h1>
-          <p className="text-muted-foreground text-lg">
-            Explora y matricúlate en nuestros programas educativos
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text">
+            Catálogo de Cursos
+          </h1>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Explora y matricúlate en nuestros programas educativos especializados
           </p>
         </motion.div>
 
@@ -229,36 +232,59 @@ const Courses = () => {
         />
 
         {/* Results count */}
-        {filteredCourses.length > 0 && (
-          <p className="text-sm text-muted-foreground">
-            {filteredCourses.length} curso{filteredCourses.length !== 1 ? 's' : ''} encontrado{filteredCourses.length !== 1 ? 's' : ''}
-          </p>
-        )}
+        <AnimatePresence mode="wait">
+          {!loading && filteredCourses.length > 0 && (
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-sm text-muted-foreground"
+            >
+              <span className="font-semibold text-foreground">{filteredCourses.length}</span> curso{filteredCourses.length !== 1 ? 's' : ''} encontrado{filteredCourses.length !== 1 ? 's' : ''}
+            </motion.p>
+          )}
+        </AnimatePresence>
 
         {/* Courses Grid */}
-        {paginatedCourses.length > 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <CourseSkeleton count={6} />
+          </div>
+        ) : paginatedCourses.length > 0 ? (
           <>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedCourses.map((course, idx) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  index={idx}
-                  onClick={() => navigate(`/course/${course.id}`)}
-                />
-              ))}
-            </div>
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              layout
+            >
+              <AnimatePresence mode="popLayout">
+                {paginatedCourses.map((course, idx) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    index={idx}
+                    onClick={() => navigate(`/course/${course.id}`)}
+                  />
+                ))}
+              </AnimatePresence>
+            </motion.div>
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 pt-6">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-center gap-2 pt-8"
+              >
                 <Button
                   variant="outline"
+                  size="icon"
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
+                  className="h-10 w-10 rounded-full border-border/50 disabled:opacity-30"
                 >
-                  Anterior
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
+                
                 <div className="flex items-center gap-1">
                   {[...Array(totalPages)].map((_, i) => (
                     <Button
@@ -266,51 +292,69 @@ const Courses = () => {
                       variant={currentPage === i + 1 ? "default" : "ghost"}
                       size="sm"
                       onClick={() => setCurrentPage(i + 1)}
-                      className={currentPage === i + 1 ? "btn-gradient-primary" : ""}
+                      className={`h-10 w-10 rounded-full transition-all ${
+                        currentPage === i + 1 
+                          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" 
+                          : "hover:bg-muted/50"
+                      }`}
                     >
                       {i + 1}
                     </Button>
                   ))}
                 </div>
+                
                 <Button
                   variant="outline"
+                  size="icon"
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
+                  className="h-10 w-10 rounded-full border-border/50 disabled:opacity-30"
                 >
-                  Siguiente
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
-              </div>
+              </motion.div>
             )}
           </>
         ) : (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-16"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-20"
           >
-            <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted/30 flex items-center justify-center">
+              <BookOpen className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">
               {hasActiveFilters ? "No se encontraron cursos" : "No hay cursos disponibles"}
             </h3>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               {hasActiveFilters 
-                ? "Intenta ajustar los filtros de búsqueda"
+                ? "Intenta ajustar los filtros de búsqueda para encontrar más resultados"
                 : "Pronto habrá nuevos cursos disponibles"
               }
             </p>
             {hasActiveFilters && (
-              <Button variant="outline" onClick={clearFilters}>
+              <Button 
+                variant="outline" 
+                onClick={clearFilters}
+                className="border-primary/50 text-primary hover:bg-primary/10"
+              >
                 Limpiar filtros
               </Button>
             )}
           </motion.div>
         )}
 
-        {/* Recommendations (only show if user has some enrollments) */}
-        {user && (
-          <div className="pt-8 border-t border-border">
-            <CourseRecommendations userId={user.id} limit={4} />
-          </div>
+        {/* Recommendations */}
+        {user && !loading && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="pt-12 border-t border-border/30"
+          >
+            <CourseRecommendations userId={user.id} limit={6} />
+          </motion.div>
         )}
       </div>
     </div>
