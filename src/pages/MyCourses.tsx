@@ -135,10 +135,16 @@ const MyCourses = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-4"
+        >
+          <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+          </div>
           <p className="text-foreground font-medium">Cargando tus cursos...</p>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -146,13 +152,15 @@ const MyCourses = () => {
   return (
     <div className="min-h-screen bg-gradient-dark">
       {/* Navigation */}
-      <nav className="border-b border-border backdrop-blur-xl sticky top-0 z-40 bg-background/80">
+      <nav className="border-b border-border/50 backdrop-blur-xl sticky top-0 z-40 bg-background/80">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div 
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer group"
             onClick={() => navigate('/')}
           >
-            <GraduationCap className="h-8 w-8 text-primary" />
+            <div className="p-2 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+              <GraduationCap className="h-6 w-6 text-primary" />
+            </div>
             <span className="text-2xl font-bold gradient-text">MCP</span>
           </div>
           <div className="flex items-center gap-2">
@@ -181,17 +189,21 @@ const MyCourses = () => {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          transition={{ duration: 0.5 }}
+          className="text-center mb-10"
         >
-          <h1 className="text-4xl font-bold mb-3">Mis Cursos</h1>
-          <p className="text-muted-foreground text-lg">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Mis Cursos</h1>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Continúa tu aprendizaje donde lo dejaste
           </p>
         </motion.div>
 
         {/* Courses Grid */}
         {courses.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            layout
+          >
             {courses.map((course, idx) => (
               <CourseCard
                 key={course.id}
@@ -203,19 +215,24 @@ const MyCourses = () => {
                 onClick={() => navigate(`/course/${course.id}`)}
               />
             ))}
-          </div>
+          </motion.div>
         ) : (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-16"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-20"
           >
-            <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No estás inscrito en ningún curso</h3>
-            <p className="text-muted-foreground mb-6">
-              Explora nuestro catálogo y comienza tu aprendizaje
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted/30 flex items-center justify-center">
+              <BookOpen className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">No estás inscrito en ningún curso</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Explora nuestro catálogo y comienza tu viaje de aprendizaje
             </p>
-            <Button onClick={() => navigate("/courses")} className="btn-gradient-primary">
+            <Button 
+              onClick={() => navigate("/courses")} 
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg shadow-primary/25 px-6"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Explorar Cursos
             </Button>
@@ -224,9 +241,14 @@ const MyCourses = () => {
 
         {/* Recommendations */}
         {user && (
-          <div className="pt-8 border-t border-border">
-            <CourseRecommendations userId={user.id} limit={4} />
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="pt-12 border-t border-border/30"
+          >
+            <CourseRecommendations userId={user.id} limit={6} />
+          </motion.div>
         )}
       </div>
     </div>
