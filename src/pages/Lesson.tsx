@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, CheckCircle2, FileText } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import ChatBot from "@/components/ChatBot";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { CourseLayoutOS } from "@/layouts/CourseLayoutOS";
+import { LessonContent } from "@/components/course/LessonContent";
 
 interface LessonData {
   id: string;
@@ -13,6 +13,7 @@ interface LessonData {
   description: string;
   duration_minutes?: number;
   image_url?: string | null;
+  module_id: string;
 }
 
 interface Video {
@@ -28,6 +29,24 @@ interface Material {
   file_url: string;
 }
 
+interface Module {
+  id: string;
+  module_number: number;
+  title: string;
+  description: string;
+  instructor: string;
+  course_id: string;
+  lessons: Array<{
+    id: string;
+    lesson_number: number;
+    title: string;
+    description: string;
+    duration_minutes: number;
+    completed: boolean;
+    type: 'video' | 'pdf' | 'quiz' | 'audio';
+  }>;
+}
+
 const Lesson = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -38,6 +57,12 @@ const Lesson = () => {
   const [lesson, setLesson] = useState<LessonData | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [courseId, setCourseId] = useState<string | null>(null);
+  const [courseTitle, setCourseTitle] = useState("");
+  const [courseProgress, setCourseProgress] = useState(0);
+  const [currentModuleName, setCurrentModuleName] = useState("");
+  const [instructorName, setInstructorName] = useState("");
 
   useEffect(() => {
     if (user && id) {
@@ -48,9 +73,10 @@ const Lesson = () => {
   const loadLesson = async () => {
     if (!id) return;
     try {
+      // Load lesson data
       const { data: lessonData, error: lessonError } = await supabase
         .from("lessons")
-        .select("*")
+        .select("*, modules(id, title, instructor, course_id, module_number)")
         .eq("id", id)
         .maybeSingle();
 
@@ -66,25 +92,93 @@ const Lesson = () => {
       }
 
       setLesson(lessonData);
+      const moduleData = lessonData.modules as any;
+      setCurrentModuleName(moduleData?.title || "");
+      setInstructorName(moduleData?.instructor || "");
+      const currentCourseId = moduleData?.course_id;
+      setCourseId(currentCourseId);
+
+      // Load course info
+      if (currentCourseId) {
+        const { data: courseData } = await supabase
+          .from("courses")
+          .select("title")
+          .eq("id", currentCourseId)
+          .single();
+        
+        if (courseData) {
+          setCourseTitle(courseData.title);
+        }
+
+        // Load all modules with lessons for sidebar
+        const { data: modulesData } = await supabase
+          .from("modules")
+          .select("*")
+          .eq("course_id", currentCourseId)
+          .eq("is_active", true)
+          .order("module_number");
+
+        if (modulesData) {
+          const modulesWithLessons = await Promise.all(
+            modulesData.map(async (module) => {
+              const { data: lessonsData } = await supabase
+                .from("lessons")
+                .select("*")
+                .eq("module_id", module.id)
+                .eq("is_active", true)
+                .order("lesson_number");
+
+              // Get user progress for lessons
+              const { data: progressData } = await supabase
+                .from("user_progress")
+                .select("lesson_id, completed")
+                .eq("user_id", user!.id)
+                .in("lesson_id", (lessonsData || []).map(l => l.id));
+
+              const progressMap = new Map(
+                (progressData || []).map(p => [p.lesson_id, p.completed])
+              );
+
+              return {
+                ...module,
+                lessons: (lessonsData || []).map(l => ({
+                  id: l.id,
+                  lesson_number: l.lesson_number,
+                  title: l.title,
+                  description: l.description || "",
+                  duration_minutes: l.duration_minutes || 0,
+                  completed: progressMap.get(l.id) || false,
+                  type: "video" as const,
+                })),
+              };
+            })
+          );
+          setModules(modulesWithLessons);
+
+          // Calculate progress
+          const totalLessons = modulesWithLessons.reduce((acc, m) => acc + m.lessons.length, 0);
+          const completedLessons = modulesWithLessons.reduce(
+            (acc, m) => acc + m.lessons.filter(l => l.completed).length,
+            0
+          );
+          setCourseProgress(totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0);
+        }
+      }
 
       // Load videos
-      const { data: videosData, error: videosError } = await supabase
+      const { data: videosData } = await supabase
         .from("lesson_videos")
         .select("*")
         .eq("lesson_id", id)
         .order("order_number");
-
-      if (videosError) throw videosError;
       setVideos(videosData || []);
 
       // Load materials
-      const { data: materialsData, error: materialsError } = await supabase
+      const { data: materialsData } = await supabase
         .from("lesson_materials")
         .select("*")
         .eq("lesson_id", id)
         .order("created_at");
-
-      if (materialsError) throw materialsError;
       setMaterials(materialsData || []);
 
       // Load progress
@@ -110,20 +204,30 @@ const Lesson = () => {
 
   const handleComplete = async () => {
     if (!user || !id || completed) return;
+    
+    // Optimistic update
+    setCompleted(true);
+    
     try {
-      // Use secure RPC function to mark lesson as viewed
-      const { data, error } = await supabase.rpc("mark_lesson_viewed", {
+      const { error } = await supabase.rpc("mark_lesson_viewed", {
         _lesson_id: id,
       });
 
       if (error) throw error;
 
-      setCompleted(true);
       toast({
-        title: "¡Lección vista!",
-        description: "Ahora realiza el examen para completar esta lección.",
+        title: "¡Lección completada!",
+        description: "Tu progreso ha sido guardado.",
+      });
+      
+      // Update progress
+      setCourseProgress(prev => {
+        const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0);
+        return Math.min(100, prev + Math.round(100 / totalLessons));
       });
     } catch (error: any) {
+      // Rollback on error
+      setCompleted(false);
       console.error("Error marking lesson as viewed:", error);
       toast({
         title: "Error",
@@ -133,14 +237,27 @@ const Lesson = () => {
     }
   };
 
-  const handleExam = () => {
-    if (!lesson) return;
-    navigate(`/exam/${lesson.id}`);
+  const handleLessonSelect = useCallback((lessonId: string) => {
+    navigate(`/lesson/${lessonId}`);
+  }, [navigate]);
+
+  const getAdjacentLessons = () => {
+    const allLessons = modules.flatMap(m => m.lessons);
+    const currentIndex = allLessons.findIndex(l => l.id === id);
+    
+    return {
+      hasPrevious: currentIndex > 0,
+      hasNext: currentIndex < allLessons.length - 1,
+      previousId: currentIndex > 0 ? allLessons[currentIndex - 1].id : null,
+      nextId: currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1].id : null,
+    };
   };
+
+  const { hasPrevious, hasNext, previousId, nextId } = getAdjacentLessons();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="text-muted-foreground">Cargando lección...</p>
@@ -152,142 +269,32 @@ const Lesson = () => {
   if (!lesson) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-dark">
-      {/* Navigation */}
-      <nav className="border-b border-border backdrop-blur-xl sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Volver al Dashboard
-          </Button>
-        </div>
-      </nav>
-
-      {/* Content */}
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Imagen de la lección */}
-        {lesson.image_url && (
-          <div className="glass-card p-4 sm:p-6 mb-6 overflow-hidden">
-            <img
-              src={lesson.image_url}
-              alt={lesson.title}
-              className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg"
-            />
-          </div>
-        )}
-
-        <div className="glass-card p-4 sm:p-6 md:p-8 mb-6">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 break-words">{lesson.title}</h1>
-          <p className="text-muted-foreground text-sm sm:text-base md:text-lg break-words">
-            {lesson.description || "Aprende los conceptos fundamentales de este módulo"}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-            {/* Videos */}
-            {videos.length === 0 ? (
-              <div className="glass-card p-4 sm:p-6">
-                <p className="text-center text-sm sm:text-base text-muted-foreground">
-                  No hay videos disponibles para esta lección
-                </p>
-              </div>
-            ) : (
-              videos.map((video, index) => (
-                <div key={video.id} className="glass-card p-4 sm:p-6">
-                  <div className="aspect-video bg-background rounded-lg overflow-hidden mb-4">
-                    <iframe
-                      width="100%"
-                      height="100%"
-                      src={video.video_url}
-                      title={video.title || `Video ${index + 1}`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="border-0"
-                    />
-                  </div>
-                  <h3 className="font-semibold text-base sm:text-lg break-words">
-                    {video.title || `Video ${index + 1}`}
-                  </h3>
-                </div>
-              ))
-            )}
-
-            {/* Botones de acción */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:justify-between">
-              {!completed && (
-                <Button onClick={handleComplete} className="btn-gradient-primary gap-2 w-full sm:w-auto">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Marcar como Vista
-                </Button>
-              )}
-              {completed && (
-                <Button onClick={handleExam} className="btn-gradient-secondary gap-2 w-full sm:w-auto">
-                  Realizar Examen
-                </Button>
-              )}
-            </div>
-
-            {/* Descripción */}
-            <div className="glass-card p-4 sm:p-6">
-              <h3 className="text-lg sm:text-xl font-bold mb-4">Descripción del Módulo</h3>
-              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed break-words">
-                Esta clase te proporcionará las bases fundamentales necesarias para comprender los conceptos más
-                avanzados de los siguientes módulos.
-              </p>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-4 sm:space-y-6">
-            {/* Materiales */}
-            <div className="glass-card p-4 sm:p-6">
-              <h3 className="text-lg sm:text-xl font-bold mb-4">Materiales</h3>
-              {materials.length === 0 ? (
-                <div className="p-3 sm:p-4 bg-muted/20 rounded-lg border border-border text-center">
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    No hay materiales disponibles para esta lección
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {materials.map((material) => (
-                    <a
-                      key={material.id}
-                      href={material.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-card hover:bg-card-hover transition-colors border border-border"
-                    >
-                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-xs sm:text-sm truncate">{material.title}</div>
-                        <div className="text-xs text-muted-foreground">Ver</div>
-                      </div>
-                      <Download className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Progreso */}
-            <div className="glass-card p-4 sm:p-6">
-              <h3 className="text-lg sm:text-xl font-bold mb-4">Tu Progreso</h3>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs sm:text-sm text-muted-foreground">Estado de la clase</span>
-                <span className={`text-xs sm:text-sm font-semibold ${completed ? "text-success" : "text-primary"}`}>
-                  {completed ? "Completada" : "En Progreso"}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <>
+      <CourseLayoutOS
+        courseId={courseId || ""}
+        courseTitle={courseTitle}
+        modules={modules}
+        currentLessonId={id || ""}
+        progress={courseProgress}
+        onLessonSelect={handleLessonSelect}
+        materials={materials}
+        onComplete={handleComplete}
+      >
+        <LessonContent
+          lesson={lesson}
+          videos={videos}
+          moduleName={currentModuleName}
+          instructorName={instructorName}
+          completed={completed}
+          onComplete={handleComplete}
+          onNextLesson={() => nextId && navigate(`/lesson/${nextId}`)}
+          onPreviousLesson={() => previousId && navigate(`/lesson/${previousId}`)}
+          hasNext={hasNext}
+          hasPrevious={hasPrevious}
+        />
+      </CourseLayoutOS>
       <ChatBot />
-    </div>
+    </>
   );
 };
 
