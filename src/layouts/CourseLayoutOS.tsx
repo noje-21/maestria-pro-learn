@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Maximize2, Minimize2 } from "lucide-react";
+import { Menu, X, Maximize2, Minimize2, PanelLeftClose, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -52,8 +52,8 @@ export const CourseLayoutOS = ({
 }: CourseLayoutOSProps) => {
   const isMobile = useIsMobile();
   const [isImmersive, setIsImmersive] = useState(false);
-  const [leftPanelOpen, setLeftPanelOpen] = useState(!isMobile);
-  const [rightPanelOpen, setRightPanelOpen] = useState(!isMobile);
+  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   // Keyboard navigation
@@ -92,107 +92,82 @@ export const CourseLayoutOS = ({
     return (
       <div className="min-h-screen bg-background flex flex-col">
         {/* Mobile Progress Bar - Sticky */}
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border">
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
           <CourseProgressBar 
             progress={progress} 
             courseTitle={courseTitle}
             compact
           />
-          
-          {/* Mobile Controls */}
-          <div className="flex items-center justify-between px-4 py-2">
-            <Sheet open={mobileDrawerOpen} onOpenChange={setMobileDrawerOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <Menu className="h-4 w-4" />
-                  Índice
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[85vw] p-0 bg-background">
-                <LessonIndexPanel
-                  modules={modules}
-                  currentLessonId={currentLessonId}
-                  onLessonSelect={(id) => {
-                    onLessonSelect(id);
-                    setMobileDrawerOpen(false);
-                  }}
-                />
-              </SheetContent>
-            </Sheet>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleImmersive}
-              className="gap-2"
-            >
-              {isImmersive ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
-          </div>
         </div>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
+        {/* Main Content - Full height scroll */}
+        <main className="flex-1 overflow-y-auto overscroll-contain">
           {children}
         </main>
 
         {/* Floating Index Button */}
-        <AnimatePresence>
-          {!mobileDrawerOpen && (
-            <motion.div
+        <Sheet open={mobileDrawerOpen} onOpenChange={setMobileDrawerOpen}>
+          <SheetTrigger asChild>
+            <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="fixed bottom-24 right-4 z-40"
+              className="fixed bottom-6 left-4 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20"
             >
-              <Button
-                size="lg"
-                className="rounded-full w-14 h-14 shadow-lg bg-primary hover:bg-primary/90"
-                onClick={() => setMobileDrawerOpen(true)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <Menu className="h-4 w-4" />
+              <span className="text-sm font-medium">Índice</span>
+            </motion.button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[85vw] max-w-[320px] p-0 bg-background">
+            <LessonIndexPanel
+              modules={modules}
+              currentLessonId={currentLessonId}
+              onLessonSelect={(id) => {
+                onLessonSelect(id);
+                setMobileDrawerOpen(false);
+              }}
+            />
+          </SheetContent>
+        </Sheet>
       </div>
     );
   }
 
   // Desktop Layout - 3 Panels
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Top Progress Bar */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border">
+      <div className="flex-shrink-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
         <CourseProgressBar 
           progress={progress} 
           courseTitle={courseTitle}
         />
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex min-h-0">
         {/* Left Panel - Lesson Index */}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {!isImmersive && leftPanelOpen && (
             <motion.aside
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
+              animate={{ width: 300, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="border-r border-border bg-card/30 overflow-hidden flex-shrink-0"
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="flex-shrink-0 border-r border-border/50 bg-card/30 overflow-hidden"
             >
-              <LessonIndexPanel
-                modules={modules}
-                currentLessonId={currentLessonId}
-                onLessonSelect={onLessonSelect}
-              />
+              <div className="h-full overflow-y-auto overscroll-contain">
+                <LessonIndexPanel
+                  modules={modules}
+                  currentLessonId={currentLessonId}
+                  onLessonSelect={onLessonSelect}
+                />
+              </div>
             </motion.aside>
           )}
         </AnimatePresence>
 
         {/* Center - Main Content */}
-        <main className="flex-1 overflow-y-auto relative">
-          {/* Immersive Toggle */}
+        <main className="flex-1 min-w-0 overflow-y-auto overscroll-contain relative">
+          {/* Panel Toggle Controls */}
           <div className="absolute top-4 right-4 z-30 flex gap-2">
             {!isImmersive && (
               <>
@@ -200,19 +175,19 @@ export const CourseLayoutOS = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => setLeftPanelOpen(prev => !prev)}
-                  className="bg-background/80 backdrop-blur-sm"
-                  title="Toggle sidebar"
+                  className="h-9 w-9 bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-background"
+                  title={leftPanelOpen ? "Ocultar índice" : "Mostrar índice"}
                 >
-                  <Menu className="h-4 w-4" />
+                  <PanelLeftClose className={`h-4 w-4 transition-transform ${!leftPanelOpen ? 'rotate-180' : ''}`} />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setRightPanelOpen(prev => !prev)}
-                  className="bg-background/80 backdrop-blur-sm"
-                  title="Toggle resources"
+                  className="h-9 w-9 bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-background"
+                  title={rightPanelOpen ? "Ocultar recursos" : "Mostrar recursos"}
                 >
-                  <Menu className="h-4 w-4 rotate-180" />
+                  <PanelRightClose className={`h-4 w-4 transition-transform ${!rightPanelOpen ? 'rotate-180' : ''}`} />
                 </Button>
               </>
             )}
@@ -220,8 +195,8 @@ export const CourseLayoutOS = ({
               variant="ghost"
               size="icon"
               onClick={toggleImmersive}
-              className="bg-background/80 backdrop-blur-sm"
-              title={isImmersive ? "Exit immersive (F)" : "Immersive mode (F)"}
+              className="h-9 w-9 bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-background"
+              title={isImmersive ? "Salir del modo inmersivo (F)" : "Modo inmersivo (F)"}
             >
               {isImmersive ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </Button>
@@ -231,19 +206,21 @@ export const CourseLayoutOS = ({
         </main>
 
         {/* Right Panel - Resources & Notes */}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {!isImmersive && rightPanelOpen && (
             <motion.aside
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 340, opacity: 1 }}
+              animate={{ width: 320, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="border-l border-border bg-card/30 overflow-hidden flex-shrink-0"
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="flex-shrink-0 border-l border-border/50 bg-card/30 overflow-hidden"
             >
-              <LessonSidePanel
-                materials={materials}
-                lessonId={currentLessonId}
-              />
+              <div className="h-full overflow-y-auto overscroll-contain">
+                <LessonSidePanel
+                  materials={materials}
+                  lessonId={currentLessonId}
+                />
+              </div>
             </motion.aside>
           )}
         </AnimatePresence>
