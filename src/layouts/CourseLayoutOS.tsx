@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Maximize2, Minimize2, PanelLeftClose, PanelRightClose } from "lucide-react";
+import { Menu, Maximize2, Minimize2, PanelLeftClose, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -87,7 +87,7 @@ export const CourseLayoutOS = ({
     setIsImmersive(prev => !prev);
   }, []);
 
-  // Mobile Layout
+  // Mobile Layout - Full scroll, no fixed heights
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -100,9 +100,17 @@ export const CourseLayoutOS = ({
           />
         </div>
 
-        {/* Main Content - Full height scroll */}
-        <main className="flex-1 overflow-y-auto overscroll-contain">
+        {/* Main Content - Natural scroll */}
+        <main className="flex-1">
           {children}
+          
+          {/* Side panel content inline for mobile */}
+          <div className="border-t border-border/50 bg-card/30">
+            <LessonSidePanel
+              materials={materials}
+              lessonId={currentLessonId}
+            />
+          </div>
         </main>
 
         {/* Floating Index Button */}
@@ -132,7 +140,7 @@ export const CourseLayoutOS = ({
     );
   }
 
-  // Desktop Layout - 3 Panels
+  // Desktop Layout - 3 Panels with proper overflow handling
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Top Progress Bar */}
@@ -143,7 +151,7 @@ export const CourseLayoutOS = ({
         />
       </div>
 
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Left Panel - Lesson Index */}
         <AnimatePresence mode="wait">
           {!isImmersive && leftPanelOpen && (
@@ -154,7 +162,7 @@ export const CourseLayoutOS = ({
               transition={{ duration: 0.2, ease: "easeInOut" }}
               className="flex-shrink-0 border-r border-border/50 bg-card/30 overflow-hidden"
             >
-              <div className="h-full overflow-y-auto overscroll-contain">
+              <div className="h-full overflow-y-auto">
                 <LessonIndexPanel
                   modules={modules}
                   currentLessonId={currentLessonId}
@@ -166,7 +174,7 @@ export const CourseLayoutOS = ({
         </AnimatePresence>
 
         {/* Center - Main Content */}
-        <main className="flex-1 min-w-0 overflow-y-auto overscroll-contain relative">
+        <main className="flex-1 min-w-0 overflow-y-auto relative">
           {/* Panel Toggle Controls */}
           <div className="absolute top-4 right-4 z-30 flex gap-2">
             {!isImmersive && (
@@ -215,7 +223,7 @@ export const CourseLayoutOS = ({
               transition={{ duration: 0.2, ease: "easeInOut" }}
               className="flex-shrink-0 border-l border-border/50 bg-card/30 overflow-hidden"
             >
-              <div className="h-full overflow-y-auto overscroll-contain">
+              <div className="h-full overflow-y-auto">
                 <LessonSidePanel
                   materials={materials}
                   lessonId={currentLessonId}

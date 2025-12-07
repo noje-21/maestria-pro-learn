@@ -1,17 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { 
   FileText, 
   Image, 
   Headphones, 
-  Download, 
   ExternalLink,
   BookOpen,
   Pencil,
   Save,
   Trash2,
   Plus,
-  Link2
+  Link2,
+  Loader2,
+  Check,
+  Cloud
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { GlossaryTooltip } from "@/components/common/GlossaryTooltip";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Material {
   id: string;
@@ -35,7 +39,7 @@ interface LessonSidePanelProps {
   lessonId: string;
 }
 
-// Medical terms glossary (sample)
+// Medical terms glossary
 const glossaryTerms = [
   { term: "Hipertensión", definition: "Presión arterial elevada por encima de los valores normales." },
   { term: "Cardiopatía", definition: "Enfermedad del corazón." },
@@ -90,44 +94,139 @@ export const LessonSidePanel = ({
   lessonId,
 }: LessonSidePanelProps) => {
   const { toast } = useToast();
-  const [notes, setNotes] = useState<string>("");
-  const [savedNotes, setSavedNotes] = useState<string[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
+  const { user } = useAuth();
+  const [noteContent, setNoteContent] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [noteId, setNoteId] = useState<string | null>(null);
 
-  // Load notes from localStorage
+  // Load notes from Supabase
   useEffect(() => {
-    const storedNotes = localStorage.getItem(`lesson-notes-${lessonId}`);
-    if (storedNotes) {
-      setSavedNotes(JSON.parse(storedNotes));
-    } else {
-      setSavedNotes([]);
+    const loadNote = async () => {
+      if (!user || !lessonId) return;
+      
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("lesson_notes")
+          .select("id, content")
+          .eq("user_id", user.id)
+          .eq("lesson_id", lessonId)
+          .maybeSingle();
+
+        if (error) throw error;
+        
+        if (data) {
+          setNoteContent(data.content);
+          setNoteId(data.id);
+        } else {
+          setNoteContent("");
+          setNoteId(null);
+        }
+      } catch (error) {
+        console.error("Error loading note:", error);
+        // Fallback to localStorage
+        const storedNote = localStorage.getItem(`lesson-note-${lessonId}`);
+        if (storedNote) {
+          setNoteContent(storedNote);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadNote();
+  }, [user, lessonId]);
+
+  // Debounced save function
+  const saveNote = useCallback(async (content: string) => {
+    if (!user || !lessonId) return;
+    
+    setSaveStatus('saving');
+    setIsSaving(true);
+
+    try {
+      // Also save to localStorage as backup
+      localStorage.setItem(`lesson-note-${lessonId}`, content);
+
+      if (noteId) {
+        // Update existing note
+        const { error } = await supabase
+          .from("lesson_notes")
+          .update({ content })
+          .eq("id", noteId);
+
+        if (error) throw error;
+      } else if (content.trim()) {
+        // Create new note
+        const { data, error } = await supabase
+          .from("lesson_notes")
+          .insert({
+            user_id: user.id,
+            lesson_id: lessonId,
+            content
+          })
+          .select("id")
+          .single();
+
+        if (error) throw error;
+        if (data) setNoteId(data.id);
+      }
+
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      console.error("Error saving note:", error);
+      setSaveStatus('idle');
+      toast({
+        title: "Error al guardar",
+        description: "La nota se guardó localmente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
-  }, [lessonId]);
+  }, [user, lessonId, noteId, toast]);
 
-  const saveNote = () => {
-    if (!notes.trim()) return;
+  // Debounce effect for auto-save
+  useEffect(() => {
+    if (isLoading) return;
     
-    const updatedNotes = [...savedNotes, notes.trim()];
-    setSavedNotes(updatedNotes);
-    localStorage.setItem(`lesson-notes-${lessonId}`, JSON.stringify(updatedNotes));
-    setNotes("");
-    setIsEditing(false);
-    
-    toast({
-      title: "Nota guardada",
-      description: "Tu nota se ha guardado correctamente.",
-    });
-  };
+    const timeoutId = setTimeout(() => {
+      saveNote(noteContent);
+    }, 500);
 
-  const deleteNote = (index: number) => {
-    const updatedNotes = savedNotes.filter((_, i) => i !== index);
-    setSavedNotes(updatedNotes);
-    localStorage.setItem(`lesson-notes-${lessonId}`, JSON.stringify(updatedNotes));
-    
-    toast({
-      title: "Nota eliminada",
-      description: "La nota se ha eliminado.",
-    });
+    return () => clearTimeout(timeoutId);
+  }, [noteContent, saveNote, isLoading]);
+
+  const deleteNote = async () => {
+    if (!user || !noteId) return;
+
+    try {
+      const { error } = await supabase
+        .from("lesson_notes")
+        .delete()
+        .eq("id", noteId);
+
+      if (error) throw error;
+
+      setNoteContent("");
+      setNoteId(null);
+      localStorage.removeItem(`lesson-note-${lessonId}`);
+
+      toast({
+        title: "Nota eliminada",
+        description: "La nota se ha eliminado correctamente.",
+      });
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la nota.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -217,7 +316,7 @@ export const LessonSidePanel = ({
           </ScrollArea>
         </TabsContent>
 
-        {/* Notes Tab */}
+        {/* Notes Tab - Now with Supabase sync */}
         <TabsContent value="notes" className="flex-1 m-0">
           <ScrollArea className="h-full">
             <div className="p-4 space-y-4">
@@ -225,91 +324,67 @@ export const LessonSidePanel = ({
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                   Mis notas
                 </h3>
-                {!isEditing && (
-                  <Button 
-                    size="sm" 
-                    variant="ghost"
-                    onClick={() => setIsEditing(true)}
-                    className="gap-1"
-                  >
-                    <Plus className="h-3 w-3" />
-                    Añadir
-                  </Button>
-                )}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {saveStatus === 'saving' && (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span>Guardando...</span>
+                    </>
+                  )}
+                  {saveStatus === 'saved' && (
+                    <>
+                      <Check className="h-3 w-3 text-green-500" />
+                      <span className="text-green-500">Guardado</span>
+                    </>
+                  )}
+                  {saveStatus === 'idle' && noteId && (
+                    <>
+                      <Cloud className="h-3 w-3" />
+                      <span>Sincronizado</span>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* Note Editor */}
-              {isEditing && (
+              {isLoading ? (
+                <Card className="p-6 text-center bg-muted/20">
+                  <Loader2 className="h-8 w-8 text-muted-foreground/50 mx-auto mb-3 animate-spin" />
+                  <p className="text-sm text-muted-foreground">
+                    Cargando notas...
+                  </p>
+                </Card>
+              ) : (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="space-y-2"
+                  className="space-y-3"
                 >
                   <Textarea
-                    placeholder="Escribe tu nota aquí..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    className="min-h-[100px] bg-background/50"
+                    placeholder="Escribe tus notas aquí... Se guardan automáticamente."
+                    value={noteContent}
+                    onChange={(e) => setNoteContent(e.target.value)}
+                    className="min-h-[200px] bg-background/50 resize-none"
                   />
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={saveNote} className="gap-1">
-                      <Save className="h-3 w-3" />
-                      Guardar
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => {
-                        setNotes("");
-                        setIsEditing(false);
-                      }}
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Saved Notes */}
-              {savedNotes.length === 0 && !isEditing ? (
-                <Card className="p-6 text-center bg-muted/20">
-                  <Pencil className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    No tienes notas para esta lección
+                  
+                  {noteContent.trim() && (
+                    <div className="flex justify-end">
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        onClick={deleteNote}
+                        className="gap-1"
+                        disabled={isSaving}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Eliminar nota
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-muted-foreground text-center">
+                    Tus notas se guardan automáticamente y se sincronizan entre dispositivos.
                   </p>
-                  <Button 
-                    size="sm" 
-                    variant="link" 
-                    className="mt-2"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    Crear una nota
-                  </Button>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {savedNotes.map((note, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="group relative"
-                    >
-                      <Card className="p-3 bg-card/50 border-border/50">
-                        <p className="text-sm pr-8 whitespace-pre-wrap">{note}</p>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                          onClick={() => deleteNote(index)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
+                </motion.div>
               )}
             </div>
           </ScrollArea>

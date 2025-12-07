@@ -53,22 +53,26 @@ export const LessonContent = ({
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
-        <div className="animate-pulse">
-          <div className="w-full aspect-video rounded-2xl bg-muted/50 flex items-center justify-center">
+      <div className="p-4 md:p-6 space-y-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="w-full aspect-video rounded-2xl bg-muted/50 flex items-center justify-center animate-pulse">
             <Play className="h-16 w-16 text-muted-foreground/30" />
           </div>
-        </div>
-        <Skeleton className="h-10 w-3/4" />
-        <Skeleton className="h-6 w-1/2" />
-        <div className="space-y-3">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-2/3" />
+          <div className="mt-6 space-y-4">
+            <Skeleton className="h-10 w-3/4" />
+            <Skeleton className="h-6 w-1/2" />
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          </div>
         </div>
       </div>
     );
   }
+
+  const activeVideo = videos[activeVideoIndex];
 
   return (
     <AnimatePresence mode="wait">
@@ -78,25 +82,27 @@ export const LessonContent = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="flex flex-col min-h-full"
+        className="flex flex-col"
       >
-        {/* Video Section - Fixed aspect ratio, no sticky behavior */}
+        {/* Video Section */}
         <div className="w-full px-4 md:px-6 lg:px-8 pt-4 md:pt-6">
           <div className="max-w-4xl mx-auto">
-            {videos.length > 0 ? (
+            {videos.length > 0 && activeVideo ? (
               <motion.div
+                key={activeVideo.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-4"
               >
-                {/* Main Video Player */}
+                {/* Single Video Player - Only shows active video */}
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-border/30 bg-black">
                   <div className="aspect-video">
                     <iframe
+                      key={activeVideo.id}
                       width="100%"
                       height="100%"
-                      src={videos[activeVideoIndex]?.video_url}
-                      title={videos[activeVideoIndex]?.title || `Video ${activeVideoIndex + 1}`}
+                      src={activeVideo.video_url}
+                      title={activeVideo.title || `Video ${activeVideoIndex + 1}`}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                       className="border-0"
@@ -157,7 +163,7 @@ export const LessonContent = ({
         </div>
 
         {/* Lesson Content Section */}
-        <div className="flex-1 w-full px-4 md:px-6 lg:px-8 py-6 md:py-8">
+        <div className="w-full px-4 md:px-6 lg:px-8 py-6 md:py-8">
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Lesson Header */}
             <motion.div 
