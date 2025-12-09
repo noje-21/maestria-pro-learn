@@ -47,17 +47,17 @@ const LessonContentComponent = ({
 }: LessonContentProps) => {
   if (loading) {
     return (
-      <div className="p-4 md:p-6 space-y-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="p-4 md:p-6 lg:p-8 space-y-6">
+        <div className="max-w-5xl mx-auto">
           <Skeleton className="w-full aspect-video rounded-2xl" />
           <div className="mt-6 space-y-4">
-            <Skeleton className="h-10 w-3/4" />
-            <Skeleton className="h-6 w-1/2" />
-            <div className="space-y-3">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-12 w-3/4" />
+            <div className="flex gap-4">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-5 w-24" />
             </div>
+            <Skeleton className="h-32 w-full rounded-xl" />
           </div>
         </div>
       </div>
@@ -68,26 +68,27 @@ const LessonContentComponent = ({
     <AnimatePresence mode="wait">
       <motion.div
         key={lesson.id}
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
+        exit={{ opacity: 0, y: -15 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
         className="flex flex-col"
       >
         {/* Video Section */}
         <div className="w-full px-4 md:px-6 lg:px-8 pt-4 md:pt-6">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <VideoPlayer
               videos={videos}
               lessonId={lesson.id}
               fallbackImage={lesson.image_url}
+              displayMode="tabs"
             />
           </div>
         </div>
 
         {/* Lesson Content Section */}
         <div className="w-full px-4 md:px-6 lg:px-8 py-6 md:py-8">
-          <div className="max-w-4xl mx-auto space-y-6">
+          <div className="max-w-5xl mx-auto space-y-6">
             {/* Lesson Header */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -97,7 +98,7 @@ const LessonContentComponent = ({
               {/* Module Badge */}
               <Badge
                 variant="secondary"
-                className="mb-4 bg-primary/10 text-primary border-primary/20 font-medium"
+                className="mb-4 bg-primary/10 text-primary border-primary/20 font-medium px-3 py-1"
               >
                 {moduleName}
               </Badge>
@@ -110,16 +111,31 @@ const LessonContentComponent = ({
               {/* Metadata */}
               <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                 {instructorName && (
-                  <div className="flex items-center gap-2">
+                  <motion.div 
+                    className="flex items-center gap-2"
+                    whileHover={{ scale: 1.02 }}
+                  >
                     <User className="h-4 w-4" />
-                    <span className="text-sm">{instructorName}</span>
-                  </div>
+                    <span className="text-sm font-medium">{instructorName}</span>
+                  </motion.div>
                 )}
                 {lesson.duration_minutes && lesson.duration_minutes > 0 && (
-                  <div className="flex items-center gap-2">
+                  <motion.div 
+                    className="flex items-center gap-2"
+                    whileHover={{ scale: 1.02 }}
+                  >
                     <Clock className="h-4 w-4" />
                     <span className="text-sm">{lesson.duration_minutes} minutos</span>
-                  </div>
+                  </motion.div>
+                )}
+                {videos.length > 0 && (
+                  <motion.div 
+                    className="flex items-center gap-2"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    <span className="text-sm">{videos.length} {videos.length === 1 ? 'video' : 'videos'}</span>
+                  </motion.div>
                 )}
               </div>
             </motion.div>
@@ -129,9 +145,9 @@ const LessonContentComponent = ({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
+                transition={{ delay: 0.15 }}
               >
-                <Card className="p-5 md:p-6 bg-card/80 backdrop-blur-sm border-border/50">
+                <Card className="p-5 md:p-6 bg-card/80 backdrop-blur-sm border-border/50 hover:border-border/80 transition-colors">
                   <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-primary" />
                     Descripción
@@ -146,8 +162,13 @@ const LessonContentComponent = ({
         </div>
 
         {/* Footer Navigation */}
-        <div className="w-full px-4 md:px-6 lg:px-8 pb-6 md:pb-8">
-          <div className="max-w-4xl mx-auto">
+        <motion.div 
+          className="w-full px-4 md:px-6 lg:px-8 pb-6 md:pb-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="max-w-5xl mx-auto">
             <LessonFooter
               completed={completed}
               onComplete={onComplete}
@@ -157,7 +178,7 @@ const LessonContentComponent = ({
               hasPrevious={hasPrevious}
             />
           </div>
-        </div>
+        </motion.div>
       </motion.div>
     </AnimatePresence>
   );
