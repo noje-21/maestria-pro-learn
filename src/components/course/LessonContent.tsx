@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, BookOpen, User, Play } from "lucide-react";
+import { Clock, BookOpen, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { VideoPlayer } from "@/components/common/VideoPlayer";
 import { LessonFooter } from "./LessonFooter";
 
 interface LessonContentProps {
@@ -31,7 +32,7 @@ interface LessonContentProps {
   loading?: boolean;
 }
 
-export const LessonContent = ({
+const LessonContentComponent = ({
   lesson,
   videos,
   moduleName,
@@ -44,20 +45,11 @@ export const LessonContent = ({
   hasPrevious,
   loading = false,
 }: LessonContentProps) => {
-  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
-
-  // Reset active video when lesson changes
-  useEffect(() => {
-    setActiveVideoIndex(0);
-  }, [lesson.id]);
-
   if (loading) {
     return (
       <div className="p-4 md:p-6 space-y-6">
         <div className="max-w-4xl mx-auto">
-          <div className="w-full aspect-video rounded-2xl bg-muted/50 flex items-center justify-center animate-pulse">
-            <Play className="h-16 w-16 text-muted-foreground/30" />
-          </div>
+          <Skeleton className="w-full aspect-video rounded-2xl" />
           <div className="mt-6 space-y-4">
             <Skeleton className="h-10 w-3/4" />
             <Skeleton className="h-6 w-1/2" />
@@ -72,93 +64,24 @@ export const LessonContent = ({
     );
   }
 
-  const activeVideo = videos[activeVideoIndex];
-
   return (
     <AnimatePresence mode="wait">
       <motion.div
         key={lesson.id}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
         className="flex flex-col"
       >
         {/* Video Section */}
         <div className="w-full px-4 md:px-6 lg:px-8 pt-4 md:pt-6">
           <div className="max-w-4xl mx-auto">
-            {videos.length > 0 && activeVideo ? (
-              <motion.div
-                key={activeVideo.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-4"
-              >
-                {/* Single Video Player - Only shows active video */}
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-border/30 bg-black">
-                  <div className="aspect-video">
-                    <iframe
-                      key={activeVideo.id}
-                      width="100%"
-                      height="100%"
-                      src={activeVideo.video_url}
-                      title={activeVideo.title || `Video ${activeVideoIndex + 1}`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="border-0"
-                    />
-                  </div>
-                </div>
-
-                {/* Video Selector (if multiple videos) */}
-                {videos.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                    {videos.map((video, index) => (
-                      <button
-                        key={video.id}
-                        onClick={() => setActiveVideoIndex(index)}
-                        className={`
-                          flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-                          transition-all whitespace-nowrap
-                          ${index === activeVideoIndex 
-                            ? 'bg-primary text-primary-foreground shadow-md' 
-                            : 'bg-muted/50 hover:bg-muted text-muted-foreground'
-                          }
-                        `}
-                      >
-                        <Play className="h-3.5 w-3.5" />
-                        {video.title || `Video ${index + 1}`}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            ) : lesson.image_url ? (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-border/30"
-              >
-                <div className="aspect-video">
-                  <img
-                    src={lesson.image_url}
-                    alt={lesson.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="aspect-video bg-gradient-to-br from-primary/10 via-background to-secondary/10 rounded-2xl flex items-center justify-center ring-1 ring-border/30"
-              >
-                <div className="text-center">
-                  <BookOpen className="h-16 w-16 text-primary/30 mx-auto mb-3" />
-                  <p className="text-muted-foreground text-sm">Contenido de la lección</p>
-                </div>
-              </motion.div>
-            )}
+            <VideoPlayer
+              videos={videos}
+              lessonId={lesson.id}
+              fallbackImage={lesson.image_url}
+            />
           </div>
         </div>
 
@@ -166,14 +89,14 @@ export const LessonContent = ({
         <div className="w-full px-4 md:px-6 lg:px-8 py-6 md:py-8">
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Lesson Header */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
               {/* Module Badge */}
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="mb-4 bg-primary/10 text-primary border-primary/20 font-medium"
               >
                 {moduleName}
@@ -192,7 +115,7 @@ export const LessonContent = ({
                     <span className="text-sm">{instructorName}</span>
                   </div>
                 )}
-                {lesson.duration_minutes && (
+                {lesson.duration_minutes && lesson.duration_minutes > 0 && (
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     <span className="text-sm">{lesson.duration_minutes} minutos</span>
@@ -213,7 +136,7 @@ export const LessonContent = ({
                     <BookOpen className="h-5 w-5 text-primary" />
                     Descripción
                   </h2>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {lesson.description}
                   </p>
                 </Card>
@@ -223,7 +146,7 @@ export const LessonContent = ({
         </div>
 
         {/* Footer Navigation */}
-        <div className="w-full px-4 md:px-6 lg:px-8 pb-4 md:pb-6">
+        <div className="w-full px-4 md:px-6 lg:px-8 pb-6 md:pb-8">
           <div className="max-w-4xl mx-auto">
             <LessonFooter
               completed={completed}
@@ -239,3 +162,5 @@ export const LessonContent = ({
     </AnimatePresence>
   );
 };
+
+export const LessonContent = memo(LessonContentComponent);
