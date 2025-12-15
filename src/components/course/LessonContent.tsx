@@ -81,7 +81,6 @@ const LessonContentComponent = ({
               videos={videos}
               lessonId={lesson.id}
               fallbackImage={lesson.image_url}
-              displayMode="tabs"
             />
           </div>
         </div>
