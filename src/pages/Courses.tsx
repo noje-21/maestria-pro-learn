@@ -1,38 +1,22 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, LogOut, User, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useCourseData } from "@/hooks/useCourseData";
 import { CourseFilters } from "@/components/courses/CourseFilters";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { CourseSkeleton } from "@/components/courses/CourseSkeleton";
 import { CourseRecommendations } from "@/components/courses/CourseRecommendations";
+import { PageTransition, FadeIn } from "@/components/ui/page-transition";
 import { motion, AnimatePresence } from "framer-motion";
-
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  image_url: string | null;
-  level: string;
-  status: string;
-  start_date: string | null;
-  end_date: string | null;
-  is_enrolled: boolean;
-  modules_count: number;
-  progress?: number;
-}
 
 const ITEMS_PER_PAGE = 9;
 
 const Courses = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { toast } = useToast();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { courses, loading } = useCourseData(user?.id);
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,72 +24,23 @@ const Courses = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    loadCourses();
-  }, [user]);
-
   // Reset page when filters change
-  useEffect(() => {
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchTerm(value);
     setCurrentPage(1);
-  }, [searchTerm, levelFilter, sortBy]);
+  }, []);
 
-  const loadCourses = async () => {
-    if (!user) return;
+  const handleLevelChange = useCallback((value: string) => {
+    setLevelFilter(value);
+    setCurrentPage(1);
+  }, []);
 
-    try {
-      const { data: coursesData, error: coursesError } = await supabase
-        .from('courses')
-        .select('*')
-        .eq('is_active', true)
-        .eq('status', 'active');
+  const handleSortChange = useCallback((value: string) => {
+    setSortBy(value);
+    setCurrentPage(1);
+  }, []);
 
-      if (coursesError) throw coursesError;
-
-      const { data: enrollmentsData, error: enrollmentsError } = await supabase
-        .from('user_courses')
-        .select('course_id, progress')
-        .eq('user_id', user.id)
-        .eq('status', 'enrolled');
-
-      if (enrollmentsError) throw enrollmentsError;
-
-      const enrollmentMap = new Map(
-        (enrollmentsData || []).map(e => [e.course_id, e.progress || 0])
-      );
-
-      const coursesWithData = await Promise.all(
-        (coursesData || []).map(async (course) => {
-          const { count } = await supabase
-            .from('modules')
-            .select('*', { count: 'exact', head: true })
-            .eq('course_id', course.id)
-            .eq('is_active', true);
-
-          const isEnrolled = enrollmentMap.has(course.id);
-          
-          return {
-            ...course,
-            is_enrolled: isEnrolled,
-            modules_count: count || 0,
-            progress: isEnrolled ? enrollmentMap.get(course.id) : undefined,
-          };
-        })
-      );
-
-      setCourses(coursesWithData);
-    } catch (error: any) {
-      console.error('Error loading courses:', error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los cursos",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Filtered and sorted courses
+  // Filtered and sorted courses - memoized
   const filteredCourses = useMemo(() => {
     let result = [...courses];
 
@@ -139,7 +74,7 @@ const Courses = () => {
     return result;
   }, [courses, searchTerm, levelFilter, sortBy]);
 
-  // Paginated courses
+  // Paginated courses - memoized
   const paginatedCourses = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredCourses.slice(start, start + ITEMS_PER_PAGE);
@@ -147,20 +82,25 @@ const Courses = () => {
 
   const totalPages = Math.ceil(filteredCourses.length / ITEMS_PER_PAGE);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await signOut();
-  };
+  }, [signOut]);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSearchTerm("");
     setLevelFilter("all");
     setSortBy("newest");
-  };
+    setCurrentPage(1);
+  }, []);
 
   const hasActiveFilters = searchTerm !== "" || levelFilter !== "all" || sortBy !== "newest";
 
+  const handleCourseClick = useCallback((courseId: string) => {
+    navigate(`/course/${courseId}`);
+  }, [navigate]);
+
   return (
-    <div className="min-h-screen bg-gradient-dark">
+    <PageTransition className="min-h-screen bg-gradient-dark">
       {/* Navigation */}
       <nav className="border-b border-border/50 backdrop-blur-xl sticky top-0 z-40 bg-background/80">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -205,28 +145,23 @@ const Courses = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-10"
-        >
+        <FadeIn className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text">
             Catálogo de Cursos
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Explora y matricúlate en nuestros programas educativos especializados
           </p>
-        </motion.div>
+        </FadeIn>
 
         {/* Filters */}
         <CourseFilters
           searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          onSearchChange={handleSearchChange}
           levelFilter={levelFilter}
-          onLevelChange={setLevelFilter}
+          onLevelChange={handleLevelChange}
           sortBy={sortBy}
-          onSortChange={setSortBy}
+          onSortChange={handleSortChange}
           onClearFilters={clearFilters}
           hasActiveFilters={hasActiveFilters}
         />
@@ -262,7 +197,7 @@ const Courses = () => {
                     key={course.id}
                     course={course}
                     index={idx}
-                    onClick={() => navigate(`/course/${course.id}`)}
+                    onClick={() => handleCourseClick(course.id)}
                   />
                 ))}
               </AnimatePresence>
@@ -347,18 +282,13 @@ const Courses = () => {
 
         {/* Recommendations */}
         {user && !loading && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="pt-12 border-t border-border/30"
-          >
+          <FadeIn delay={0.3} className="pt-12 border-t border-border/30">
             <CourseRecommendations userId={user.id} limit={6} />
-          </motion.div>
+          </FadeIn>
         )}
       </div>
-    </div>
+    </PageTransition>
   );
 };
 
-export default Courses;
+export default memo(Courses);

@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ interface CourseCardProps {
   onClick: () => void;
 }
 
-export const CourseCard = ({ course, index, onClick }: CourseCardProps) => {
+const CourseCardComponent = ({ course, index, onClick }: CourseCardProps) => {
   const getLevelConfig = (level: string) => {
     switch (level?.toLowerCase()) {
       case 'básico':
@@ -257,3 +258,5 @@ export const CourseCard = ({ course, index, onClick }: CourseCardProps) => {
     </motion.div>
   );
 };
+
+export const CourseCard = memo(CourseCardComponent);
