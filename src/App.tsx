@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, memo } from "react";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -22,23 +22,37 @@ const CourseDetail = lazy(() => import("./pages/CourseDetail"));
 const MyCourses = lazy(() => import("./pages/MyCourses"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+// Optimized QueryClient with proper caching
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes (previously cacheTime)
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-// Loading fallback component
-const PageLoader = () => (
+// Memoized loading fallback component
+const PageLoader = memo(() => (
   <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
     <div className="text-center space-y-4">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-      <p className="text-muted-foreground">Cargando...</p>
+      <div className="relative">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-primary/20 border-t-primary mx-auto"></div>
+      </div>
+      <p className="text-muted-foreground text-sm animate-pulse">Cargando...</p>
     </div>
   </div>
-);
+));
+
+PageLoader.displayName = "PageLoader";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+    <TooltipProvider delayDuration={300}>
       <Toaster />
-      <Sonner />
+      <Sonner position="top-center" richColors closeButton />
       <BrowserRouter>
         <AuthProvider>
           <Suspense fallback={<PageLoader />}>

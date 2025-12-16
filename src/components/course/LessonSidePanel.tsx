@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 import { 
   FileText, 
@@ -89,7 +89,7 @@ const getFileColor = (type: string) => {
   }
 };
 
-export const LessonSidePanel = ({
+const LessonSidePanelComponent = ({
   materials,
   lessonId,
 }: LessonSidePanelProps) => {
@@ -426,3 +426,5 @@ export const LessonSidePanel = ({
     </div>
   );
 };
+
+export const LessonSidePanel = memo(LessonSidePanelComponent);
