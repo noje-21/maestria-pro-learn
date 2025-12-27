@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, memo } from "react";
-import { motion } from "framer-motion";
+import { memo, useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, 
   Image, 
@@ -7,23 +7,21 @@ import {
   ExternalLink,
   BookOpen,
   Pencil,
-  Save,
   Trash2,
-  Plus,
-  Link2,
   Loader2,
   Check,
-  Cloud
+  Cloud,
+  ListCollapse,
+  FolderOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { GlossaryTooltip } from "@/components/common/GlossaryTooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -34,20 +32,13 @@ interface Material {
   type?: string;
 }
 
-interface LessonSidePanelProps {
+interface LessonTabsProps {
+  lessonDescription: string;
   materials: Material[];
   lessonId: string;
 }
 
-// Medical terms glossary
-const glossaryTerms = [
-  { term: "Hipertensión", definition: "Presión arterial elevada por encima de los valores normales." },
-  { term: "Cardiopatía", definition: "Enfermedad del corazón." },
-  { term: "Edema", definition: "Acumulación anormal de líquido en los tejidos." },
-  { term: "Disnea", definition: "Dificultad para respirar o sensación de falta de aire." },
-  { term: "Cianosis", definition: "Coloración azulada de la piel debido a falta de oxígeno." },
-];
-
+// Helper functions for file types
 const getFileType = (url: string, title: string): string => {
   const extension = url.split('.').pop()?.toLowerCase() || '';
   const lowerTitle = title.toLowerCase();
@@ -56,7 +47,6 @@ const getFileType = (url: string, title: string): string => {
   if (['doc', 'docx'].includes(extension) || lowerTitle.includes('documento')) return 'doc';
   if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension) || lowerTitle.includes('imagen')) return 'image';
   if (['mp3', 'wav', 'ogg'].includes(extension) || lowerTitle.includes('audio')) return 'audio';
-  if (['ppt', 'pptx'].includes(extension) || lowerTitle.includes('presentación')) return 'presentation';
   return 'file';
 };
 
@@ -89,10 +79,11 @@ const getFileColor = (type: string) => {
   }
 };
 
-const LessonSidePanelComponent = ({
+const LessonTabsComponent = ({
+  lessonDescription,
   materials,
   lessonId,
-}: LessonSidePanelProps) => {
+}: LessonTabsProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [noteContent, setNoteContent] = useState<string>("");
@@ -100,6 +91,7 @@ const LessonSidePanelComponent = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [noteId, setNoteId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("summary");
 
   // Load notes from Supabase
   useEffect(() => {
@@ -126,7 +118,6 @@ const LessonSidePanelComponent = ({
         }
       } catch (error) {
         console.error("Error loading note:", error);
-        // Fallback to localStorage
         const storedNote = localStorage.getItem(`lesson-note-${lessonId}`);
         if (storedNote) {
           setNoteContent(storedNote);
@@ -147,11 +138,9 @@ const LessonSidePanelComponent = ({
     setIsSaving(true);
 
     try {
-      // Also save to localStorage as backup
       localStorage.setItem(`lesson-note-${lessonId}`, content);
 
       if (noteId) {
-        // Update existing note
         const { error } = await supabase
           .from("lesson_notes")
           .update({ content })
@@ -159,7 +148,6 @@ const LessonSidePanelComponent = ({
 
         if (error) throw error;
       } else if (content.trim()) {
-        // Create new note
         const { data, error } = await supabase
           .from("lesson_notes")
           .insert({
@@ -195,7 +183,7 @@ const LessonSidePanelComponent = ({
     
     const timeoutId = setTimeout(() => {
       saveNote(noteContent);
-    }, 500);
+    }, 800);
 
     return () => clearTimeout(timeoutId);
   }, [noteContent, saveNote, isLoading]);
@@ -230,35 +218,80 @@ const LessonSidePanelComponent = ({
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <Tabs defaultValue="resources" className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-3 m-2 mr-4">
-          <TabsTrigger value="resources" className="text-xs">
-            Recursos
+    <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="w-full grid grid-cols-3 h-12 bg-muted/30 rounded-none border-b border-border/50">
+          <TabsTrigger 
+            value="summary" 
+            className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+          >
+            <ListCollapse className="h-4 w-4" />
+            <span className="hidden sm:inline">Resumen</span>
           </TabsTrigger>
-          <TabsTrigger value="notes" className="text-xs">
-            Notas
+          <TabsTrigger 
+            value="resources" 
+            className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+          >
+            <FolderOpen className="h-4 w-4" />
+            <span className="hidden sm:inline">Recursos</span>
+            {materials.length > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                {materials.length}
+              </Badge>
+            )}
           </TabsTrigger>
-          <TabsTrigger value="glossary" className="text-xs">
-            Glosario
+          <TabsTrigger 
+            value="notes" 
+            className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+          >
+            <Pencil className="h-4 w-4" />
+            <span className="hidden sm:inline">Notas</span>
+            {noteContent.trim() && (
+              <div className="w-2 h-2 rounded-full bg-primary ml-1" />
+            )}
           </TabsTrigger>
         </TabsList>
 
-        {/* Resources Tab */}
-        <TabsContent value="resources" className="flex-1 m-0">
-          <ScrollArea className="h-full">
-            <div className="p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-                Materiales de la lección
-              </h3>
-              
-              {materials.length === 0 ? (
-                <Card className="p-6 text-center bg-muted/20">
-                  <BookOpen className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    No hay materiales disponibles para esta lección
+        {/* Summary Tab */}
+        <TabsContent value="summary" className="m-0 p-0">
+          <ScrollArea className="max-h-[300px]">
+            <div className="p-5">
+              {lessonDescription ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Descripción de la lección
+                  </h3>
+                  <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                    {lessonDescription}
                   </p>
-                </Card>
+                </motion.div>
+              ) : (
+                <div className="text-center py-8">
+                  <BookOpen className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">
+                    No hay descripción disponible para esta lección.
+                  </p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </TabsContent>
+
+        {/* Resources Tab */}
+        <TabsContent value="resources" className="m-0 p-0">
+          <ScrollArea className="max-h-[300px]">
+            <div className="p-5 space-y-3">
+              {materials.length === 0 ? (
+                <div className="text-center py-8">
+                  <FolderOpen className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">
+                    No hay materiales disponibles para esta lección.
+                  </p>
+                </div>
               ) : (
                 materials.map((material, index) => {
                   const fileType = getFileType(material.file_url, material.title);
@@ -271,10 +304,10 @@ const LessonSidePanelComponent = ({
                       href={material.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      initial={{ opacity: 0, x: 20 }}
+                      initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-card/50 hover:bg-card border border-border/50 hover:border-primary/30 transition-all group"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-background/50 hover:bg-background border border-border/50 hover:border-primary/30 transition-all group"
                     >
                       <div className={cn("p-2.5 rounded-lg", colorClass)}>
                         <Icon className="h-5 w-5" />
@@ -299,27 +332,14 @@ const LessonSidePanelComponent = ({
                   );
                 })
               )}
-
-              {/* Quick Links Section */}
-              <div className="pt-4 mt-4 border-t border-border">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  Enlaces útiles
-                </h3>
-                <Card className="p-4 bg-primary/5 border-primary/20">
-                  <div className="flex items-center gap-2 text-sm text-primary">
-                    <Link2 className="h-4 w-4" />
-                    <span>Referencias y bibliografía disponibles próximamente</span>
-                  </div>
-                </Card>
-              </div>
             </div>
           </ScrollArea>
         </TabsContent>
 
-        {/* Notes Tab - Now with Supabase sync */}
-        <TabsContent value="notes" className="flex-1 m-0">
-          <ScrollArea className="h-full">
-            <div className="p-4 space-y-4">
+        {/* Notes Tab */}
+        <TabsContent value="notes" className="m-0 p-0">
+          <ScrollArea className="max-h-[300px]">
+            <div className="p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                   Mis notas
@@ -347,12 +367,10 @@ const LessonSidePanelComponent = ({
               </div>
 
               {isLoading ? (
-                <Card className="p-6 text-center bg-muted/20">
+                <div className="text-center py-8">
                   <Loader2 className="h-8 w-8 text-muted-foreground/50 mx-auto mb-3 animate-spin" />
-                  <p className="text-sm text-muted-foreground">
-                    Cargando notas...
-                  </p>
-                </Card>
+                  <p className="text-sm text-muted-foreground">Cargando notas...</p>
+                </div>
               ) : (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
@@ -363,7 +381,7 @@ const LessonSidePanelComponent = ({
                     placeholder="Escribe tus notas aquí... Se guardan automáticamente."
                     value={noteContent}
                     onChange={(e) => setNoteContent(e.target.value)}
-                    className="min-h-[200px] bg-background/50 resize-none"
+                    className="min-h-[150px] bg-background/50 resize-none"
                   />
                   
                   {noteContent.trim() && (
@@ -389,42 +407,9 @@ const LessonSidePanelComponent = ({
             </div>
           </ScrollArea>
         </TabsContent>
-
-        {/* Glossary Tab */}
-        <TabsContent value="glossary" className="flex-1 m-0">
-          <ScrollArea className="h-full">
-            <div className="p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-                Términos médicos
-              </h3>
-              
-              {glossaryTerms.map((item, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <GlossaryTooltip term={item.term} definition={item.definition}>
-                    <Card className="p-3 bg-card/50 border-border/50 hover:border-primary/30 transition-all cursor-help">
-                      <div className="flex items-start gap-2">
-                        <Badge variant="secondary" className="bg-primary/10 text-primary shrink-0">
-                          {item.term}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                        {item.definition}
-                      </p>
-                    </Card>
-                  </GlossaryTooltip>
-                </motion.div>
-              ))}
-            </div>
-          </ScrollArea>
-        </TabsContent>
       </Tabs>
-    </div>
+    </Card>
   );
 };
 
-export const LessonSidePanel = memo(LessonSidePanelComponent);
+export const LessonTabs = memo(LessonTabsComponent);

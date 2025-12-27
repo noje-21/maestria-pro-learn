@@ -1,11 +1,11 @@
 import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, BookOpen, User } from "lucide-react";
+import { Clock, User, Video } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VideoPlayer } from "@/components/common/VideoPlayer";
 import { LessonFooter } from "./LessonFooter";
+import { LessonTabs } from "./LessonTabs";
 
 interface LessonContentProps {
   lesson: {
@@ -21,6 +21,11 @@ interface LessonContentProps {
     title: string | null;
     order_number: number;
   }>;
+  materials?: Array<{
+    id: string;
+    title: string;
+    file_url: string;
+  }>;
   moduleName: string;
   instructorName?: string;
   completed: boolean;
@@ -35,6 +40,7 @@ interface LessonContentProps {
 const LessonContentComponent = ({
   lesson,
   videos,
+  materials = [],
   moduleName,
   instructorName,
   completed,
@@ -81,7 +87,6 @@ const LessonContentComponent = ({
               videos={videos}
               lessonId={lesson.id}
               fallbackImage={lesson.image_url}
-              displayMode="tabs"
             />
           </div>
         </div>
@@ -111,53 +116,38 @@ const LessonContentComponent = ({
               {/* Metadata */}
               <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                 {instructorName && (
-                  <motion.div 
-                    className="flex items-center gap-2"
-                    whileHover={{ scale: 1.02 }}
-                  >
+                  <div className="flex items-center gap-2">
                     <User className="h-4 w-4" />
                     <span className="text-sm font-medium">{instructorName}</span>
-                  </motion.div>
+                  </div>
                 )}
                 {lesson.duration_minutes && lesson.duration_minutes > 0 && (
-                  <motion.div 
-                    className="flex items-center gap-2"
-                    whileHover={{ scale: 1.02 }}
-                  >
+                  <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     <span className="text-sm">{lesson.duration_minutes} minutos</span>
-                  </motion.div>
+                  </div>
                 )}
                 {videos.length > 0 && (
-                  <motion.div 
-                    className="flex items-center gap-2"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <BookOpen className="h-4 w-4" />
+                  <div className="flex items-center gap-2">
+                    <Video className="h-4 w-4" />
                     <span className="text-sm">{videos.length} {videos.length === 1 ? 'video' : 'videos'}</span>
-                  </motion.div>
+                  </div>
                 )}
               </div>
             </motion.div>
 
-            {/* Description Card */}
-            {lesson.description && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-              >
-                <Card className="p-5 md:p-6 bg-card/80 backdrop-blur-sm border-border/50 hover:border-border/80 transition-colors">
-                  <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                    Descripción
-                  </h2>
-                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {lesson.description}
-                  </p>
-                </Card>
-              </motion.div>
-            )}
+            {/* Lesson Tabs: Summary, Resources, Notes */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <LessonTabs
+                lessonDescription={lesson.description}
+                materials={materials}
+                lessonId={lesson.id}
+              />
+            </motion.div>
           </div>
         </div>
 
