@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, Maximize2, Minimize2, PanelLeftClose, PanelRightClose, X } from "lucide-react";
+import { Menu, Maximize2, Minimize2, PanelLeftClose, PanelRightClose, X, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
 import { LessonSidebar } from "@/components/course/LessonSidebar";
 import type { ModuleData } from "@/components/course/LessonSidebar";
-import { LessonSidePanel } from "@/components/course/LessonSidePanel";
 import { CourseProgressBar } from "@/components/course/CourseProgressBar";
 
 interface CourseLayoutOSProps {
@@ -33,9 +33,9 @@ const CourseLayoutOSComponent = ({
   onComplete,
 }: CourseLayoutOSProps) => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [isImmersive, setIsImmersive] = useState(false);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
-  const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   // Keyboard navigation
@@ -75,30 +75,38 @@ const CourseLayoutOSComponent = ({
     setMobileDrawerOpen(false);
   }, [onLessonSelect]);
 
+  const handleBackToCourse = useCallback(() => {
+    navigate(`/course/${courseId}`);
+  }, [navigate, courseId]);
+
   // Mobile Layout
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        {/* Mobile Progress Bar */}
+        {/* Mobile Header with Progress */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
-          <CourseProgressBar
-            progress={progress}
-            courseTitle={courseTitle}
-            compact
-          />
+          <div className="flex items-center gap-2 p-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBackToCourse}
+              className="shrink-0 h-9 w-9"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <CourseProgressBar
+                progress={progress}
+                courseTitle={courseTitle}
+                compact
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Main Content */}
+        {/* Main Content - Natural scroll */}
         <main className="flex-1 pb-24">
           {children}
-
-          {/* Side panel inline for mobile */}
-          <div className="border-t border-border/50 bg-card/30 mt-6">
-            <LessonSidePanel
-              materials={materials}
-              lessonId={currentLessonId}
-            />
-          </div>
         </main>
 
         {/* Floating Index Button */}
@@ -132,19 +140,32 @@ const CourseLayoutOSComponent = ({
     );
   }
 
-  // Desktop Layout - 3 Panels
+  // Desktop Layout - 2 Panels (Sidebar + Content)
   return (
-    <div className="h-screen bg-background flex flex-col">
-      {/* Top Progress Bar */}
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      {/* Top Progress Bar with back button */}
       <div className="shrink-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
-        <CourseProgressBar
-          progress={progress}
-          courseTitle={courseTitle}
-        />
+        <div className="flex items-center gap-3 px-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBackToCourse}
+            className="gap-2 shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden lg:inline">Volver al curso</span>
+          </Button>
+          <div className="flex-1">
+            <CourseProgressBar
+              progress={progress}
+              courseTitle={courseTitle}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Main 3-Panel Layout */}
-      <div className="flex-1 flex min-h-0">
+      {/* Main 2-Panel Layout */}
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Left Panel - Lesson Sidebar */}
         <AnimatePresence mode="wait" initial={false}>
           {!isImmersive && leftPanelOpen && (
@@ -172,26 +193,15 @@ const CourseLayoutOSComponent = ({
           {/* Panel Controls */}
           <div className="absolute top-4 right-4 z-30 flex gap-2">
             {!isImmersive && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setLeftPanelOpen(prev => !prev)}
-                  className="h-9 w-9 bg-background/90 backdrop-blur-sm border border-border/50 hover:bg-background shadow-sm"
-                  title={leftPanelOpen ? "Ocultar índice" : "Mostrar índice"}
-                >
-                  <PanelLeftClose className={`h-4 w-4 transition-transform duration-200 ${!leftPanelOpen ? 'rotate-180' : ''}`} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setRightPanelOpen(prev => !prev)}
-                  className="h-9 w-9 bg-background/90 backdrop-blur-sm border border-border/50 hover:bg-background shadow-sm"
-                  title={rightPanelOpen ? "Ocultar recursos" : "Mostrar recursos"}
-                >
-                  <PanelRightClose className={`h-4 w-4 transition-transform duration-200 ${!rightPanelOpen ? 'rotate-180' : ''}`} />
-                </Button>
-              </>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setLeftPanelOpen(prev => !prev)}
+                className="h-9 w-9 bg-background/90 backdrop-blur-sm border border-border/50 hover:bg-background shadow-sm"
+                title={leftPanelOpen ? "Ocultar índice" : "Mostrar índice"}
+              >
+                <PanelLeftClose className={`h-4 w-4 transition-transform duration-200 ${!leftPanelOpen ? 'rotate-180' : ''}`} />
+              </Button>
             )}
             <Button
               variant="ghost"
@@ -206,26 +216,6 @@ const CourseLayoutOSComponent = ({
 
           {children}
         </main>
-
-        {/* Right Panel - Resources & Notes */}
-        <AnimatePresence mode="wait" initial={false}>
-          {!isImmersive && rightPanelOpen && (
-            <motion.aside
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 340, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-              className="shrink-0 border-l border-border/50 bg-card/30 overflow-hidden"
-            >
-              <div className="h-full overflow-y-auto overscroll-contain">
-                <LessonSidePanel
-                  materials={materials}
-                  lessonId={currentLessonId}
-                />
-              </div>
-            </motion.aside>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );

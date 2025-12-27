@@ -1,10 +1,9 @@
-import { useState, useMemo, memo, useCallback } from "react";
+import { useState, useMemo, memo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, CheckCircle2, Search, BookOpen } from "lucide-react";
+import { ChevronDown, CheckCircle2, Search, BookOpen, Lock, PlayCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { LessonItem } from "./LessonItem";
 
 export interface LessonData {
   id: string;
@@ -34,7 +33,85 @@ interface LessonSidebarProps {
   compact?: boolean;
 }
 
-// Module Accordion - extracted for reuse
+// Lesson Item Component
+const LessonItemComponent = memo(({
+  lesson,
+  isCurrent,
+  onSelect,
+}: {
+  lesson: LessonData;
+  isCurrent: boolean;
+  onSelect: () => void;
+}) => {
+  const isLocked = lesson.locked;
+  const isCompleted = lesson.completed;
+
+  return (
+    <motion.button
+      onClick={onSelect}
+      disabled={isLocked}
+      whileHover={!isLocked ? { x: 4 } : undefined}
+      whileTap={!isLocked ? { scale: 0.98 } : undefined}
+      className={cn(
+        "w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-all relative",
+        isLocked 
+          ? "opacity-50 cursor-not-allowed" 
+          : "cursor-pointer hover:bg-muted/50",
+        isCurrent && "bg-primary/10 border border-primary/30"
+      )}
+    >
+      {/* Status Icon */}
+      <div className={cn(
+        "flex items-center justify-center w-7 h-7 rounded-full shrink-0 transition-all",
+        isCompleted 
+          ? "bg-green-500/20 text-green-500" 
+          : isCurrent
+            ? "bg-primary text-primary-foreground"
+            : isLocked
+              ? "bg-muted text-muted-foreground"
+              : "bg-muted/50 text-muted-foreground"
+      )}>
+        {isCompleted ? (
+          <CheckCircle2 className="h-4 w-4" />
+        ) : isLocked ? (
+          <Lock className="h-3 w-3" />
+        ) : isCurrent ? (
+          <PlayCircle className="h-4 w-4" />
+        ) : (
+          <span className="text-xs font-bold">{lesson.lesson_number}</span>
+        )}
+      </div>
+
+      {/* Lesson Info */}
+      <div className="flex-1 min-w-0">
+        <p className={cn(
+          "text-sm truncate transition-colors",
+          isCurrent ? "font-semibold text-foreground" : "text-foreground/80",
+          isCompleted && !isCurrent && "text-muted-foreground"
+        )}>
+          {lesson.title}
+        </p>
+        {lesson.duration_minutes > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {lesson.duration_minutes} min
+          </p>
+        )}
+      </div>
+
+      {/* Current indicator */}
+      {isCurrent && (
+        <motion.div
+          layoutId="currentLesson"
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"
+        />
+      )}
+    </motion.button>
+  );
+});
+
+LessonItemComponent.displayName = "LessonItem";
+
+// Module Accordion Component
 const ModuleAccordionItem = memo(({
   module,
   isExpanded,
@@ -60,12 +137,11 @@ const ModuleAccordionItem = memo(({
       {/* Module Header */}
       <motion.button
         onClick={onToggle}
-        whileHover={{ scale: 1.005 }}
+        whileHover={{ backgroundColor: "hsl(var(--muted) / 0.5)" }}
         whileTap={{ scale: 0.995 }}
         className={cn(
           "w-full flex items-center gap-3 p-3.5 rounded-xl text-left transition-all",
-          "hover:bg-muted/50",
-          hasCurrentLesson && "bg-primary/10 border border-primary/30 shadow-sm"
+          hasCurrentLesson && "bg-primary/5 border border-primary/20"
         )}
       >
         {/* Module Number / Complete Icon */}
@@ -76,7 +152,7 @@ const ModuleAccordionItem = memo(({
               ? "bg-green-500/20 text-green-500"
               : hasCurrentLesson
                 ? "bg-primary text-primary-foreground"
-                : "bg-primary/20 text-primary"
+                : "bg-primary/10 text-primary"
           )}
         >
           {isComplete ? (
@@ -94,7 +170,7 @@ const ModuleAccordionItem = memo(({
               {completedCount}/{totalCount} lecciones
             </span>
             {/* Progress bar mini */}
-            <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden max-w-[80px]">
+            <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden max-w-[60px]">
               <motion.div
                 className={cn(
                   "h-full rounded-full",
@@ -141,13 +217,12 @@ const ModuleAccordionItem = memo(({
             className="overflow-hidden"
           >
             <div className="pl-4 pr-2 py-2 space-y-1">
-              {module.lessons.map((lesson, index) => (
-                <LessonItem
+              {module.lessons.map((lesson) => (
+                <LessonItemComponent
                   key={lesson.id}
                   lesson={lesson}
                   isCurrent={lesson.id === currentLessonId}
                   onSelect={() => !lesson.locked && onLessonSelect(lesson.id)}
-                  animationDelay={index * 0.02}
                 />
               ))}
             </div>
@@ -169,9 +244,17 @@ const LessonSidebarComponent = ({
   compact = false,
 }: LessonSidebarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedModules, setExpandedModules] = useState<Set<string>>(
-    () => new Set(modules.map(m => m.id))
-  );
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(() => new Set());
+
+  // Auto-expand module containing current lesson
+  useEffect(() => {
+    const moduleWithCurrentLesson = modules.find(m => 
+      m.lessons.some(l => l.id === currentLessonId)
+    );
+    if (moduleWithCurrentLesson) {
+      setExpandedModules(prev => new Set([...prev, moduleWithCurrentLesson.id]));
+    }
+  }, [currentLessonId, modules]);
 
   // Filter modules and lessons based on search
   const filteredModules = useMemo(() => {
@@ -259,6 +342,4 @@ const LessonSidebarComponent = ({
   );
 };
 
-// Export both as LessonSidebar and LessonIndexPanel for backwards compatibility
 export const LessonSidebar = memo(LessonSidebarComponent);
-export const LessonIndexPanel = memo(LessonSidebarComponent);

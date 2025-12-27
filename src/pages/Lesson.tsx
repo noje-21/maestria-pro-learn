@@ -70,6 +70,7 @@ const Lesson = () => {
         <LessonContent
           lesson={lesson}
           videos={videos}
+          materials={materials}
           moduleName={currentModuleName}
           instructorName={instructorName}
           completed={completed}
