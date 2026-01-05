@@ -3,8 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Save, Eye, EyeOff } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Save, Eye, EyeOff, BookOpen, GraduationCap } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Module {
   id: string;
@@ -25,6 +27,7 @@ export const ModuleVisibilityManager = () => {
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -35,26 +38,17 @@ export const ModuleVisibilityManager = () => {
     try {
       setLoading(true);
 
-      // Cargar módulos
-      const { data: modulesData, error: modulesError } = await supabase
-        .from("modules")
-        .select("*")
-        .order("module_number");
+      const [modulesResult, lessonsResult] = await Promise.all([
+        supabase.from("modules").select("*").order("module_number"),
+        supabase.from("lessons").select("*").order("lesson_number"),
+      ]);
 
-      if (modulesError) throw modulesError;
+      if (modulesResult.error) throw modulesResult.error;
+      if (lessonsResult.error) throw lessonsResult.error;
 
-      // Cargar lecciones
-      const { data: lessonsData, error: lessonsError } = await supabase
-        .from("lessons")
-        .select("*")
-        .order("lesson_number");
-
-      if (lessonsError) throw lessonsError;
-
-      // Organizar módulos con sus lecciones
-      const modulesWithLessons = modulesData!.map((module) => ({
+      const modulesWithLessons = (modulesResult.data || []).map((module) => ({
         ...module,
-        lessons: lessonsData!.filter((lesson) => lesson.module_id === module.id),
+        lessons: (lessonsResult.data || []).filter((lesson) => lesson.module_id === module.id),
       }));
 
       setModules(modulesWithLessons);
@@ -78,6 +72,7 @@ export const ModuleVisibilityManager = () => {
           : module
       )
     );
+    setHasChanges(true);
   };
 
   const toggleLessonVisibility = (moduleId: string, lessonId: string) => {
@@ -95,36 +90,37 @@ export const ModuleVisibilityManager = () => {
           : module
       )
     );
+    setHasChanges(true);
   };
 
   const saveChanges = async () => {
     try {
       setSaving(true);
 
-      // Actualizar módulos
-      for (const module of modules) {
-        const { error: moduleError } = await supabase
+      // Batch updates
+      const moduleUpdates = modules.map((module) =>
+        supabase
           .from("modules")
           .update({ is_active: module.is_active })
-          .eq("id", module.id);
+          .eq("id", module.id)
+      );
 
-        if (moduleError) throw moduleError;
-
-        // Actualizar lecciones
-        for (const lesson of module.lessons) {
-          const { error: lessonError } = await supabase
+      const lessonUpdates = modules.flatMap((module) =>
+        module.lessons.map((lesson) =>
+          supabase
             .from("lessons")
             .update({ is_active: lesson.is_active })
-            .eq("id", lesson.id);
+            .eq("id", lesson.id)
+        )
+      );
 
-          if (lessonError) throw lessonError;
-        }
-      }
+      await Promise.all([...moduleUpdates, ...lessonUpdates]);
 
       toast({
         title: "Cambios guardados",
-        description: "La visibilidad de módulos y lecciones se actualizó correctamente",
+        description: "La visibilidad se actualizó correctamente",
       });
+      setHasChanges(false);
     } catch (error: any) {
       console.error("Error saving changes:", error);
       toast({
@@ -137,9 +133,20 @@ export const ModuleVisibilityManager = () => {
     }
   };
 
+  // Stats
+  const stats = {
+    totalModules: modules.length,
+    activeModules: modules.filter((m) => m.is_active).length,
+    totalLessons: modules.reduce((acc, m) => acc + m.lessons.length, 0),
+    activeLessons: modules.reduce(
+      (acc, m) => acc + m.lessons.filter((l) => l.is_active).length,
+      0
+    ),
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12 bg-background/50 rounded-lg border border-border">
+      <div className="flex items-center justify-center p-12">
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
           <p className="text-foreground font-medium">Cargando módulos...</p>
@@ -150,17 +157,18 @@ export const ModuleVisibilityManager = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold">Gestión de Visibilidad</h2>
+          <h2 className="text-2xl font-bold">Gestión de Visibilidad</h2>
           <p className="text-muted-foreground">
             Controla qué módulos y lecciones están visibles para los estudiantes
           </p>
         </div>
         <Button
           onClick={saveChanges}
-          disabled={saving}
-          className="btn-gradient-primary gap-2"
+          disabled={saving || !hasChanges}
+          className="gap-2"
         >
           {saving ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -168,69 +176,124 @@ export const ModuleVisibilityManager = () => {
             <Save className="h-4 w-4" />
           )}
           Guardar Cambios
+          {hasChanges && (
+            <Badge variant="secondary" className="ml-1">
+              Pendiente
+            </Badge>
+          )}
         </Button>
       </div>
 
-      <div className="grid gap-4">
-        {modules.map((module) => (
-          <Card key={module.id} className="glass-card">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="flex items-center gap-2">
-                    <span className="text-primary">Módulo {module.module_number}:</span>
-                    {module.title}
-                  </CardTitle>
-                  <CardDescription className="mt-2">
-                    {module.lessons.length} lección(es)
-                  </CardDescription>
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Módulos", value: `${stats.activeModules}/${stats.totalModules}`, icon: BookOpen, color: "text-primary" },
+          { label: "Lecciones", value: `${stats.activeLessons}/${stats.totalLessons}`, icon: GraduationCap, color: "text-success" },
+        ].map((stat, idx) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
+            className="col-span-1"
+          >
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-muted">
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
                 </div>
-                <div className="flex items-center gap-2">
-                  {module.is_active ? (
-                    <Eye className="h-4 w-4 text-success" />
-                  ) : (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  )}
-                  <Switch
-                    checked={module.is_active}
-                    onCheckedChange={() => toggleModuleVisibility(module.id)}
-                  />
+                <div>
+                  <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+                  <p className="text-xs text-muted-foreground">{stat.label} Visibles</p>
                 </div>
               </div>
-            </CardHeader>
-
-            {module.lessons.length > 0 && (
-              <CardContent>
-                <div className="space-y-2 border-t pt-4">
-                  <p className="text-sm font-semibold text-muted-foreground mb-2">
-                    Lecciones:
-                  </p>
-                  {module.lessons.map((lesson) => (
-                    <div
-                      key={lesson.id}
-                      className="flex items-center justify-between p-3 rounded-lg border bg-card"
-                    >
-                      <span className="text-sm">{lesson.title}</span>
-                      <div className="flex items-center gap-2">
-                        {lesson.is_active ? (
-                          <Eye className="h-3 w-3 text-success" />
-                        ) : (
-                          <EyeOff className="h-3 w-3 text-muted-foreground" />
-                        )}
-                        <Switch
-                          checked={lesson.is_active}
-                          onCheckedChange={() =>
-                            toggleLessonVisibility(module.id, lesson.id)
-                          }
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            )}
-          </Card>
+            </Card>
+          </motion.div>
         ))}
+      </div>
+
+      {/* Modules List */}
+      <div className="space-y-4">
+        {modules.length === 0 ? (
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground">No hay módulos disponibles</p>
+          </Card>
+        ) : (
+          modules.map((module, idx) => (
+            <motion.div
+              key={module.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.03 }}
+            >
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Badge variant="outline" className="shrink-0">
+                          Módulo {module.module_number}
+                        </Badge>
+                        <span className="truncate">{module.title}</span>
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {module.lessons.filter((l) => l.is_active).length} de{" "}
+                        {module.lessons.length} lecciones visibles
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-sm text-muted-foreground hidden sm:inline">
+                        {module.is_active ? "Visible" : "Oculto"}
+                      </span>
+                      {module.is_active ? (
+                        <Eye className="h-4 w-4 text-success" />
+                      ) : (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <Switch
+                        checked={module.is_active}
+                        onCheckedChange={() => toggleModuleVisibility(module.id)}
+                      />
+                    </div>
+                  </div>
+                </CardHeader>
+
+                {module.lessons.length > 0 && (
+                  <CardContent className="pt-0">
+                    <div className="space-y-2 border-t pt-4">
+                      {module.lessons.map((lesson) => (
+                        <div
+                          key={lesson.id}
+                          className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="text-sm text-muted-foreground w-6 shrink-0">
+                              {lesson.lesson_number}.
+                            </span>
+                            <span className="text-sm truncate">{lesson.title}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {lesson.is_active ? (
+                              <Eye className="h-3 w-3 text-success" />
+                            ) : (
+                              <EyeOff className="h-3 w-3 text-muted-foreground" />
+                            )}
+                            <Switch
+                              checked={lesson.is_active}
+                              onCheckedChange={() =>
+                                toggleLessonVisibility(module.id, lesson.id)
+                              }
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            </motion.div>
+          ))
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -9,7 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle, XCircle, BookOpen, GraduationCap } from "lucide-react";
+import { DataTable, Column } from "@/components/common/DataTable";
+import { CheckCircle, XCircle, BookOpen, GraduationCap, TrendingUp, Users } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface StudentProgress {
   user_id: string;
@@ -27,20 +30,13 @@ interface StudentProgress {
 export const StudentProgressView = () => {
   const { toast } = useToast();
   const [progress, setProgress] = useState<StudentProgress[]>([]);
-  const [filteredProgress, setFilteredProgress] = useState<StudentProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [selectedCourse, setSelectedCourse] = useState<string>("all");
-  const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
-  const [courses, setCourses] = useState<string[]>([]);
 
   useEffect(() => {
     loadProgress();
   }, []);
-
-  useEffect(() => {
-    filterProgress();
-  }, [selectedUser, selectedCourse, progress]);
 
   const loadProgress = async () => {
     setLoading(true);
@@ -48,19 +44,7 @@ export const StudentProgressView = () => {
       const { data, error } = await supabase.rpc("get_student_progress");
 
       if (error) throw error;
-
       setProgress(data || []);
-
-      // Extract unique users and courses
-      const uniqueUsers = Array.from(
-        new Map(data?.map((p) => [p.user_id, { id: p.user_id, name: p.user_name }]) || []).values()
-      );
-      const uniqueCourses = Array.from(
-        new Set(data?.map((p) => p.course_title) || [])
-      );
-
-      setUsers(uniqueUsers);
-      setCourses(uniqueCourses);
     } catch (error) {
       console.error("Error loading progress:", error);
       toast({
@@ -73,7 +57,18 @@ export const StudentProgressView = () => {
     }
   };
 
-  const filterProgress = () => {
+  // Derived data
+  const users = useMemo(() => {
+    return Array.from(
+      new Map(progress.map((p) => [p.user_id, { id: p.user_id, name: p.user_name }])).values()
+    );
+  }, [progress]);
+
+  const courses = useMemo(() => {
+    return Array.from(new Set(progress.map((p) => p.course_title)));
+  }, [progress]);
+
+  const filteredProgress = useMemo(() => {
     let filtered = [...progress];
 
     if (selectedUser !== "all") {
@@ -84,36 +79,133 @@ export const StudentProgressView = () => {
       filtered = filtered.filter((p) => p.course_title === selectedCourse);
     }
 
-    setFilteredProgress(filtered);
-  };
+    return filtered;
+  }, [progress, selectedUser, selectedCourse]);
 
-  const calculateStats = () => {
+  const stats = useMemo(() => {
     const totalLessons = filteredProgress.length;
     const completedLessons = filteredProgress.filter((p) => p.completed).length;
     const completionRate = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+    const uniqueStudents = new Set(filteredProgress.map(p => p.user_id)).size;
 
-    return { totalLessons, completedLessons, completionRate };
-  };
+    return { totalLessons, completedLessons, completionRate, uniqueStudents };
+  }, [filteredProgress]);
 
-  const stats = calculateStats();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12 bg-background/50 rounded-lg border border-border">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-foreground font-medium">Cargando progreso...</p>
+  const columns: Column<StudentProgress>[] = useMemo(() => [
+    {
+      key: "user_name",
+      header: "Estudiante",
+      cell: (row) => (
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <Users className="h-4 w-4 text-primary" />
+          </div>
+          <span className="font-medium">{row.user_name}</span>
         </div>
-      </div>
-    );
-  }
+      ),
+    },
+    {
+      key: "course_title",
+      header: "Curso",
+      cell: (row) => (
+        <span className="text-sm text-muted-foreground truncate max-w-[150px] block">
+          {row.course_title}
+        </span>
+      ),
+    },
+    {
+      key: "module_title",
+      header: "Módulo",
+      cell: (row) => (
+        <span className="text-sm">
+          {row.module_number}. {row.module_title}
+        </span>
+      ),
+    },
+    {
+      key: "lesson_title",
+      header: "Lección",
+      cell: (row) => (
+        <span className="text-sm">
+          {row.lesson_number}. {row.lesson_title}
+        </span>
+      ),
+    },
+    {
+      key: "completed",
+      header: "Estado",
+      cell: (row) => (
+        <Badge 
+          variant={row.completed ? "default" : "secondary"}
+          className={row.completed ? "bg-success/20 text-success hover:bg-success/30" : ""}
+        >
+          {row.completed ? (
+            <><CheckCircle className="h-3 w-3 mr-1" /> Completada</>
+          ) : (
+            <><XCircle className="h-3 w-3 mr-1" /> Pendiente</>
+          )}
+        </Badge>
+      ),
+    },
+    {
+      key: "completed_at",
+      header: "Fecha",
+      cell: (row) => (
+        <span className="text-sm text-muted-foreground">
+          {row.completed_at
+            ? new Date(row.completed_at).toLocaleDateString("es-ES", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })
+            : "-"}
+        </span>
+      ),
+    },
+  ], []);
+
+  const statsCards = [
+    {
+      label: "Total Lecciones",
+      value: stats.totalLessons,
+      icon: BookOpen,
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+    },
+    {
+      label: "Completadas",
+      value: stats.completedLessons,
+      icon: CheckCircle,
+      color: "text-success",
+      bgColor: "bg-success/10",
+    },
+    {
+      label: "Tasa Completado",
+      value: `${stats.completionRate}%`,
+      icon: TrendingUp,
+      color: "text-purple-500",
+      bgColor: "bg-purple-500/10",
+    },
+    {
+      label: "Estudiantes",
+      value: stats.uniqueStudents,
+      icon: GraduationCap,
+      color: "text-secondary",
+      bgColor: "bg-secondary/10",
+    },
+  ];
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold">Progreso de Estudiantes</h2>
+        <p className="text-muted-foreground">Monitorea el avance de los estudiantes en los cursos</p>
+      </div>
+
       {/* Filters */}
-      <Card className="p-6">
-        <h3 className="text-xl font-bold mb-4">Filtros</h3>
-        <div className="grid md:grid-cols-2 gap-4">
+      <Card className="p-4 lg:p-6">
+        <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-medium mb-2 block">Estudiante</label>
             <Select value={selectedUser} onValueChange={setSelectedUser}>
@@ -151,89 +243,41 @@ export const StudentProgressView = () => {
       </Card>
 
       {/* Stats */}
-      <div className="grid md:grid-cols-3 gap-4">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Lecciones</p>
-              <p className="text-3xl font-bold">{stats.totalLessons}</p>
-            </div>
-            <BookOpen className="h-8 w-8 text-primary" />
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Completadas</p>
-              <p className="text-3xl font-bold text-green-500">{stats.completedLessons}</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Tasa de Completado</p>
-              <p className="text-3xl font-bold text-primary">{stats.completionRate}%</p>
-            </div>
-            <GraduationCap className="h-8 w-8 text-primary" />
-          </div>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statsCards.map((stat, idx) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
+          >
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                </div>
+                <div>
+                  <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        ))}
       </div>
 
-      {/* Progress Table */}
-      <Card className="p-6">
-        <h3 className="text-xl font-bold mb-4">Progreso Detallado</h3>
-        <div className="overflow-x-auto">
-          {filteredProgress.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              No hay datos de progreso disponibles
-            </p>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-semibold">Estudiante</th>
-                  <th className="text-left py-3 px-4 font-semibold">Curso</th>
-                  <th className="text-left py-3 px-4 font-semibold">Módulo</th>
-                  <th className="text-left py-3 px-4 font-semibold">Lección</th>
-                  <th className="text-center py-3 px-4 font-semibold">Estado</th>
-                  <th className="text-left py-3 px-4 font-semibold">Fecha Completado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProgress.map((item, index) => (
-                  <tr key={index} className="border-b border-border/50 hover:bg-muted/20">
-                    <td className="py-3 px-4">{item.user_name}</td>
-                    <td className="py-3 px-4 text-sm text-muted-foreground">
-                      {item.course_title}
-                    </td>
-                    <td className="py-3 px-4 text-sm">
-                      {item.module_number}. {item.module_title}
-                    </td>
-                    <td className="py-3 px-4 text-sm">
-                      {item.lesson_number}. {item.lesson_title}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      {item.completed ? (
-                        <CheckCircle className="h-5 w-5 text-green-500 inline-block" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-muted-foreground inline-block" />
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-muted-foreground">
-                      {item.completed_at
-                        ? new Date(item.completed_at).toLocaleDateString("es-ES")
-                        : "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+      {/* Table */}
+      <Card className="p-4 lg:p-6">
+        <DataTable
+          data={filteredProgress}
+          columns={columns}
+          loading={loading}
+          searchable
+          searchPlaceholder="Buscar por estudiante o lección..."
+          searchKeys={["user_name", "lesson_title", "module_title"]}
+          emptyMessage="No hay datos de progreso disponibles"
+          pageSize={15}
+        />
       </Card>
     </div>
   );

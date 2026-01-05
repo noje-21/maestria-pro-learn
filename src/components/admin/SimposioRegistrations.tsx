@@ -1,14 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DataTable, Column } from "@/components/common/DataTable";
 import BulkEmailSender from "./BulkEmailSender";
+import { Download, Mail, Users, Globe, Calendar } from "lucide-react";
+import { motion } from "framer-motion";
 
 type SimposioRegistro = {
   id: string;
@@ -23,28 +30,13 @@ type SimposioRegistro = {
 
 const SimposioRegistrations = () => {
   const [registros, setRegistros] = useState<SimposioRegistro[]>([]);
-  const [filteredRegistros, setFilteredRegistros] = useState<SimposioRegistro[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [filterModalidad, setFilterModalidad] = useState<string>("all");
   const { toast } = useToast();
 
   useEffect(() => {
     fetchRegistros();
   }, []);
-
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setFilteredRegistros(registros);
-    } else {
-      const filtered = registros.filter(
-        (reg) =>
-          reg.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          reg.correo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          reg.pais.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredRegistros(filtered);
-    }
-  }, [searchTerm, registros]);
 
   const fetchRegistros = async () => {
     try {
@@ -54,9 +46,7 @@ const SimposioRegistrations = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-
       setRegistros(data || []);
-      setFilteredRegistros(data || []);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -67,6 +57,20 @@ const SimposioRegistrations = () => {
       setLoading(false);
     }
   };
+
+  const filteredRegistros = useMemo(() => {
+    if (filterModalidad === "all") return registros;
+    return registros.filter((r) => r.modalidad === filterModalidad);
+  }, [registros, filterModalidad]);
+
+  const stats = useMemo(() => {
+    const total = registros.length;
+    const presencial = registros.filter((r) => r.modalidad === "presencial").length;
+    const virtual = registros.filter((r) => r.modalidad === "virtual").length;
+    const paises = new Set(registros.map((r) => r.pais)).size;
+
+    return { total, presencial, virtual, paises };
+  }, [registros]);
 
   const exportToCSV = () => {
     if (filteredRegistros.length === 0) {
@@ -96,114 +100,167 @@ const SimposioRegistrations = () => {
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `simposio_registros_${new Date().toISOString().split("T")[0]}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
+    link.href = URL.createObjectURL(blob);
+    link.download = `simposio_registros_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
-    document.body.removeChild(link);
 
     toast({
       title: "Exportación exitosa",
-      description: "Los registros se han exportado correctamente.",
+      description: `Se exportaron ${filteredRegistros.length} registros.`,
     });
   };
 
+  const columns: Column<SimposioRegistro>[] = useMemo(
+    () => [
+      {
+        key: "nombre",
+        header: "Participante",
+        cell: (row) => (
+          <div className="min-w-0">
+            <p className="font-medium truncate">{row.nombre}</p>
+            <p className="text-xs text-muted-foreground truncate">{row.correo}</p>
+          </div>
+        ),
+      },
+      {
+        key: "pais",
+        header: "País",
+        cell: (row) => (
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-sm">{row.pais}</span>
+          </div>
+        ),
+      },
+      {
+        key: "modalidad",
+        header: "Modalidad",
+        cell: (row) => (
+          <Badge
+            variant={row.modalidad === "presencial" ? "default" : "secondary"}
+            className={row.modalidad === "presencial" ? "bg-primary/20 text-primary" : ""}
+          >
+            {row.modalidad === "presencial" ? "Presencial" : "Virtual"}
+          </Badge>
+        ),
+      },
+      {
+        key: "documento",
+        header: "Documento",
+        cell: (row) => <span className="text-sm font-mono">{row.documento}</span>,
+      },
+      {
+        key: "telefono",
+        header: "Teléfono",
+        cell: (row) => (
+          <span className="text-sm text-muted-foreground">{row.telefono || "-"}</span>
+        ),
+      },
+      {
+        key: "created_at",
+        header: "Registro",
+        cell: (row) => (
+          <span className="text-sm text-muted-foreground">
+            {new Date(row.created_at).toLocaleDateString("es-ES", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
+
+  const statsCards = [
+    { label: "Total Registros", value: stats.total, icon: Users, color: "text-primary", bgColor: "bg-primary/10" },
+    { label: "Presencial", value: stats.presencial, icon: Calendar, color: "text-success", bgColor: "bg-success/10" },
+    { label: "Virtual", value: stats.virtual, icon: Globe, color: "text-purple-500", bgColor: "bg-purple-500/10" },
+    { label: "Países", value: stats.paises, icon: Globe, color: "text-secondary", bgColor: "bg-secondary/10" },
+  ];
+
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="registros" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="registros">Registros</TabsTrigger>
-          <TabsTrigger value="emails">Enviar correos</TabsTrigger>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold">Registros del Simposio</h2>
+          <p className="text-muted-foreground">Gestiona los participantes del simposio</p>
+        </div>
+        <Button onClick={exportToCSV} variant="outline" className="gap-2">
+          <Download className="h-4 w-4" />
+          Exportar CSV
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statsCards.map((stat, idx) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
+          >
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                </div>
+                <div>
+                  <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Tabs */}
+      <Tabs defaultValue="registros">
+        <TabsList>
+          <TabsTrigger value="registros" className="gap-2">
+            <Users className="h-4 w-4" />
+            Registros
+          </TabsTrigger>
+          <TabsTrigger value="emails" className="gap-2">
+            <Mail className="h-4 w-4" />
+            Enviar Correos
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="registros" className="mt-6">
-          <Card className="border-primary/20 shadow-lg">
-        <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
-          <CardTitle className="text-2xl text-primary">Registros del Simposio</CardTitle>
-          <CardDescription>
-            Vista de todos los registros al 4to Simposio Latinoamericano de Hipertensión Pulmonar
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nombre, correo o país..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+        <TabsContent value="registros" className="mt-4">
+          <Card className="p-4 lg:p-6">
+            {/* Filter */}
+            <div className="mb-4">
+              <Select value={filterModalidad} onValueChange={setFilterModalidad}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filtrar por modalidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las modalidades</SelectItem>
+                  <SelectItem value="presencial">Presencial</SelectItem>
+                  <SelectItem value="virtual">Virtual</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Button onClick={exportToCSV} variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Exportar CSV
-            </Button>
-          </div>
 
-          {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Cargando registros...</div>
-          ) : filteredRegistros.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {searchTerm ? "No se encontraron registros con ese criterio" : "No hay registros todavía"}
-            </div>
-          ) : (
-            <div className="rounded-xl border border-border/50 overflow-hidden">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/30 hover:bg-muted/30">
-                      <TableHead className="font-semibold">Nombre</TableHead>
-                      <TableHead className="font-semibold">Correo</TableHead>
-                      <TableHead className="font-semibold">País</TableHead>
-                      <TableHead className="font-semibold">Documento/DNI</TableHead>
-                      <TableHead className="font-semibold">Teléfono</TableHead>
-                      <TableHead className="font-semibold">Modalidad</TableHead>
-                      <TableHead className="font-semibold">Fecha</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredRegistros.map((registro, index) => (
-                      <TableRow key={registro.id} className={index % 2 === 0 ? "bg-background" : "bg-muted/10"}>
-                        <TableCell className="font-medium">{registro.nombre}</TableCell>
-                        <TableCell>{registro.correo}</TableCell>
-                        <TableCell>{registro.pais}</TableCell>
-                        <TableCell className="font-mono text-sm">{registro.documento}</TableCell>
-                        <TableCell>{registro.telefono || "N/A"}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={registro.modalidad === "presencial" ? "default" : "secondary"}
-                            className={registro.modalidad === "presencial" ? "bg-primary" : "bg-secondary"}
-                          >
-                            {registro.modalidad}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {new Date(registro.created_at).toLocaleDateString("es-AR", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          )}
-
-          <div className="text-sm text-muted-foreground flex items-center gap-2 pt-2 border-t border-border/50">
-            <span>Total de registros:</span>
-            <span className="font-bold text-primary text-lg">{filteredRegistros.length}</span>
-          </div>
-        </CardContent>
-      </Card>
+            <DataTable
+              data={filteredRegistros}
+              columns={columns}
+              loading={loading}
+              searchable
+              searchPlaceholder="Buscar por nombre, correo o país..."
+              searchKeys={["nombre", "correo", "pais"]}
+              emptyMessage="No hay registros disponibles"
+              pageSize={15}
+            />
+          </Card>
         </TabsContent>
 
-        <TabsContent value="emails" className="mt-6">
+        <TabsContent value="emails" className="mt-4">
           <BulkEmailSender registros={filteredRegistros} />
         </TabsContent>
       </Tabs>
