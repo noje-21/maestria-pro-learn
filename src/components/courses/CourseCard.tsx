@@ -10,9 +10,11 @@ import {
   Sparkles, 
   TrendingUp,
   Layers,
-  Star
+  Star,
+  PlayCircle
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { getCourseCardCTA, getHumanProgressMessage } from "@/utils/progressMessages";
 
 interface CourseCardProps {
   course: {
@@ -214,7 +216,9 @@ const CourseCardComponent = ({ course, index, onClick }: CourseCardProps) => {
           {course.is_enrolled && course.progress !== undefined && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground font-medium">Tu progreso</span>
+                <span className="text-muted-foreground font-medium">
+                  {getHumanProgressMessage(course.progress)}
+                </span>
                 <span className="font-bold text-primary">{Math.round(course.progress)}%</span>
               </div>
               <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
@@ -241,11 +245,24 @@ const CourseCardComponent = ({ course, index, onClick }: CourseCardProps) => {
             }}
           >
             {course.is_enrolled ? (
-              <>
-                <Award className="h-4 w-4 mr-2" />
-                Continuar
-                <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-              </>
+              course.progress && course.progress >= 100 ? (
+                <>
+                  <Award className="h-4 w-4 mr-2" />
+                  Revisar curso
+                </>
+              ) : course.progress && course.progress > 0 ? (
+                <>
+                  <PlayCircle className="h-4 w-4 mr-2" />
+                  Continuar aprendiendo
+                  <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Comenzar ahora
+                  <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                </>
+              )
             ) : (
               <>
                 Ver Detalles

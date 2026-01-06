@@ -1,10 +1,11 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ChatBot from "@/components/ChatBot";
 import { useAuth } from "@/hooks/useAuth";
 import { useLessonData } from "@/hooks/useLessonData";
 import { CourseLayoutOS } from "@/layouts/CourseLayoutOS";
 import { LessonContent } from "@/components/course/LessonContent";
+import { ModuleCompletedOverlay } from "@/components/course/ModuleCompletedOverlay";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const LessonLoadingSkeleton = () => (
@@ -56,6 +57,17 @@ const Lesson = () => {
     handleComplete,
   } = useLessonData(id, user?.id);
 
+  // Module completion overlay state
+  const [showModuleCompleted, setShowModuleCompleted] = useState(false);
+  const [completedModuleInfo, setCompletedModuleInfo] = useState<{
+    name: string;
+    number: number;
+    lessonsCount: number;
+    duration: number;
+    nextModuleFirstLessonId: string | null;
+    nextModuleName: string | null;
+  } | null>(null);
+
   const handleLessonSelect = useCallback((lessonId: string) => {
     navigate(`/lesson/${lessonId}`);
   }, [navigate]);
@@ -89,11 +101,21 @@ const Lesson = () => {
     
     // Calculate module progress
     let moduleProgress = 0;
+    let currentModuleData = null;
+    let nextModuleData = null;
+    
     if (current) {
-      const currentModule = modules.find(m => m.id === current.moduleId);
-      if (currentModule) {
-        const completedInModule = currentModule.lessons.filter(l => l.completed).length;
-        moduleProgress = (completedInModule / currentModule.lessons.length) * 100;
+      const currentModuleIdx = modules.findIndex(m => m.id === current.moduleId);
+      currentModuleData = modules[currentModuleIdx];
+      
+      if (currentModuleData) {
+        const completedInModule = currentModuleData.lessons.filter(l => l.completed).length;
+        moduleProgress = (completedInModule / currentModuleData.lessons.length) * 100;
+      }
+      
+      // Get next module info
+      if (currentModuleIdx < modules.length - 1) {
+        nextModuleData = modules[currentModuleIdx + 1];
       }
     }
     
@@ -106,8 +128,62 @@ const Lesson = () => {
       lessonNumber: current?.lessonNumber || 1,
       totalInModule: current?.totalInModule || 1,
       moduleProgress,
+      currentModuleData,
+      nextModuleData,
+      isLastLessonInModule: current?.lessonNumber === current?.totalInModule,
     };
   }, [modules, id]);
+
+  // Detect module completion
+  const [prevModuleProgress, setPrevModuleProgress] = useState<number | null>(null);
+  
+  useEffect(() => {
+    // Only check when we have valid data and lesson was just completed
+    if (
+      lessonInfo.moduleProgress === 100 && 
+      prevModuleProgress !== null && 
+      prevModuleProgress < 100 &&
+      lessonInfo.currentModuleData &&
+      completed
+    ) {
+      // Module just became 100% - show overlay
+      const totalDuration = lessonInfo.currentModuleData.lessons.reduce(
+        (acc, l) => acc + (l.duration_minutes || 0), 0
+      );
+      
+      setCompletedModuleInfo({
+        name: lessonInfo.currentModuleData.title,
+        number: lessonInfo.currentModuleData.module_number,
+        lessonsCount: lessonInfo.currentModuleData.lessons.length,
+        duration: totalDuration,
+        nextModuleFirstLessonId: lessonInfo.nextModuleData?.lessons[0]?.id || null,
+        nextModuleName: lessonInfo.nextModuleData?.title || null,
+      });
+      setShowModuleCompleted(true);
+    }
+    
+    setPrevModuleProgress(lessonInfo.moduleProgress);
+  }, [lessonInfo.moduleProgress, completed]);
+
+  // Reset on lesson change
+  useEffect(() => {
+    setShowModuleCompleted(false);
+    setPrevModuleProgress(null);
+  }, [id]);
+
+  const handleContinueToNextModule = useCallback(() => {
+    if (completedModuleInfo?.nextModuleFirstLessonId) {
+      setShowModuleCompleted(false);
+      navigate(`/lesson/${completedModuleInfo.nextModuleFirstLessonId}`);
+    }
+  }, [completedModuleInfo, navigate]);
+
+  const handleBackToCourse = useCallback(() => {
+    setShowModuleCompleted(false);
+    if (courseId) {
+      navigate(`/course/${courseId}`);
+    }
+  }, [courseId, navigate]);
 
   if (loading) {
     return <LessonLoadingSkeleton />;
@@ -145,6 +221,21 @@ const Lesson = () => {
           hasPrevious={lessonInfo.hasPrevious}
         />
       </CourseLayoutOS>
+
+      {/* Module Completed Overlay */}
+      <ModuleCompletedOverlay
+        isOpen={showModuleCompleted}
+        moduleName={completedModuleInfo?.name || ""}
+        moduleNumber={completedModuleInfo?.number || 1}
+        lessonsCompleted={completedModuleInfo?.lessonsCount || 0}
+        estimatedMinutes={completedModuleInfo?.duration || 0}
+        hasNextModule={!!completedModuleInfo?.nextModuleFirstLessonId}
+        nextModuleName={completedModuleInfo?.nextModuleName || undefined}
+        onContinue={handleContinueToNextModule}
+        onBackToCourse={handleBackToCourse}
+        onClose={() => setShowModuleCompleted(false)}
+      />
+
       <ChatBot />
     </>
   );

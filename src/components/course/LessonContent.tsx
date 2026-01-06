@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, User, Video, Target, CheckCircle2, Footprints } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -7,8 +7,9 @@ import { Progress } from "@/components/ui/progress";
 import { VideoPlayerStacked } from "@/components/common/VideoPlayerStacked";
 import { LessonFooter } from "./LessonFooter";
 import { LessonTabs } from "./LessonTabs";
+import { LessonCompletedSummary } from "./LessonCompletedSummary";
 import { cn } from "@/lib/utils";
-
+import { getHumanProgressMessage, getStepDescription } from "@/utils/progressMessages";
 interface LessonContentProps {
   lesson: {
     id: string;
@@ -86,17 +87,30 @@ const LessonContentComponent = ({
   hasPrevious,
   loading = false,
 }: LessonContentProps) => {
+  const [showCompletedSummary, setShowCompletedSummary] = useState(false);
+  const [wasCompleted, setWasCompleted] = useState(completed);
+
+  // Detect when lesson becomes completed to show summary
+  useEffect(() => {
+    if (completed && !wasCompleted) {
+      setShowCompletedSummary(true);
+      setWasCompleted(true);
+    }
+  }, [completed, wasCompleted]);
+
+  // Reset when lesson changes
+  useEffect(() => {
+    setShowCompletedSummary(false);
+    setWasCompleted(completed);
+  }, [lesson.id]);
+
   if (loading) {
     return <LessonSkeleton />;
   }
 
-  // Create step description based on lesson number
-  const getStepDescription = () => {
-    if (lessonNumber === 1) return "Comienza aquí";
-    if (lessonNumber === totalLessonsInModule) return "Paso final";
-    return `Paso ${lessonNumber}`;
-  };
-
+  // Human-friendly step description
+  const stepDescription = getStepDescription(lessonNumber, totalLessonsInModule);
+  const humanProgress = getHumanProgressMessage(moduleProgress);
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -172,7 +186,7 @@ const LessonContentComponent = ({
                     variant="outline"
                     className="bg-secondary/50 font-medium px-3 py-1"
                   >
-                    {getStepDescription()}
+                    {stepDescription}
                   </Badge>
                   
                   {completed && (
@@ -249,9 +263,28 @@ const LessonContentComponent = ({
             </div>
           </section>
 
+          {/* Lesson Completed Summary */}
+          {showCompletedSummary && (
+            <section className="w-full px-4 md:px-6 lg:px-8 pb-4">
+              <div className="max-w-5xl mx-auto">
+                <LessonCompletedSummary
+                  isVisible={showCompletedSummary}
+                  lessonTitle={lesson.title}
+                  moduleName={moduleName}
+                  lessonNumber={lessonNumber}
+                  totalLessonsInModule={totalLessonsInModule}
+                  moduleProgress={moduleProgress}
+                  hasNextLesson={hasNext}
+                  onNextLesson={onNextLesson}
+                  onDismiss={() => setShowCompletedSummary(false)}
+                />
+              </div>
+            </section>
+          )}
+
           {/* Footer Navigation */}
           <footer className="w-full px-4 md:px-6 lg:px-8 pb-6 md:pb-8">
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-5xl mx-auto space-y-4">
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
