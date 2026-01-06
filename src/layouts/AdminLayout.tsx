@@ -49,6 +49,7 @@ const navItems: NavItem[] = [
   { id: "images", label: "Imágenes", icon: Image, section: "Contenido" },
   { id: "exams", label: "Exámenes", icon: FileQuestion, section: "Contenido" },
   { id: "progress", label: "Progreso", icon: TrendingUp, section: "Estadísticas" },
+  { id: "analytics", label: "Analytics", icon: TrendingUp, section: "Estadísticas" },
   { id: "visibility", label: "Visibilidad", icon: Eye, section: "Configuración" },
   { id: "simposio", label: "Simposio", icon: Calendar, section: "Eventos" },
 ];

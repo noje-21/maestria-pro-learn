@@ -17,6 +17,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CourseRecommendations } from "@/components/courses/CourseRecommendations";
+import { StudentAnalytics } from "@/components/dashboard/StudentAnalytics";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -343,6 +344,9 @@ export const StudentDashboard = memo(({ userId }: StudentDashboardProps) => {
 
   return (
     <div className="space-y-8">
+      {/* Learning Analytics */}
+      <StudentAnalytics userId={userId} />
+
       {/* Stats Cards */}
       <div className="grid md:grid-cols-4 gap-4">
         <StatCard
