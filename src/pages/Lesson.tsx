@@ -1,10 +1,40 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ChatBot from "@/components/ChatBot";
 import { useAuth } from "@/hooks/useAuth";
 import { useLessonData } from "@/hooks/useLessonData";
 import { CourseLayoutOS } from "@/layouts/CourseLayoutOS";
 import { LessonContent } from "@/components/course/LessonContent";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const LessonLoadingSkeleton = () => (
+  <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-14 border-b border-border/50 flex items-center px-4 gap-4">
+      <Skeleton className="h-8 w-8 rounded" />
+      <Skeleton className="h-5 w-32" />
+      <div className="flex-1" />
+      <Skeleton className="h-5 w-24" />
+    </div>
+    <div className="flex-1 flex">
+      <div className="w-80 border-r border-border/50 p-4 space-y-4 hidden lg:block">
+        <Skeleton className="h-10 w-full" />
+        <div className="space-y-2">
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+      <div className="flex-1 p-6">
+        <Skeleton className="aspect-video w-full max-w-5xl mx-auto rounded-2xl" />
+        <div className="max-w-5xl mx-auto mt-6 space-y-4">
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-10 w-3/4" />
+          <Skeleton className="h-5 w-48" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const Lesson = () => {
   const { id } = useParams();
@@ -30,7 +60,8 @@ const Lesson = () => {
     navigate(`/lesson/${lessonId}`);
   }, [navigate]);
 
-  const adjacentLessons = useMemo(() => {
+  // Calculate adjacent lessons from modules
+  const getAdjacentLessons = useCallback(() => {
     const allLessons = modules.flatMap(m => m.lessons);
     const currentIndex = allLessons.findIndex(l => l.id === id);
     
@@ -43,17 +74,12 @@ const Lesson = () => {
   }, [modules, id]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Cargando lección...</p>
-        </div>
-      </div>
-    );
+    return <LessonLoadingSkeleton />;
   }
 
   if (!lesson) return null;
+
+  const adjacentLessons = getAdjacentLessons();
 
   return (
     <>
