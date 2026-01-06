@@ -1,22 +1,32 @@
-import { useState, useEffect, useCallback, memo } from "react";
+import { useState, useEffect, useCallback, memo, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Clock, 
   CheckCircle2, 
-  TrendingUp, 
+  TrendingUp,
+  TrendingDown,
   Calendar,
   Flame,
   Award,
   BookOpen,
   Target,
   Zap,
+  AlertCircle,
+  ArrowRight,
+  Sunrise,
+  Sun,
+  Sunset,
+  Moon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
+import { useStudentAnalyticsData } from "@/hooks/useLearningAnalytics";
 
 interface StudentAnalyticsProps {
   userId: string;
@@ -33,6 +43,34 @@ interface AnalyticsData {
   coursesCompleted: number;
   weeklyActivity: { day: string; count: number }[];
 }
+
+const formatTime = (minutes: number): string => {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+};
+
+const getPaceLabel = (pace: string): { label: string; description: string } => {
+  switch (pace) {
+    case "quick":
+      return { label: "Rápido", description: "Sesiones cortas y enfocadas" };
+    case "thorough":
+      return { label: "Profundo", description: "Aprendizaje detallado" };
+    default:
+      return { label: "Equilibrado", description: "Ritmo constante" };
+  }
+};
+
+const getTimeSlotInfo = (slot: string): { icon: any; label: string } => {
+  switch (slot) {
+    case "morning": return { icon: Sunrise, label: "Mañanas" };
+    case "afternoon": return { icon: Sun, label: "Tardes" };
+    case "evening": return { icon: Sunset, label: "Atardecer" };
+    case "night": return { icon: Moon, label: "Noches" };
+    default: return { icon: Clock, label: "Variable" };
+  }
+};
 
 const StatCard = memo(({ 
   icon: Icon, 
@@ -74,6 +112,9 @@ const StatCard = memo(({
 StatCard.displayName = "StatCard";
 
 export const StudentAnalytics = memo(({ userId }: StudentAnalyticsProps) => {
+  const navigate = useNavigate();
+  const { data: advancedData, stagnationWarning } = useStudentAnalyticsData(userId);
+  
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     totalTimeStudied: 0,
@@ -86,6 +127,21 @@ export const StudentAnalytics = memo(({ userId }: StudentAnalyticsProps) => {
     coursesCompleted: 0,
     weeklyActivity: [],
   });
+
+  // Calculate week trend
+  const weekTrend = useMemo(() => {
+    if (!advancedData) return null;
+    const { thisWeekMinutes, lastWeekMinutes } = advancedData;
+    if (lastWeekMinutes === 0) {
+      return thisWeekMinutes > 0 
+        ? { trend: "up" as const, message: "¡Excelente inicio!" } 
+        : null;
+    }
+    const change = ((thisWeekMinutes - lastWeekMinutes) / lastWeekMinutes) * 100;
+    if (change > 20) return { trend: "up" as const, message: "Tu ritmo mejora" };
+    if (change < -20) return { trend: "down" as const, message: "Ritmo menor" };
+    return { trend: "stable" as const, message: "Ritmo constante" };
+  }, [advancedData]);
 
   const loadAnalytics = useCallback(async () => {
     try {
@@ -242,12 +298,65 @@ export const StudentAnalytics = memo(({ userId }: StudentAnalyticsProps) => {
     ? Math.round((analytics.lessonsCompleted / analytics.totalLessons) * 100)
     : 0;
 
+  const paceInfo = advancedData ? getPaceLabel(advancedData.learningPace) : null;
+  const timeSlotInfo = advancedData ? getTimeSlotInfo(advancedData.preferredTime) : null;
+
   return (
     <Card className="p-6 bg-card/50">
-      <div className="flex items-center gap-2 mb-6">
-        <TrendingUp className="h-5 w-5 text-primary" />
-        <h3 className="font-semibold">Tu Progreso de Aprendizaje</h3>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold">Tu Progreso de Aprendizaje</h3>
+        </div>
+        {weekTrend && (
+          <Badge 
+            variant="secondary"
+            className={cn(
+              "gap-1",
+              weekTrend.trend === "up" && "bg-emerald-500/10 text-emerald-500",
+              weekTrend.trend === "down" && "bg-amber-500/10 text-amber-500"
+            )}
+          >
+            {weekTrend.trend === "up" && <TrendingUp className="h-3 w-3" />}
+            {weekTrend.trend === "down" && <TrendingDown className="h-3 w-3" />}
+            {weekTrend.message}
+          </Badge>
+        )}
       </div>
+
+      {/* Stagnation Warning */}
+      {stagnationWarning && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <Card className="p-4 border-amber-500/30 bg-amber-500/5">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10 shrink-0">
+                <AlertCircle className="h-5 w-5 text-amber-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-amber-600 dark:text-amber-400">
+                  {stagnationWarning}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Retomar te ayudará a consolidar lo aprendido
+                </p>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="shrink-0 gap-1 border-amber-500/30 hover:bg-amber-500/10"
+                onClick={() => navigate("/courses")}
+              >
+                Continuar
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -345,9 +454,16 @@ export const StudentAnalytics = memo(({ userId }: StudentAnalyticsProps) => {
         transition={{ delay: 0.3 }}
         className="mt-6 pt-6 border-t border-border/50"
       >
-        <div className="flex items-center gap-2 mb-4">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Actividad de la semana</span>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Actividad de la semana</span>
+          </div>
+          {advancedData && (
+            <span className="text-xs text-muted-foreground">
+              {formatTime(advancedData.thisWeekMinutes)} esta semana
+            </span>
+          )}
         </div>
         <div className="flex gap-2">
           {analytics.weeklyActivity.map((day, idx) => (
@@ -372,6 +488,59 @@ export const StudentAnalytics = memo(({ userId }: StudentAnalyticsProps) => {
           {analytics.weeklyActivity.reduce((acc, d) => acc + d.count, 0)} lecciones esta semana
         </p>
       </motion.div>
+
+      {/* Learning Insights */}
+      {advancedData && (advancedData.currentStreak > 0 || paceInfo) && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="mt-6 pt-6 border-t border-border/50"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Target className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Tu estilo de aprendizaje</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {advancedData.currentStreak > 0 && (
+              <div className="p-3 rounded-lg bg-orange-500/5 border border-orange-500/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <Flame className="h-4 w-4 text-orange-500" />
+                  <span className="font-semibold">{advancedData.currentStreak} días</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Racha actual</p>
+              </div>
+            )}
+            {paceInfo && (
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <span className="font-semibold">{paceInfo.label}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{paceInfo.description}</p>
+              </div>
+            )}
+            {timeSlotInfo && advancedData.preferredTime !== "variable" && (
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                <div className="flex items-center gap-2 mb-1">
+                  <timeSlotInfo.icon className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-semibold">{timeSlotInfo.label}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Horario preferido</p>
+              </div>
+            )}
+            {advancedData.totalStudyMinutes > 0 && (
+              <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock className="h-4 w-4 text-emerald-500" />
+                  <span className="font-semibold">{formatTime(advancedData.totalStudyMinutes)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Tiempo total</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
     </Card>
   );
 });

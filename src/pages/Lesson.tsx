@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ChatBot from "@/components/ChatBot";
 import { useAuth } from "@/hooks/useAuth";
 import { useLessonData } from "@/hooks/useLessonData";
+import { useLearningAnalytics } from "@/hooks/useLearningAnalytics";
 import { CourseLayoutOS } from "@/layouts/CourseLayoutOS";
 import { LessonContent } from "@/components/course/LessonContent";
 import { ModuleCompletedOverlay } from "@/components/course/ModuleCompletedOverlay";
@@ -56,6 +57,9 @@ const Lesson = () => {
     loading,
     handleComplete,
   } = useLessonData(id, user?.id);
+
+  // Analytics tracking
+  const { startSession, endSession, trackLessonCompleted } = useLearningAnalytics(user?.id);
 
   // Module completion overlay state
   const [showModuleCompleted, setShowModuleCompleted] = useState(false);
@@ -171,6 +175,26 @@ const Lesson = () => {
     setPrevModuleProgress(null);
   }, [id]);
 
+  // Start analytics session when lesson loads
+  useEffect(() => {
+    if (lesson && courseId && lessonInfo.currentModuleData) {
+      startSession(lesson.id, lessonInfo.currentModuleData.id, courseId);
+    }
+    
+    // End session when leaving the lesson
+    return () => {
+      endSession();
+    };
+  }, [lesson?.id, courseId, lessonInfo.currentModuleData?.id]);
+
+  // Track lesson completion for analytics
+  const handleCompleteWithAnalytics = useCallback(async () => {
+    await handleComplete();
+    if (id) {
+      trackLessonCompleted(id);
+    }
+  }, [handleComplete, id, trackLessonCompleted]);
+
   const handleContinueToNextModule = useCallback(() => {
     if (completedModuleInfo?.nextModuleFirstLessonId) {
       setShowModuleCompleted(false);
@@ -193,15 +217,15 @@ const Lesson = () => {
 
   return (
     <>
-      <CourseLayoutOS
-        courseId={courseId || ""}
-        courseTitle={courseTitle}
-        modules={modules}
-        currentLessonId={id || ""}
-        progress={courseProgress}
-        onLessonSelect={handleLessonSelect}
-        materials={materials}
-        onComplete={handleComplete}
+        <CourseLayoutOS
+          courseId={courseId || ""}
+          courseTitle={courseTitle}
+          modules={modules}
+          currentLessonId={id || ""}
+          progress={courseProgress}
+          onLessonSelect={handleLessonSelect}
+          materials={materials}
+          onComplete={handleCompleteWithAnalytics}
       >
         <LessonContent
           lesson={lesson}
@@ -214,7 +238,7 @@ const Lesson = () => {
           moduleProgress={lessonInfo.moduleProgress}
           instructorName={instructorName}
           completed={completed}
-          onComplete={handleComplete}
+          onComplete={handleCompleteWithAnalytics}
           onNextLesson={() => lessonInfo.nextId && navigate(`/lesson/${lessonInfo.nextId}`)}
           onPreviousLesson={() => lessonInfo.previousId && navigate(`/lesson/${lessonInfo.previousId}`)}
           hasNext={lessonInfo.hasNext}
