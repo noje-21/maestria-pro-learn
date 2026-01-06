@@ -19,6 +19,7 @@ import { ModuleVisibilityManager } from "@/components/admin/ModuleVisibilityMana
 import { LessonImageManager } from "@/components/admin/LessonImageManager";
 import { ExamQuestionsManager } from "@/components/admin/ExamQuestionsManager";
 import { ModuleLessonManager } from "@/components/admin/ModuleLessonManager";
+import { LearningAnalytics } from "@/components/admin/LearningAnalytics";
 
 // Loading skeleton
 import { Skeleton } from "@/components/ui/skeleton";
@@ -116,6 +117,8 @@ const Admin = () => {
         return <ExamQuestionsManager />;
       case 'progress':
         return <StudentProgressView />;
+      case 'analytics':
+        return <LearningAnalytics />;
       case 'visibility':
         return <ModuleVisibilityManager />;
       case 'simposio':

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Clock, User, Video } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { VideoPlayer } from "@/components/common/VideoPlayer";
+import { VideoPlayerStacked } from "@/components/common/VideoPlayerStacked";
 import { LessonFooter } from "./LessonFooter";
 import { LessonTabs } from "./LessonTabs";
 
@@ -80,10 +80,10 @@ const LessonContentComponent = ({
         transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
         className="flex flex-col"
       >
-        {/* Video Section */}
+        {/* Video Section - All videos stacked vertically */}
         <div className="w-full px-4 md:px-6 lg:px-8 pt-4 md:pt-6">
           <div className="max-w-5xl mx-auto">
-            <VideoPlayer
+            <VideoPlayerStacked
               videos={videos}
               lessonId={lesson.id}
               fallbackImage={lesson.image_url}
