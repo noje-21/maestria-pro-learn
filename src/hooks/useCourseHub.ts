@@ -18,6 +18,9 @@ interface Module {
   description: string;
   instructor: string;
   lessons: Lesson[];
+  isCompleted: boolean;
+  isLocked: boolean;
+  progress: number;
 }
 
 interface CourseHubData {
@@ -44,6 +47,7 @@ interface CourseHubData {
   loading: boolean;
   error: string | null;
   refreshData: () => Promise<void>;
+  getNextLessonForModule: (moduleId: string) => string | null;
 }
 
 export function useCourseHub(courseId: string | undefined, userId: string | undefined): CourseHubData {
@@ -134,8 +138,8 @@ export function useCourseHub(courseId: string | undefined, userId: string | unde
         setLastCompletedLessonId(sortedProgress[0].lesson_id);
       }
 
-      // Build modules with lessons
-      const modulesWithLessons: Module[] = (modulesResult.data || []).map(module => {
+      // Build modules with lessons and computed properties
+      const modulesWithLessons: Module[] = (modulesResult.data || []).map((module, idx, allModules) => {
         const moduleLessons = (lessonsResult.data || [])
           .filter(lesson => lesson.module_id === module.id)
           .map(lesson => ({
@@ -144,8 +148,24 @@ export function useCourseHub(courseId: string | undefined, userId: string | unde
             title: lesson.title,
             duration_minutes: lesson.duration_minutes || 0,
             completed: progressMap.has(lesson.id),
-            locked: false, // Could implement locking logic here
+            locked: false,
           }));
+
+        const completedInModule = moduleLessons.filter(l => l.completed).length;
+        const totalInModule = moduleLessons.length;
+        const moduleProgress = totalInModule > 0 ? (completedInModule / totalInModule) * 100 : 0;
+        const isModuleCompleted = moduleProgress === 100;
+
+        // Check if previous module is completed for locking
+        let isLocked = false;
+        if (idx > 0) {
+          const prevModuleLessons = (lessonsResult.data || [])
+            .filter(lesson => lesson.module_id === allModules[idx - 1].id);
+          const prevModuleCompleted = prevModuleLessons.every(lesson => progressMap.has(lesson.id));
+          // Note: We'll only lock if progressive locking is enabled in the UI
+          // For now, set to false but provide the computed value
+          isLocked = false; // Can be enabled per-course if needed
+        }
 
         return {
           id: module.id,
@@ -154,6 +174,9 @@ export function useCourseHub(courseId: string | undefined, userId: string | unde
           description: module.description || '',
           instructor: module.instructor || '',
           lessons: moduleLessons,
+          isCompleted: isModuleCompleted,
+          isLocked,
+          progress: moduleProgress,
         };
       });
 
@@ -227,6 +250,17 @@ export function useCourseHub(courseId: string | undefined, userId: string | unde
     return null;
   }, [modules]);
 
+  // Get next lesson for a specific module
+  const getNextLessonForModule = useCallback((moduleId: string) => {
+    const module = modules.find(m => m.id === moduleId);
+    if (!module) return null;
+    
+    const incompleteLesson = module.lessons.find(l => !l.completed && !l.locked);
+    if (incompleteLesson) return incompleteLesson.id;
+    
+    return module.lessons[0]?.id || null;
+  }, [modules]);
+
   return {
     course,
     modules,
@@ -238,5 +272,6 @@ export function useCourseHub(courseId: string | undefined, userId: string | unde
     loading,
     error,
     refreshData: loadCourseData,
+    getNextLessonForModule,
   };
 }

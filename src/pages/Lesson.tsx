@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ChatBot from "@/components/ChatBot";
 import { useAuth } from "@/hooks/useAuth";
@@ -60,16 +60,52 @@ const Lesson = () => {
     navigate(`/lesson/${lessonId}`);
   }, [navigate]);
 
-  // Calculate adjacent lessons from modules
-  const getAdjacentLessons = useCallback(() => {
-    const allLessons = modules.flatMap(m => m.lessons);
+  // Calculate adjacent lessons and module info from modules
+  const lessonInfo = useMemo(() => {
+    const allLessons: Array<{
+      id: string;
+      moduleId: string;
+      moduleNumber: number;
+      moduleName: string;
+      lessonNumber: number;
+      totalInModule: number;
+    }> = [];
+    
+    modules.forEach(m => {
+      m.lessons.forEach((l, idx) => {
+        allLessons.push({
+          id: l.id,
+          moduleId: m.id,
+          moduleNumber: m.module_number,
+          moduleName: m.title,
+          lessonNumber: idx + 1,
+          totalInModule: m.lessons.length,
+        });
+      });
+    });
+    
     const currentIndex = allLessons.findIndex(l => l.id === id);
+    const current = allLessons[currentIndex];
+    
+    // Calculate module progress
+    let moduleProgress = 0;
+    if (current) {
+      const currentModule = modules.find(m => m.id === current.moduleId);
+      if (currentModule) {
+        const completedInModule = currentModule.lessons.filter(l => l.completed).length;
+        moduleProgress = (completedInModule / currentModule.lessons.length) * 100;
+      }
+    }
     
     return {
       hasPrevious: currentIndex > 0,
       hasNext: currentIndex < allLessons.length - 1,
       previousId: currentIndex > 0 ? allLessons[currentIndex - 1].id : null,
       nextId: currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1].id : null,
+      moduleNumber: current?.moduleNumber || 1,
+      lessonNumber: current?.lessonNumber || 1,
+      totalInModule: current?.totalInModule || 1,
+      moduleProgress,
     };
   }, [modules, id]);
 
@@ -78,8 +114,6 @@ const Lesson = () => {
   }
 
   if (!lesson) return null;
-
-  const adjacentLessons = getAdjacentLessons();
 
   return (
     <>
@@ -98,13 +132,17 @@ const Lesson = () => {
           videos={videos}
           materials={materials}
           moduleName={currentModuleName}
+          moduleNumber={lessonInfo.moduleNumber}
+          lessonNumber={lessonInfo.lessonNumber}
+          totalLessonsInModule={lessonInfo.totalInModule}
+          moduleProgress={lessonInfo.moduleProgress}
           instructorName={instructorName}
           completed={completed}
           onComplete={handleComplete}
-          onNextLesson={() => adjacentLessons.nextId && navigate(`/lesson/${adjacentLessons.nextId}`)}
-          onPreviousLesson={() => adjacentLessons.previousId && navigate(`/lesson/${adjacentLessons.previousId}`)}
-          hasNext={adjacentLessons.hasNext}
-          hasPrevious={adjacentLessons.hasPrevious}
+          onNextLesson={() => lessonInfo.nextId && navigate(`/lesson/${lessonInfo.nextId}`)}
+          onPreviousLesson={() => lessonInfo.previousId && navigate(`/lesson/${lessonInfo.previousId}`)}
+          hasNext={lessonInfo.hasNext}
+          hasPrevious={lessonInfo.hasPrevious}
         />
       </CourseLayoutOS>
       <ChatBot />

@@ -1,8 +1,9 @@
 import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, User, Video, BookOpen, CheckCircle2 } from "lucide-react";
+import { Clock, User, Video, Target, CheckCircle2, Footprints } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { VideoPlayerStacked } from "@/components/common/VideoPlayerStacked";
 import { LessonFooter } from "./LessonFooter";
 import { LessonTabs } from "./LessonTabs";
@@ -28,6 +29,10 @@ interface LessonContentProps {
     file_url: string;
   }>;
   moduleName: string;
+  moduleNumber?: number;
+  lessonNumber?: number;
+  totalLessonsInModule?: number;
+  moduleProgress?: number;
   instructorName?: string;
   completed: boolean;
   onComplete: () => void;
@@ -42,17 +47,21 @@ interface LessonContentProps {
 const LessonSkeleton = () => (
   <div className="p-4 md:p-6 lg:p-8 space-y-6 animate-in fade-in duration-300">
     <div className="max-w-5xl mx-auto">
+      {/* Header Skeleton */}
+      <div className="space-y-3 mb-6">
+        <Skeleton className="h-8 w-48 rounded-full" />
+        <Skeleton className="h-12 w-3/4" />
+        <div className="flex gap-4">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-24" />
+        </div>
+      </div>
+      
       {/* Video Skeleton */}
       <Skeleton className="w-full aspect-video rounded-2xl" />
       
       {/* Content Skeleton */}
       <div className="mt-6 space-y-4">
-        <Skeleton className="h-6 w-24 rounded-full" />
-        <Skeleton className="h-10 w-3/4" />
-        <div className="flex gap-4">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-5 w-24" />
-        </div>
         <Skeleton className="h-32 w-full rounded-xl" />
       </div>
     </div>
@@ -64,6 +73,10 @@ const LessonContentComponent = ({
   videos,
   materials = [],
   moduleName,
+  moduleNumber = 1,
+  lessonNumber = 1,
+  totalLessonsInModule = 1,
+  moduleProgress = 0,
   instructorName,
   completed,
   onComplete,
@@ -77,6 +90,13 @@ const LessonContentComponent = ({
     return <LessonSkeleton />;
   }
 
+  // Create step description based on lesson number
+  const getStepDescription = () => {
+    if (lessonNumber === 1) return "Comienza aquí";
+    if (lessonNumber === totalLessonsInModule) return "Paso final";
+    return `Paso ${lessonNumber}`;
+  };
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -89,8 +109,56 @@ const LessonContentComponent = ({
       >
         {/* Main Content - Single scroll container */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
+          {/* Module Progress Header - Sticky on scroll */}
+          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl border-b border-border/30">
+            <div className="w-full px-4 md:px-6 lg:px-8 py-3">
+              <div className="max-w-5xl mx-auto">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  {/* Module Info */}
+                  <div className="flex items-center gap-3">
+                    <Badge
+                      variant="secondary"
+                      className="bg-primary/10 text-primary border-primary/20 font-medium px-3 py-1.5 gap-1.5"
+                    >
+                      <Target className="h-3.5 w-3.5" />
+                      Hito {moduleNumber}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground hidden sm:inline">
+                      {moduleName}
+                    </span>
+                  </div>
+                  
+                  {/* Module Progress */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Footprints className="h-4 w-4" />
+                      <span>
+                        Paso {lessonNumber} de {totalLessonsInModule}
+                      </span>
+                    </div>
+                    <div className="hidden sm:flex items-center gap-2 w-24">
+                      <Progress 
+                        value={moduleProgress} 
+                        className={cn(
+                          "h-2 flex-1",
+                          moduleProgress >= 100 && "[&>div]:bg-emerald-500"
+                        )}
+                      />
+                      <span className={cn(
+                        "text-xs font-semibold tabular-nums",
+                        moduleProgress >= 100 ? "text-emerald-500" : "text-primary"
+                      )}>
+                        {Math.round(moduleProgress)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Lesson Header Section */}
-          <header className="w-full px-4 md:px-6 lg:px-8 pt-4 md:pt-6 pb-4">
+          <header className="w-full px-4 md:px-6 lg:px-8 pt-6 pb-4">
             <div className="max-w-5xl mx-auto">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -98,20 +166,19 @@ const LessonContentComponent = ({
                 transition={{ delay: 0.05 }}
                 className="space-y-4"
               >
-                {/* Breadcrumb & Status */}
+                {/* Step Indicator & Status */}
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge
-                    variant="secondary"
-                    className="bg-primary/10 text-primary border-primary/20 font-medium px-3 py-1"
+                    variant="outline"
+                    className="bg-secondary/50 font-medium px-3 py-1"
                   >
-                    <BookOpen className="h-3 w-3 mr-1.5" />
-                    {moduleName}
+                    {getStepDescription()}
                   </Badge>
                   
                   {completed && (
                     <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1.5">
                       <CheckCircle2 className="h-3 w-3" />
-                      Completada
+                      Paso completado
                     </Badge>
                   )}
                 </div>
@@ -132,14 +199,14 @@ const LessonContentComponent = ({
                   {lesson.duration_minutes && lesson.duration_minutes > 0 && (
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      <span className="text-sm">{lesson.duration_minutes} minutos</span>
+                      <span className="text-sm">~{lesson.duration_minutes} minutos</span>
                     </div>
                   )}
                   {videos.length > 0 && (
                     <div className="flex items-center gap-2">
                       <Video className="h-4 w-4" />
                       <span className="text-sm">
-                        {videos.length} {videos.length === 1 ? 'video' : 'videos'}
+                        {videos.length} {videos.length === 1 ? 'recurso multimedia' : 'recursos multimedia'}
                       </span>
                     </div>
                   )}

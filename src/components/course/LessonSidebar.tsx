@@ -1,8 +1,9 @@
 import { useState, useMemo, memo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, CheckCircle2, Search, BookOpen, Lock, PlayCircle } from "lucide-react";
+import { ChevronDown, CheckCircle2, Search, Target, Lock, PlayCircle, Footprints } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export interface LessonData {
@@ -33,18 +34,28 @@ interface LessonSidebarProps {
   compact?: boolean;
 }
 
-// Lesson Item Component
+// Step/Lesson Item Component
 const LessonItemComponent = memo(({
   lesson,
+  stepNumber,
   isCurrent,
   onSelect,
 }: {
   lesson: LessonData;
+  stepNumber: number;
   isCurrent: boolean;
   onSelect: () => void;
 }) => {
   const isLocked = lesson.locked;
   const isCompleted = lesson.completed;
+
+  // Human-friendly step labels
+  const getStepLabel = () => {
+    if (isCurrent) return "Estás aquí";
+    if (isCompleted) return "Completado";
+    if (isLocked) return "Bloqueado";
+    return `Paso ${stepNumber}`;
+  };
 
   return (
     <motion.button
@@ -64,7 +75,7 @@ const LessonItemComponent = memo(({
       <div className={cn(
         "flex items-center justify-center w-7 h-7 rounded-full shrink-0 transition-all",
         isCompleted 
-          ? "bg-green-500/20 text-green-500" 
+          ? "bg-emerald-500/20 text-emerald-500" 
           : isCurrent
             ? "bg-primary text-primary-foreground"
             : isLocked
@@ -78,7 +89,7 @@ const LessonItemComponent = memo(({
         ) : isCurrent ? (
           <PlayCircle className="h-4 w-4" />
         ) : (
-          <span className="text-xs font-bold">{lesson.lesson_number}</span>
+          <span className="text-xs font-bold">{stepNumber}</span>
         )}
       </div>
 
@@ -91,11 +102,9 @@ const LessonItemComponent = memo(({
         )}>
           {lesson.title}
         </p>
-        {lesson.duration_minutes > 0 && (
-          <p className="text-xs text-muted-foreground">
-            {lesson.duration_minutes} min
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground">
+          {lesson.duration_minutes > 0 ? `~${lesson.duration_minutes} min` : getStepLabel()}
+        </p>
       </div>
 
       {/* Current indicator */}
@@ -111,7 +120,7 @@ const LessonItemComponent = memo(({
 
 LessonItemComponent.displayName = "LessonItem";
 
-// Module Accordion Component
+// Milestone/Module Accordion Component
 const ModuleAccordionItem = memo(({
   module,
   isExpanded,
@@ -132,6 +141,14 @@ const ModuleAccordionItem = memo(({
   const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const isComplete = percentage === 100;
 
+  // Human-friendly milestone status
+  const getMilestoneStatus = () => {
+    if (isComplete) return "¡Completado!";
+    if (hasCurrentLesson) return "En este hito";
+    if (completedCount > 0) return "En progreso";
+    return "Por comenzar";
+  };
+
   return (
     <div className="mb-2">
       {/* Module Header */}
@@ -147,34 +164,46 @@ const ModuleAccordionItem = memo(({
         {/* Module Number / Complete Icon */}
         <div
           className={cn(
-            "flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold shrink-0 transition-all",
+            "flex items-center justify-center w-10 h-10 rounded-xl text-sm font-bold shrink-0 transition-all",
             isComplete
-              ? "bg-green-500/20 text-green-500"
+              ? "bg-emerald-500/20 text-emerald-500"
               : hasCurrentLesson
                 ? "bg-primary text-primary-foreground"
                 : "bg-primary/10 text-primary"
           )}
         >
           {isComplete ? (
-            <CheckCircle2 className="h-4 w-4" />
+            <CheckCircle2 className="h-5 w-5" />
           ) : (
-            module.module_number
+            <Target className="h-5 w-5" />
           )}
         </div>
 
         {/* Module Info */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm truncate">{module.title}</h3>
-          <div className="flex items-center gap-2 mt-0.5">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-sm truncate">
+              Hito {module.module_number}
+            </h3>
+            {hasCurrentLesson && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary">
+                Actual
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground truncate mt-0.5">
+            {module.title}
+          </p>
+          <div className="flex items-center gap-2 mt-1">
             <span className="text-xs text-muted-foreground">
-              {completedCount}/{totalCount} lecciones
+              {completedCount}/{totalCount} pasos
             </span>
             {/* Progress bar mini */}
             <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden max-w-[60px]">
               <motion.div
                 className={cn(
                   "h-full rounded-full",
-                  isComplete ? "bg-green-500" : "bg-primary"
+                  isComplete ? "bg-emerald-500" : "bg-primary"
                 )}
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
@@ -217,10 +246,11 @@ const ModuleAccordionItem = memo(({
             className="overflow-hidden"
           >
             <div className="pl-4 pr-2 py-2 space-y-1">
-              {module.lessons.map((lesson) => (
+              {module.lessons.map((lesson, idx) => (
                 <LessonItemComponent
                   key={lesson.id}
                   lesson={lesson}
+                  stepNumber={idx + 1}
                   isCurrent={lesson.id === currentLessonId}
                   onSelect={() => !lesson.locked && onLessonSelect(lesson.id)}
                 />
@@ -293,6 +323,7 @@ const LessonSidebarComponent = ({
     (acc, m) => acc + m.lessons.filter(l => l.completed).length,
     0
   );
+  const completionPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
   return (
     <div className="h-full flex flex-col bg-card/30">
@@ -302,16 +333,29 @@ const LessonSidebarComponent = ({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar lección..."
+              placeholder="Buscar paso..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-background/50 border-border/50 focus:border-primary/50"
             />
           </div>
-          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-            <BookOpen className="h-3 w-3" />
-            {completedLessons}/{totalLessons} lecciones completadas
-          </p>
+          <div className="flex items-center justify-between mt-3">
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <Footprints className="h-3.5 w-3.5" />
+              {completedLessons} de {totalLessons} pasos
+            </p>
+            <Badge 
+              variant="secondary" 
+              className={cn(
+                "text-xs",
+                completionPercent >= 100 
+                  ? "bg-emerald-500/10 text-emerald-600" 
+                  : "bg-primary/10 text-primary"
+              )}
+            >
+              {completionPercent}%
+            </Badge>
+          </div>
         </div>
       )}
 
@@ -321,7 +365,7 @@ const LessonSidebarComponent = ({
           {filteredModules.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No se encontraron lecciones</p>
+              <p className="text-sm">No se encontraron pasos</p>
             </div>
           ) : (
             filteredModules.map((module) => (
