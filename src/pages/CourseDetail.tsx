@@ -1,493 +1,348 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { useState, useCallback, useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, 
+  LayoutGrid, 
   BookOpen, 
-  Clock, 
-  Users, 
-  Award, 
-  CheckCircle2,
-  Play,
-  Layers,
+  TrendingUp, 
+  Pencil,
   GraduationCap,
-  ArrowRight,
-  Sparkles
+  Play
 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { CourseRecommendations } from "@/components/courses/CourseRecommendations";
-import { motion } from "framer-motion";
-
-interface Module {
-  id: string;
-  module_number: number;
-  title: string;
-  description: string;
-  instructor: string;
-  lessons_count: number;
-}
-
-interface CourseDetail {
-  id: string;
-  title: string;
-  description: string;
-  image_url: string | null;
-  level: string;
-  start_date: string | null;
-  end_date: string | null;
-  modules: Module[];
-  is_enrolled: boolean;
-  progress: number;
-}
+import { useCourseHub } from "@/hooks/useCourseHub";
+import { CourseOverview } from "@/components/course/CourseOverview";
+import { CourseModuleCard } from "@/components/course/CourseModuleCard";
+import { CourseNotes } from "@/components/course/CourseNotes";
+import ChatBot from "@/components/ChatBot";
 
 const CourseDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [course, setCourse] = useState<CourseDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [enrolling, setEnrolling] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
-  useEffect(() => {
-    if (id) {
-      loadCourseDetail();
+  const {
+    course,
+    modules,
+    stats,
+    instructors,
+    lastLessonId,
+    lastLessonTitle,
+    isEnrolled,
+    loading,
+  } = useCourseHub(id, user?.id);
+
+  const handleLessonClick = useCallback((lessonId: string) => {
+    navigate(`/lesson/${lessonId}`);
+  }, [navigate]);
+
+  const handleContinue = useCallback(() => {
+    if (lastLessonId) {
+      navigate(`/lesson/${lastLessonId}`);
     }
-  }, [id, user]);
+  }, [navigate, lastLessonId]);
 
-  const loadCourseDetail = async () => {
-    if (!id || !user) return;
-
-    try {
-      const { data: courseData, error: courseError } = await supabase
-        .from('courses')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (courseError) throw courseError;
-
-      const { data: enrollmentData } = await supabase
-        .from('user_courses')
-        .select('progress')
-        .eq('user_id', user.id)
-        .eq('course_id', id)
-        .maybeSingle();
-
-      const { data: modulesData, error: modulesError } = await supabase
-        .from('modules')
-        .select('*')
-        .eq('course_id', id)
-        .eq('is_active', true)
-        .order('module_number');
-
-      if (modulesError) throw modulesError;
-
-      const modulesWithLessons = await Promise.all(
-        (modulesData || []).map(async (module) => {
-          const { count } = await supabase
-            .from('lessons')
-            .select('*', { count: 'exact', head: true })
-            .eq('module_id', module.id)
-            .eq('is_active', true);
-
-          return {
-            ...module,
-            lessons_count: count || 0,
-          };
-        })
-      );
-
-      setCourse({
-        ...courseData,
-        modules: modulesWithLessons,
-        is_enrolled: !!enrollmentData,
-        progress: enrollmentData?.progress || 0,
-      });
-    } catch (error: any) {
-      console.error('Error loading course detail:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo cargar el curso",
-        variant: "destructive",
-      });
-      navigate('/courses');
-    } finally {
-      setLoading(false);
+  // Determine which module should be expanded by default
+  const expandedModuleId = useMemo(() => {
+    for (const module of modules) {
+      const hasIncomplete = module.lessons.some(l => !l.completed);
+      if (hasIncomplete) return module.id;
     }
-  };
-
-  const handleEnroll = async () => {
-    if (!id || !user) return;
-
-    setEnrolling(true);
-    try {
-      const { error } = await supabase.rpc('enroll_in_course', {
-        _course_id: id,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "¡Inscripción exitosa!",
-        description: "Ya puedes comenzar el curso",
-      });
-
-      loadCourseDetail();
-    } catch (error: any) {
-      console.error('Error enrolling:', error);
-      toast({
-        title: "Error",
-        description: error.message || "No se pudo completar la inscripción",
-        variant: "destructive",
-      });
-    } finally {
-      setEnrolling(false);
-    }
-  };
-
-  const getLevelConfig = (level: string) => {
-    switch (level?.toLowerCase()) {
-      case 'básico':
-        return { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/30', icon: '🌱' };
-      case 'medio':
-        return { bg: 'bg-sky-500/20', text: 'text-sky-400', border: 'border-sky-500/30', icon: '📚' };
-      case 'avanzado':
-        return { bg: 'bg-violet-500/20', text: 'text-violet-400', border: 'border-violet-500/30', icon: '🚀' };
-      case 'maestría':
-        return { bg: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/30', icon: '👑' };
-      default:
-        return { bg: 'bg-muted/20', text: 'text-muted-foreground', border: 'border-muted/30', icon: '📖' };
-    }
-  };
-
-  const totalLessons = course?.modules.reduce((acc, m) => acc + m.lessons_count, 0) || 0;
+    return modules[0]?.id;
+  }, [modules]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
-        >
-          <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+      <div className="min-h-screen bg-background">
+        {/* Navigation Skeleton */}
+        <nav className="border-b border-border/50 backdrop-blur-xl sticky top-0 z-40 bg-background/80">
+          <div className="container mx-auto px-4 py-4">
+            <Skeleton className="h-10 w-40" />
           </div>
-          <p className="text-foreground font-medium">Cargando curso...</p>
-        </motion.div>
+        </nav>
+        
+        <div className="container mx-auto px-4 py-8 space-y-6">
+          <Skeleton className="h-[320px] w-full rounded-2xl" />
+          <Skeleton className="h-32 w-full rounded-xl" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-24 rounded-xl" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!course) {
-    return null;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <GraduationCap className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Curso no encontrado</h2>
+          <Button onClick={() => navigate('/courses')}>
+            Ver todos los cursos
+          </Button>
+        </div>
+      </div>
+    );
   }
 
-  const levelConfig = getLevelConfig(course.level);
-
   return (
-    <div className="min-h-screen bg-gradient-dark">
+    <div className="min-h-screen bg-background">
       {/* Navigation */}
       <nav className="border-b border-border/50 backdrop-blur-xl sticky top-0 z-40 bg-background/80">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={() => navigate("/courses")}
             className="gap-2 hover:bg-primary/10"
           >
             <ArrowLeft className="h-4 w-4" />
-            Volver a Cursos
+            <span className="hidden sm:inline">Volver a Cursos</span>
           </Button>
+          
+          {isEnrolled && stats.progress > 0 && (
+            <Button
+              onClick={handleContinue}
+              className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary"
+            >
+              <Play className="h-4 w-4" />
+              <span className="hidden sm:inline">Continuar</span>
+            </Button>
+          )}
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <motion.section 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="relative overflow-hidden"
-      >
-        {/* Background Image */}
-        <div className="absolute inset-0 h-[500px]">
-          {course.image_url ? (
-            <img
-              src={course.image_url}
-              alt={course.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/30 via-secondary/20 to-primary/10" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
-        </div>
+      {/* Main Content with Tabs */}
+      <div className="container mx-auto px-4 py-6 md:py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          {/* Tabs Navigation */}
+          <div className="sticky top-[65px] z-30 bg-background/95 backdrop-blur-xl -mx-4 px-4 py-3 border-b border-border/30">
+            <TabsList className="w-full grid grid-cols-4 max-w-xl mx-auto h-12 bg-muted/50">
+              <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-background">
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">Resumen</span>
+              </TabsTrigger>
+              <TabsTrigger value="content" className="gap-2 data-[state=active]:bg-background">
+                <BookOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">Contenido</span>
+              </TabsTrigger>
+              <TabsTrigger value="progress" className="gap-2 data-[state=active]:bg-background">
+                <TrendingUp className="h-4 w-4" />
+                <span className="hidden sm:inline">Progreso</span>
+              </TabsTrigger>
+              <TabsTrigger value="notes" className="gap-2 data-[state=active]:bg-background">
+                <Pencil className="h-4 w-4" />
+                <span className="hidden sm:inline">Notas</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        {/* Hero Content */}
-        <div className="container mx-auto px-4 py-16 relative z-10">
-          <div className="max-w-4xl">
+          {/* Tab Contents */}
+          <AnimatePresence mode="wait">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
             >
-              <Badge className={`${levelConfig.bg} ${levelConfig.text} ${levelConfig.border} border text-sm font-medium px-3 py-1 mb-4`}>
-                <span className="mr-1.5">{levelConfig.icon}</span>
-                {course.level}
-              </Badge>
-            </motion.div>
-            
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight"
-            >
-              {course.title}
-            </motion.h1>
-            
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl"
-            >
-              {course.description}
-            </motion.p>
+              {/* Overview Tab */}
+              <TabsContent value="overview" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <CourseOverview
+                  course={course}
+                  stats={stats}
+                  instructors={instructors}
+                  onContinue={handleContinue}
+                  lastLessonTitle={lastLessonTitle || undefined}
+                />
+              </TabsContent>
 
-            {/* Stats Cards */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
-            >
-              <Card className="p-4 bg-card/50 backdrop-blur-sm border-border/30">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/20">
-                    <Layers className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{course.modules.length}</p>
-                    <p className="text-xs text-muted-foreground">Módulos</p>
-                  </div>
-                </div>
-              </Card>
-              
-              <Card className="p-4 bg-card/50 backdrop-blur-sm border-border/30">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-emerald-500/20">
-                    <BookOpen className="h-5 w-5 text-emerald-400" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{totalLessons}</p>
-                    <p className="text-xs text-muted-foreground">Lecciones</p>
-                  </div>
-                </div>
-              </Card>
-              
-              <Card className="p-4 bg-card/50 backdrop-blur-sm border-border/30">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-violet-500/20">
-                    <GraduationCap className="h-5 w-5 text-violet-400" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold capitalize">{course.level}</p>
-                    <p className="text-xs text-muted-foreground">Nivel</p>
-                  </div>
-                </div>
-              </Card>
-              
-              {course.start_date && (
-                <Card className="p-4 bg-card/50 backdrop-blur-sm border-border/30">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-amber-500/20">
-                      <Clock className="h-5 w-5 text-amber-400" />
-                    </div>
+              {/* Content Tab - Modules */}
+              <TabsContent value="content" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-2xl font-bold">{new Date(course.start_date).getFullYear()}</p>
-                      <p className="text-xs text-muted-foreground">Año</p>
-                    </div>
-                  </div>
-                </Card>
-              )}
-            </motion.div>
-
-            {/* Progress (if enrolled) */}
-            {course.is_enrolled && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="mb-8"
-              >
-                <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/30">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                      <span className="font-medium">Tu progreso</span>
-                    </div>
-                    <span className="text-2xl font-bold text-primary">{Math.round(course.progress)}%</span>
-                  </div>
-                  <div className="h-3 bg-muted/50 rounded-full overflow-hidden">
-                    <motion.div 
-                      className="h-full bg-gradient-to-r from-primary to-emerald-400 rounded-full"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${course.progress}%` }}
-                      transition={{ duration: 1, delay: 0.6 }}
-                    />
-                  </div>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* CTA Buttons */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="flex flex-wrap gap-4"
-            >
-              {course.is_enrolled ? (
-                <>
-                  <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg shadow-primary/25 px-8 h-14 text-lg font-semibold"
-                    onClick={() => navigate(`/dashboard?course=${course.id}`)}
-                  >
-                    <Play className="h-5 w-5 mr-2" />
-                    Continuar Aprendiendo
-                    <ArrowRight className="h-5 w-5 ml-2" />
-                  </Button>
-                  <Badge className="flex items-center gap-2 px-4 py-3 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-sm">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Ya estás inscrito
-                  </Badge>
-                </>
-              ) : (
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg shadow-primary/25 px-8 h-14 text-lg font-semibold"
-                  onClick={handleEnroll}
-                  disabled={enrolling}
-                >
-                  {enrolling ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-foreground border-t-transparent mr-2" />
-                      Inscribiendo...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-5 w-5 mr-2" />
-                      Inscribirme Ahora
-                    </>
-                  )}
-                </Button>
-              )}
-            </motion.div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Course Content */}
-      <section className="container mx-auto px-4 py-16">
-        <motion.h2 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold mb-8 flex items-center gap-3"
-        >
-          <div className="p-2 rounded-xl bg-primary/20">
-            <Layers className="h-6 w-6 text-primary" />
-          </div>
-          Contenido del Curso
-        </motion.h2>
-        
-        {/* Timeline Modules */}
-        <div className="relative">
-          {/* Timeline Line */}
-          <div className="absolute left-6 md:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-primary/50 to-transparent" />
-          
-          <div className="space-y-6">
-            {course.modules.map((module, idx) => (
-              <motion.div
-                key={module.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="relative pl-16 md:pl-20"
-              >
-                {/* Timeline Dot */}
-                <div className="absolute left-0 top-6 w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/25 z-10">
-                  <span className="text-xl md:text-2xl font-bold text-primary-foreground">{module.module_number}</span>
-                </div>
-                
-                <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/30 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
-                        {module.title}
-                      </h3>
-                      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                        {module.description}
+                      <h2 className="text-xl font-bold">Contenido del Curso</h2>
+                      <p className="text-sm text-muted-foreground">
+                        {stats.totalModules} módulos • {stats.totalLessons} lecciones
                       </p>
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                        {module.instructor && (
-                          <div className="flex items-center gap-1.5">
-                            <Users className="h-4 w-4 text-primary/70" />
-                            <span>{module.instructor}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1.5">
-                          <BookOpen className="h-4 w-4 text-primary/70" />
-                          <span>{module.lessons_count} lecciones</span>
-                        </div>
-                      </div>
                     </div>
-                    
-                    {course.is_enrolled && (
-                      <Button 
-                        variant="outline" 
-                        className="border-primary/50 text-primary hover:bg-primary/10 shrink-0"
-                        onClick={() => navigate(`/dashboard?course=${course.id}&module=${module.id}`)}
-                      >
-                        Ver módulo
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
+                    {isEnrolled && (
+                      <Badge variant="secondary" className="bg-primary/10 text-primary">
+                        {Math.round(stats.progress)}% completado
+                      </Badge>
                     )}
                   </div>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
 
-          {course.modules.length === 0 && (
-            <Card className="p-12 text-center bg-card/50 backdrop-blur-sm border-border/30">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/30 flex items-center justify-center">
-                <BookOpen className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground">Este curso aún no tiene módulos disponibles</p>
-            </Card>
-          )}
-        </div>
-      </section>
+                  {modules.length === 0 ? (
+                    <div className="text-center py-16">
+                      <BookOpen className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Sin contenido aún</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Este curso no tiene módulos disponibles
+                      </p>
+                    </div>
+                  ) : (
+                    <motion.div 
+                      className="space-y-4"
+                      initial="hidden"
+                      animate="visible"
+                      variants={{
+                        visible: { transition: { staggerChildren: 0.05 } }
+                      }}
+                    >
+                      {modules.map((module, idx) => (
+                        <motion.div
+                          key={module.id}
+                          variants={{
+                            hidden: { opacity: 0, y: 20 },
+                            visible: { opacity: 1, y: 0 }
+                          }}
+                        >
+                          <CourseModuleCard
+                            moduleNumber={module.module_number}
+                            title={module.title}
+                            description={module.description}
+                            instructor={module.instructor}
+                            lessons={module.lessons}
+                            onLessonClick={handleLessonClick}
+                            defaultExpanded={module.id === expandedModuleId}
+                          />
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </div>
+              </TabsContent>
 
-      {/* Recommendations */}
-      {user && (
-        <section className="container mx-auto px-4 pb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="pt-8 border-t border-border/30"
-          >
-            <CourseRecommendations userId={user.id} currentCourseId={course.id} limit={4} />
-          </motion.div>
-        </section>
-      )}
+              {/* Progress Tab */}
+              <TabsContent value="progress" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold mb-2">Tu Progreso</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Visualiza tu avance en el curso
+                    </p>
+                  </div>
+
+                  {/* Overall Progress Card */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-8 text-center"
+                  >
+                    <div className="relative z-10">
+                      <div className="w-32 h-32 mx-auto mb-6 relative">
+                        <svg className="w-full h-full transform -rotate-90">
+                          <circle
+                            cx="64"
+                            cy="64"
+                            r="56"
+                            fill="none"
+                            stroke="hsl(var(--muted))"
+                            strokeWidth="12"
+                          />
+                          <motion.circle
+                            cx="64"
+                            cy="64"
+                            r="56"
+                            fill="none"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth="12"
+                            strokeLinecap="round"
+                            strokeDasharray={351.86}
+                            initial={{ strokeDashoffset: 351.86 }}
+                            animate={{ strokeDashoffset: 351.86 - (351.86 * stats.progress / 100) }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-3xl font-bold">{Math.round(stats.progress)}%</span>
+                        </div>
+                      </div>
+                      <h3 className="text-lg font-semibold mb-1">
+                        {stats.progress >= 100 
+                          ? '¡Curso completado!' 
+                          : stats.progress > 0 
+                            ? '¡Sigue así!' 
+                            : 'Comienza ahora'}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {stats.completedLessons} de {stats.totalLessons} lecciones completadas
+                      </p>
+                    </div>
+                  </motion.div>
+
+                  {/* Module Progress */}
+                  <div className="space-y-3">
+                    <h3 className="font-semibold">Progreso por Módulo</h3>
+                    {modules.map((module, idx) => {
+                      const completed = module.lessons.filter(l => l.completed).length;
+                      const total = module.lessons.length;
+                      const pct = total > 0 ? (completed / total) * 100 : 0;
+
+                      return (
+                        <motion.div
+                          key={module.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className="flex items-center gap-4 p-4 rounded-xl bg-card/50 border border-border/50"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
+                            {module.module_number}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate text-sm">{module.title}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex-1 h-2 bg-muted/50 rounded-full overflow-hidden">
+                                <motion.div
+                                  className="h-full bg-primary rounded-full"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${pct}%` }}
+                                  transition={{ duration: 0.5, delay: idx * 0.05 }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground min-w-[3rem] text-right">
+                                {completed}/{total}
+                              </span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Notes Tab */}
+              <TabsContent value="notes" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <CourseNotes 
+                  courseId={id!} 
+                  modules={modules.map(m => ({
+                    id: m.id,
+                    title: m.title,
+                    lessons: m.lessons.map(l => ({
+                      id: l.id,
+                      title: l.title
+                    }))
+                  }))}
+                />
+              </TabsContent>
+            </motion.div>
+          </AnimatePresence>
+        </Tabs>
+      </div>
+
+      <ChatBot />
     </div>
   );
 };
