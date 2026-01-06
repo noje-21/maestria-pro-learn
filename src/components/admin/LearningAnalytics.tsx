@@ -19,6 +19,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Filter,
+  UserX,
+  Target,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
@@ -38,6 +40,8 @@ import {
   PieChart,
   Pie,
 } from "recharts";
+import { useAdminLearningInsights } from "@/hooks/useLearningAnalytics";
+import { AdminLearningInsights } from "./AdminLearningInsights";
 
 interface CourseMetrics {
   id: string;
@@ -296,13 +300,24 @@ export const LearningAnalytics = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* New Advanced Analytics Section */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Insights de Aprendizaje</h2>
+        <AdminLearningInsights />
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-border/50 pt-8">
+        <h2 className="text-xl font-semibold mb-4">Métricas Detalladas</h2>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Learning Analytics</h1>
-          <p className="text-muted-foreground mt-1">
-            Métricas de aprendizaje y engagement de los estudiantes
+          <h3 className="text-lg font-medium">Análisis por Curso</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Métricas de engagement de los estudiantes
           </p>
         </div>
         

@@ -251,6 +251,131 @@ export type Database = {
           },
         ]
       }
+      learning_analytics: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          id: string
+          lesson_id: string | null
+          module_id: string | null
+          session_end: string | null
+          session_start: string
+          time_spent_seconds: number | null
+          updated_at: string
+          user_id: string
+          video_views: Json | null
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          module_id?: string | null
+          session_end?: string | null
+          session_start?: string
+          time_spent_seconds?: number | null
+          updated_at?: string
+          user_id: string
+          video_views?: Json | null
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          module_id?: string | null
+          session_end?: string | null
+          session_start?: string
+          time_spent_seconds?: number | null
+          updated_at?: string
+          user_id?: string
+          video_views?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_analytics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_analytics_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_analytics_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_analytics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      learning_sessions: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          id: string
+          lessons_completed: number | null
+          lessons_viewed: number | null
+          session_date: string
+          total_time_seconds: number | null
+          updated_at: string
+          user_id: string
+          videos_watched: number | null
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          lessons_completed?: number | null
+          lessons_viewed?: number | null
+          session_date?: string
+          total_time_seconds?: number | null
+          updated_at?: string
+          user_id: string
+          videos_watched?: number | null
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          lessons_completed?: number | null
+          lessons_viewed?: number | null
+          session_date?: string
+          total_time_seconds?: number | null
+          updated_at?: string
+          user_id?: string
+          videos_watched?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_sessions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_materials: {
         Row: {
           created_at: string | null
@@ -569,6 +694,56 @@ export type Database = {
           },
         ]
       }
+      user_learning_profile: {
+        Row: {
+          avg_session_duration_minutes: number | null
+          created_at: string
+          id: string
+          last_active_at: string | null
+          learning_pace: string | null
+          longest_streak: number | null
+          preferred_time_slot: string | null
+          streak_days: number | null
+          total_study_time_minutes: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avg_session_duration_minutes?: number | null
+          created_at?: string
+          id?: string
+          last_active_at?: string | null
+          learning_pace?: string | null
+          longest_streak?: number | null
+          preferred_time_slot?: string | null
+          streak_days?: number | null
+          total_study_time_minutes?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avg_session_duration_minutes?: number | null
+          created_at?: string
+          id?: string
+          last_active_at?: string | null
+          learning_pace?: string | null
+          longest_streak?: number | null
+          preferred_time_slot?: string | null
+          streak_days?: number | null
+          total_study_time_minutes?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_learning_profile_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_progress: {
         Row: {
           completed: boolean | null
@@ -645,6 +820,33 @@ export type Database = {
         Returns: number
       }
       enroll_in_course: { Args: { _course_id: string }; Returns: Json }
+      get_admin_learning_insights: {
+        Args: never
+        Returns: {
+          active_students_week: number
+          avg_completion_rate: number
+          avg_time_per_course_hours: number
+          courses_with_data: Json
+          difficult_modules: Json
+          stagnant_users: number
+          total_students: number
+        }[]
+      }
+      get_student_analytics: {
+        Args: { _user_id?: string }
+        Returns: {
+          avg_session_minutes: number
+          current_streak: number
+          last_week_minutes: number
+          learning_pace: string
+          longest_streak: number
+          module_times: Json
+          preferred_time: string
+          recent_activity: Json
+          this_week_minutes: number
+          total_study_time_minutes: number
+        }[]
+      }
       get_student_progress: {
         Args: { _user_id?: string }
         Returns: {

@@ -1,4 +1,4 @@
-# Sistema Multi-Curso - Implementación Completa v3.0
+# Sistema Multi-Curso - Implementación Completa v4.0
 
 ## 📋 Resumen General
 
@@ -11,13 +11,112 @@ La plataforma ha sido exitosamente transformada de un sistema de maestría únic
 - ✅ Redirección inteligente post-login
 - ✅ UI moderna y responsive
 - ✅ Animaciones fluidas con Framer Motion
-- ✅ **NUEVO** Experiencia WOW con overlays de hitos completados
-- ✅ **NUEVO** Microcopy humano y profesional
-- ✅ **NUEVO** Resúmenes post-lección
+- ✅ Experiencia WOW con overlays de hitos completados
+- ✅ Microcopy humano y profesional
+- ✅ Resúmenes post-lección
+- ✅ **NUEVO** Analytics de aprendizaje real (FASE 5)
+- ✅ **NUEVO** Tracking de tiempo y sesiones
+- ✅ **NUEVO** Detección de estancamiento
+- ✅ **NUEVO** Insights para admin
 
 ---
 
-## 🎯 FASE 4: EXPERIENCIA WOW (NUEVO)
+## 📊 FASE 5: ANALYTICS DE APRENDIZAJE REAL (NUEVO)
+
+### Objetivo
+Convertir el progreso del estudiante en datos útiles, detectar bloqueos y preparar base para recomendaciones futuras.
+
+### Nuevas Tablas Supabase
+
+```sql
+learning_analytics        → Tracking de sesiones individuales
+learning_sessions         → Datos agregados por día
+user_learning_profile     → Perfil de aprendizaje del usuario
+```
+
+### Métricas Implementadas
+
+| Métrica | Descripción |
+|---------|-------------|
+| Tiempo por lección | Segundos en cada lección |
+| Tiempo por módulo | Agregado de lecciones |
+| Tiempo semanal | Esta semana vs anterior |
+| Racha de días | Días consecutivos de estudio |
+| Ritmo de aprendizaje | rápido/equilibrado/profundo |
+| Horario preferido | mañana/tarde/noche |
+
+### Componentes Nuevos
+
+```
+src/hooks/useLearningAnalytics.ts         → Hook completo de tracking
+src/components/admin/AdminLearningInsights.tsx → Insights para admin
+```
+
+### 1️⃣ Dashboard del Estudiante Mejorado
+
+El componente `StudentAnalytics` ahora muestra:
+
+- **Esta semana**: Tiempo estudiado con tendencia
+- **Racha actual**: Días consecutivos
+- **Ritmo de aprendizaje**: Mensaje humano (no técnico)
+- **Horario preferido**: Basado en sesiones
+- **Actividad semanal**: Gráfico de 7 días
+- **Alertas de estancamiento**: Mensajes empáticos
+
+### 2️⃣ Detección de Estancamiento
+
+El sistema detecta automáticamente:
+- No avance en 7+ días
+- Bajada de ritmo >50%
+
+Muestra mensajes empáticos:
+- "No has estudiado esta semana. ¡Retoma tu ritmo!"
+- "Tu ritmo de estudio ha bajado. ¿Necesitas ayuda?"
+
+### 3️⃣ Insights para Admin
+
+Panel mejorado con:
+- **Estudiantes totales** vs **Activos esta semana**
+- **Tasa de completado** con semáforo (bueno/moderado/bajo)
+- **Usuarios en riesgo** (inactivos +7 días)
+- **Módulos que requieren más tiempo**
+- **Rendimiento por curso**
+
+### 4️⃣ Visualización Humana
+
+| Técnico | Humano |
+|---------|--------|
+| "42.37%" | "A mitad del camino" |
+| "time_spent = 1324s" | "22 minutos" |
+| "learning_pace = quick" | "Sesiones cortas y enfocadas" |
+| "streak = 5" | "5 días de racha 🔥" |
+
+### 5️⃣ Base para Futuras Recomendaciones
+
+Datos guardados para IA futura:
+- Ritmo de aprendizaje
+- Preferencia de horario
+- Patrones de avance
+- Módulos donde se estanca
+
+### Archivos Modificados
+
+```
+src/pages/Lesson.tsx                        → Integración de tracking
+src/components/dashboard/StudentAnalytics.tsx → Datos reales de analytics
+src/components/admin/LearningAnalytics.tsx   → Nuevos insights
+```
+
+### RLS Policies
+
+Todas las nuevas tablas tienen RLS:
+- Usuarios solo ven sus propios datos
+- Admins ven todos los datos
+- Insert/Update restringido a propietarios
+
+---
+
+## 🎯 FASE 4: EXPERIENCIA WOW
 
 ### Objetivo
 Transformar el aprendizaje en una experiencia guiada y satisfactoria donde el usuario sienta progreso real.
@@ -276,9 +375,21 @@ src/
 - [x] Animaciones suaves (Framer Motion)
 - [x] Sin romper FASES 1, 2 y 3
 
+### FASE 5 - Analytics Real ✅
+- [x] Tablas de analytics en Supabase
+- [x] `useLearningAnalytics.ts` hook de tracking
+- [x] `AdminLearningInsights.tsx` insights para admin
+- [x] `StudentAnalytics.tsx` actualizado con datos reales
+- [x] Tracking de sesiones en Lesson.tsx
+- [x] Detección de estancamiento
+- [x] Visualización humana de datos
+- [x] RLS policies completas
+- [x] Mobile responsive
+- [x] Sin romper FASES 1, 2, 3 y 4
+
 ---
 
-## 🎉 Resultado Final v3.0
+## 🎉 Resultado Final v4.0
 
 ```
 ✔ Catálogo avanzado 100% funcional
@@ -288,6 +399,10 @@ src/
 ✔ Resumen post-lección motivador
 ✔ Microcopy profesional y cercano
 ✔ Continuidad automática de aprendizaje
+✔ Analytics de aprendizaje real
+✔ Tracking de tiempo y sesiones
+✔ Detección de estancamiento
+✔ Insights accionables para admin
 ✔ UI premium y moderna
 ✔ Todo mobile responsive
 ✔ Nada roto del sistema existente
@@ -296,6 +411,6 @@ src/
 
 ---
 
-**Versión:** 3.0 - Multi-Curso Premium Experience  
+**Versión:** 4.0 - Multi-Curso Premium + Analytics  
 **Fecha:** Enero 2026  
 **Estado:** ✅ 100% Funcional
