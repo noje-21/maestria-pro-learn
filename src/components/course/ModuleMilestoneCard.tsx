@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { getModuleProgressMessage } from "@/utils/progressMessages";
 
 export interface ModuleMilestoneLesson {
   id: string;
@@ -205,23 +206,29 @@ const ModuleMilestoneCardComponent = ({
 
               {/* Progress Section */}
               {status !== "locked" && status !== "available" && (
-                <div className="flex items-center gap-3">
-                  <Progress
-                    value={percentage}
-                    className={cn(
-                      "h-2.5 flex-1",
-                      status === "completed" && "[&>div]:bg-emerald-500",
-                      status === "in_progress" && "[&>div]:bg-amber-500"
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "text-sm font-semibold min-w-[3rem] text-right tabular-nums",
-                      status === "completed" ? "text-emerald-600" : "text-amber-600"
-                    )}
-                  >
-                    {percentage}%
-                  </span>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <Progress
+                      value={percentage}
+                      className={cn(
+                        "h-2.5 flex-1",
+                        status === "completed" && "[&>div]:bg-emerald-500",
+                        status === "in_progress" && "[&>div]:bg-amber-500"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "text-sm font-semibold min-w-[3rem] text-right tabular-nums",
+                        status === "completed" ? "text-emerald-600" : "text-amber-600"
+                      )}
+                    >
+                      {percentage}%
+                    </span>
+                  </div>
+                  {/* Human-friendly progress message */}
+                  <p className="text-xs text-muted-foreground">
+                    {getModuleProgressMessage(completedCount, totalCount)}
+                  </p>
                 </div>
               )}
 

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ModuleMilestoneCard, ModuleMilestoneLesson } from "./ModuleMilestoneCard";
 import { cn } from "@/lib/utils";
+import { getCourseProgressMessage, getHumanProgressMessage } from "@/utils/progressMessages";
 
 interface Module {
   id: string;
@@ -78,6 +79,16 @@ const CourseRoadmapComponent = ({
   };
 
   const journeyStatus = getJourneyStatus();
+
+  // Get human-friendly progress message
+  const completedModules = modulesWithLockStatus.filter(m => 
+    m.lessons.every(l => l.completed)
+  ).length;
+  const humanProgressMessage = getCourseProgressMessage(
+    completedModules,
+    stats.totalModules,
+    stats.progress
+  );
 
   return (
     <div className="space-y-8">
@@ -153,6 +164,10 @@ const CourseRoadmapComponent = ({
                 {" pasos completados"}
               </div>
             </div>
+            {/* Human-friendly progress message */}
+            <p className="text-sm text-muted-foreground mt-2">
+              {humanProgressMessage}
+            </p>
           </div>
         </div>
       </motion.div>

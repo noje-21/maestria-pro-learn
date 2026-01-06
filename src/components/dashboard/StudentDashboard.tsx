@@ -12,7 +12,8 @@ import {
   CheckCircle2,
   PlayCircle,
   ArrowRight,
-  GraduationCap
+  GraduationCap,
+  Sparkles
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,7 @@ import { CourseRecommendations } from "@/components/courses/CourseRecommendation
 import { StudentAnalytics } from "@/components/dashboard/StudentAnalytics";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { getHumanProgressMessage, getEncouragementMessage } from "@/utils/progressMessages";
 
 interface EnrolledCourse {
   id: string;
@@ -125,59 +127,64 @@ const CourseCard = memo(({
             {course.title}
           </h4>
           
-          <div className="mt-auto space-y-3">
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">
-                  {course.completed_lessons}/{course.total_lessons} lecciones
-                </span>
-                <span className={cn(
-                  "font-semibold",
-                  isComplete ? "text-emerald-500" : "text-primary"
-                )}>
-                  {Math.round(course.progress)}%
-                </span>
+            <div className="mt-auto space-y-3">
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    {getHumanProgressMessage(course.progress)}
+                  </span>
+                  <span className={cn(
+                    "font-semibold",
+                    isComplete ? "text-emerald-500" : "text-primary"
+                  )}>
+                    {Math.round(course.progress)}%
+                  </span>
+                </div>
+                <Progress 
+                  value={course.progress} 
+                  className={cn(
+                    "h-1.5",
+                    isComplete && "[&>div]:bg-emerald-500"
+                  )} 
+                />
               </div>
-              <Progress 
-                value={course.progress} 
-                className={cn(
-                  "h-1.5",
-                  isComplete && "[&>div]:bg-emerald-500"
-                )} 
-              />
-            </div>
             
-            <Button 
-              size="sm" 
-              className={cn(
-                "w-full gap-2",
-                isComplete 
-                  ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/30"
-                  : "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary"
-              )}
-              onClick={(e) => {
-                e.stopPropagation();
-                onContinue(course.id);
-              }}
-            >
-              {isComplete ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4" />
-                  Ver curso
-                </>
-              ) : (
-                <>
-                  <PlayCircle className="h-4 w-4" />
-                  Continuar
-                </>
-              )}
-            </Button>
+              <Button 
+                size="sm" 
+                className={cn(
+                  "w-full gap-2",
+                  isComplete 
+                    ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/30"
+                    : "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary"
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onContinue(course.id);
+                }}
+              >
+                {isComplete ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    Revisar curso
+                  </>
+                ) : course.progress > 0 ? (
+                  <>
+                    <PlayCircle className="h-4 w-4" />
+                    Continuar aprendiendo
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Comenzar ahora
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
-        </div>
-      </Card>
-    </motion.div>
-  );
-});
+        </Card>
+      </motion.div>
+    );
+  });
 
 CourseCard.displayName = "StudentCourseCard";
 
@@ -416,14 +423,15 @@ export const StudentDashboard = memo(({ userId }: StudentDashboardProps) => {
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
               <BookOpen className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Aún no tienes cursos</h3>
+            <h3 className="text-lg font-semibold mb-2">Comienza tu viaje de aprendizaje</h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Explora nuestro catálogo y comienza tu aprendizaje hoy
+              Explora nuestro catálogo y encuentra el curso perfecto para ti
             </p>
             <Button 
               onClick={() => navigate('/courses')} 
               className="gap-2 bg-gradient-to-r from-primary to-primary/80"
             >
+              <Sparkles className="h-4 w-4" />
               Explorar cursos
               <ArrowRight className="h-4 w-4" />
             </Button>

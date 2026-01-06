@@ -225,15 +225,15 @@ const MyCourses = () => {
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted/30 flex items-center justify-center">
               <BookOpen className="h-10 w-10 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-bold mb-2">No estás inscrito en ningún curso</h3>
+            <h3 className="text-xl font-bold mb-2">Comienza tu viaje de aprendizaje</h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Explora nuestro catálogo y comienza tu viaje de aprendizaje
+              Explora nuestro catálogo y encuentra el curso perfecto para ti
             </p>
             <Button 
               onClick={() => navigate("/courses")} 
-              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg shadow-primary/25 px-6"
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg shadow-primary/25 px-6 gap-2"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Explorar Cursos
             </Button>
           </motion.div>
