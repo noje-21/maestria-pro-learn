@@ -235,37 +235,46 @@ export function useLessonData(lessonId: string | undefined, userId: string | und
     // Optimistic update
     setCompleted(true);
     const previousProgress = courseProgress;
+    const previousModules = [...modules];
     const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0);
     const newProgress = Math.min(100, courseProgress + Math.round(100 / totalLessons));
     setCourseProgress(newProgress);
     
+    // Update modules state optimistically
+    setModules(prev => prev.map(m => ({
+      ...m,
+      lessons: m.lessons.map(l => 
+        l.id === lessonId ? { ...l, completed: true } : l
+      )
+    })));
+    
     try {
-      const { error } = await supabase.rpc("mark_lesson_viewed", {
+      // Use the new complete_lesson RPC that persists to Supabase
+      const { data, error } = await supabase.rpc("complete_lesson", {
         _lesson_id: lessonId,
       });
 
       if (error) throw error;
 
+      // Update with actual progress from server
+      const responseData = data as { success?: boolean; progress?: number } | null;
+      if (responseData && typeof responseData.progress === 'number') {
+        setCourseProgress(Math.round(responseData.progress));
+      }
+
       toast({
         title: "¡Lección completada!",
         description: "Tu progreso ha sido guardado.",
       });
-      
-      // Update modules state with completed lesson
-      setModules(prev => prev.map(m => ({
-        ...m,
-        lessons: m.lessons.map(l => 
-          l.id === lessonId ? { ...l, completed: true } : l
-        )
-      })));
     } catch (err: any) {
       // Rollback on error
       setCompleted(false);
       setCourseProgress(previousProgress);
-      console.error("Error marking lesson as viewed:", err);
+      setModules(previousModules);
+      console.error("Error completing lesson:", err);
       toast({
         title: "Error",
-        description: err.message || "No se pudo marcar la lección como vista",
+        description: err.message || "No se pudo completar la lección",
         variant: "destructive",
       });
     }

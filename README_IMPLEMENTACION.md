@@ -1,4 +1,4 @@
-# Sistema Multi-Curso - Implementación Completa v5.0
+# Sistema Multi-Curso - Implementación Completa v6.0
 
 ## 📋 Resumen General
 
@@ -18,10 +18,84 @@ La plataforma ha sido exitosamente transformada de un sistema de maestría únic
 - ✅ Tracking de tiempo y sesiones
 - ✅ Detección de estancamiento
 - ✅ Insights para admin
-- ✅ **NUEVO** Identidad visual memorable (FASE 6)
-- ✅ **NUEVO** Patrón visual único (Clinical Line System)
-- ✅ **NUEVO** Sistema de microcopy de autor
-- ✅ **NUEVO** Landing con concepto potente
+- ✅ Identidad visual memorable (FASE 6)
+- ✅ Patrón visual único (Clinical Line System)
+- ✅ Sistema de microcopy de autor
+- ✅ Landing con concepto potente
+- ✅ **NUEVO** Corrección de Progreso (FASE 7) - Persistencia robusta
+
+---
+
+## 🔧 CORRECCIÓN DE PROGRESO — FASE 7
+
+### Problema Detectado
+El progreso del usuario no se guardaba correctamente en la base de datos. La función `mark_lesson_viewed` solo actualizaba `updated_at` pero nunca marcaba `completed = true`.
+
+### Solución Implementada
+
+#### 1. Nueva Función RPC `complete_lesson`
+```sql
+CREATE OR REPLACE FUNCTION public.complete_lesson(_lesson_id uuid)
+RETURNS jsonb
+```
+
+**Qué hace:**
+- Marca la lección como `completed = true` en `user_progress`
+- Guarda `completed_at` con timestamp
+- Calcula y actualiza `user_courses.progress` automáticamente
+- Actualiza `status` del curso a `completed` si llega a 100%
+- Retorna el progreso actualizado del servidor
+
+#### 2. Índice Único para Evitar Duplicados
+```sql
+CREATE UNIQUE INDEX idx_user_progress_user_lesson 
+ON public.user_progress(user_id, lesson_id);
+```
+
+#### 3. Función de Recuperación `get_user_course_progress`
+Obtiene el progreso real del usuario incluyendo:
+- Lista de lecciones completadas
+- Última lección completada
+- Estado de inscripción
+- Progreso numérico
+
+#### 4. Función Admin `recalculate_all_progress`
+Recalcula todo el progreso de todos los usuarios (para recovery/mantenimiento).
+
+### Flujo Corregido
+
+```
+Usuario completa lección
+    ↓
+Frontend llama supabase.rpc("complete_lesson")
+    ↓
+Backend: INSERT/UPDATE user_progress (completed=true)
+    ↓
+Backend: calculate_course_progress()
+    ↓
+Backend: UPDATE user_courses.progress
+    ↓
+Frontend recibe progreso actualizado del servidor
+    ↓
+UI refleja estado real de la BD
+```
+
+### Archivos Modificados
+
+```
+src/hooks/useLessonData.ts     ← Usa complete_lesson RPC
+src/hooks/useCourseHub.ts      ← Consultas optimizadas
+supabase/migrations/           ← Nueva función complete_lesson
+```
+
+### Pruebas de Validación
+
+✅ Completar lección → refrescar → sigue completada
+✅ Completar módulo → progreso correcto persistente
+✅ Mobile → progreso persiste entre sesiones
+✅ Multi-video → marca completado solo al clickear botón
+✅ Usuario nuevo → inicia en 0%
+✅ Logout/Login → progreso recuperado de Supabase
 
 ---
 

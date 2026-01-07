@@ -106,31 +106,36 @@ export function useCourseHub(courseId: string | undefined, userId: string | unde
         return;
       }
 
-      const [lessonsResult, progressResult] = await Promise.all([
-        supabase
-          .from('lessons')
-          .select('*')
-          .in('module_id', moduleIds)
-          .eq('is_active', true)
-          .order('lesson_number'),
-        supabase
-          .from('user_progress')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('completed', true)
-      ]);
+      // Fetch lessons for all modules
+      const { data: lessonsData, error: lessonsError } = await supabase
+        .from('lessons')
+        .select('*')
+        .in('module_id', moduleIds)
+        .eq('is_active', true)
+        .order('lesson_number');
 
-      if (lessonsResult.error) throw lessonsResult.error;
+      if (lessonsError) throw lessonsError;
+
+      // Get all lesson IDs for this course
+      const allLessonIds = (lessonsData || []).map(l => l.id);
+
+      // Fetch progress only for lessons in this course
+      const { data: progressData } = await supabase
+        .from('user_progress')
+        .select('lesson_id, completed, completed_at')
+        .eq('user_id', userId)
+        .eq('completed', true)
+        .in('lesson_id', allLessonIds);
 
       // Create progress map
-      const progressMap = new Map(
-        (progressResult.data || []).map(p => [p.lesson_id, p])
+      const progressMap = new Map<string, typeof progressData[0]>(
+        (progressData || []).map(p => [p.lesson_id, p])
       );
       
       setCompletedLessonIds(new Set(progressMap.keys()));
 
       // Find last completed lesson
-      const sortedProgress = (progressResult.data || [])
+      const sortedProgress = (progressData || [])
         .filter(p => p.completed_at)
         .sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime());
       
@@ -140,7 +145,7 @@ export function useCourseHub(courseId: string | undefined, userId: string | unde
 
       // Build modules with lessons and computed properties
       const modulesWithLessons: Module[] = (modulesResult.data || []).map((module, idx, allModules) => {
-        const moduleLessons = (lessonsResult.data || [])
+        const moduleLessons = (lessonsData || [])
           .filter(lesson => lesson.module_id === module.id)
           .map(lesson => ({
             id: lesson.id,
@@ -159,11 +164,9 @@ export function useCourseHub(courseId: string | undefined, userId: string | unde
         // Check if previous module is completed for locking
         let isLocked = false;
         if (idx > 0) {
-          const prevModuleLessons = (lessonsResult.data || [])
+          const prevModuleLessons = (lessonsData || [])
             .filter(lesson => lesson.module_id === allModules[idx - 1].id);
           const prevModuleCompleted = prevModuleLessons.every(lesson => progressMap.has(lesson.id));
-          // Note: We'll only lock if progressive locking is enabled in the UI
-          // For now, set to false but provide the computed value
           isLocked = false; // Can be enabled per-course if needed
         }
 
