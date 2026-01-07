@@ -819,6 +819,7 @@ export type Database = {
         Args: { _course_id: string; _user_id: string }
         Returns: number
       }
+      complete_lesson: { Args: { _lesson_id: string }; Returns: Json }
       enroll_in_course: { Args: { _course_id: string }; Returns: Json }
       get_admin_learning_insights: {
         Args: never
@@ -862,6 +863,7 @@ export type Database = {
           user_name: string
         }[]
       }
+      get_user_course_progress: { Args: { _course_id: string }; Returns: Json }
       get_user_list_for_admin: {
         Args: never
         Returns: {
@@ -879,6 +881,7 @@ export type Database = {
         Returns: boolean
       }
       mark_lesson_viewed: { Args: { _lesson_id: string }; Returns: Json }
+      recalculate_all_progress: { Args: never; Returns: undefined }
       submit_exam_attempt: {
         Args: {
           _answers: Json
