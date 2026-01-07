@@ -1,115 +1,249 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* MLCP Design System - MLCP Brand Colors */
+/* ═══════════════════════════════════════════════════════════════════════════
+   MLCP DESIGN SYSTEM v6.0 — IDENTIDAD MEMORABLE
+   Campus Virtual · Maestría Latinoamericana en Circulación Pulmonar
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 @layer base {
   :root {
-    /* Core Colors - MLCP Brand */
-    --background: 0 0% 5%;
-    --background-secondary: 0 0% 8%;
-    --foreground: 0 0% 100%;
+    /* Core Colors - Deep Medical Palette */
+    --background: 220 20% 4%;
+    --background-secondary: 220 18% 7%;
+    --foreground: 210 40% 98%;
 
     /* Card & Surface Colors */
-    --card: 0 0% 10%;
-    --card-hover: 0 0% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 18% 8%;
+    --card-hover: 220 18% 11%;
+    --card-foreground: 210 40% 98%;
 
     /* Popover */
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 18% 8%;
+    --popover-foreground: 210 40% 98%;
 
-    /* Primary - MLCP Blue #213ECC */
-    --primary: 228 68% 47%;
-    --primary-glow: 228 68% 57%;
+    /* Primary - MLCP Deep Blue */
+    --primary: 225 65% 52%;
+    --primary-glow: 225 70% 62%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - MLCP Red #CE2020 */
-    --secondary: 0 73% 47%;
-    --secondary-glow: 0 73% 57%;
+    /* Secondary - Clinical Red */
+    --secondary: 0 68% 52%;
+    --secondary-glow: 0 70% 62%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Success */
-    --success: 142 76% 36%;
+    /* Success - Medical Green */
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
 
     /* Muted */
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 63%;
+    --muted: 220 14% 18%;
+    --muted-foreground: 220 10% 55%;
 
-    /* Accent */
-    --accent: 228 68% 47%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent - Soft Blue for highlights */
+    --accent: 225 50% 25%;
+    --accent-foreground: 210 40% 98%;
 
     /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     /* Border & Input */
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 228 68% 47%;
+    --border: 220 14% 16%;
+    --input: 220 14% 16%;
+    --ring: 225 65% 52%;
 
     /* Radius */
-    --radius: 0.5rem;
+    --radius: 0.625rem;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(228 68% 47%), hsl(228 68% 57%));
-    --gradient-secondary: linear-gradient(135deg, hsl(0 73% 47%), hsl(0 73% 57%));
-    --gradient-dark: linear-gradient(180deg, hsl(0 0% 5%), hsl(0 0% 3%));
-    --gradient-glow: radial-gradient(circle at 50% 0%, hsla(228 68% 47% / 0.15), transparent 50%);
+    /* ═══ FIRMA VISUAL ÚNICA ═══ */
+    
+    /* Clinical Accent Line - La línea distintiva */
+    --clinical-line: 225 65% 52%;
+    --clinical-line-glow: 0 0 8px hsl(225 65% 52% / 0.4);
+    
+    /* Progress Accent */
+    --progress-track: 220 14% 12%;
+    --progress-fill: linear-gradient(90deg, hsl(225 65% 52%), hsl(225 70% 62%));
+    --progress-complete: linear-gradient(90deg, hsl(160 84% 39%), hsl(160 90% 45%));
 
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsla(0 0% 0% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsla(0 0% 0% / 0.1), 0 2px 4px -1px hsla(0 0% 0% / 0.06);
-    --shadow-lg: 0 10px 15px -3px hsla(0 0% 0% / 0.1), 0 4px 6px -2px hsla(0 0% 0% / 0.05);
-    --shadow-xl: 0 20px 25px -5px hsla(0 0% 0% / 0.1), 0 10px 10px -5px hsla(0 0% 0% / 0.04);
-    --shadow-glow: 0 0 40px hsla(228 68% 47% / 0.3);
-    --shadow-glow-secondary: 0 0 40px hsla(0 73% 47% / 0.3);
+    /* Gradients - Refined */
+    --gradient-primary: linear-gradient(135deg, hsl(225 65% 52%), hsl(225 70% 60%));
+    --gradient-secondary: linear-gradient(135deg, hsl(0 68% 52%), hsl(0 70% 60%));
+    --gradient-dark: linear-gradient(180deg, hsl(220 20% 4%), hsl(220 22% 2%));
+    --gradient-glow: radial-gradient(ellipse at 50% 0%, hsla(225 65% 52% / 0.12), transparent 60%);
+    --gradient-card: linear-gradient(180deg, hsl(220 18% 10%), hsl(220 18% 8%));
 
-    /* Transitions */
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* Shadows - Subtle & Sophisticated */
+    --shadow-sm: 0 1px 2px 0 hsla(0 0% 0% / 0.08);
+    --shadow-md: 0 4px 12px -2px hsla(0 0% 0% / 0.15), 0 2px 4px -1px hsla(0 0% 0% / 0.08);
+    --shadow-lg: 0 12px 24px -6px hsla(0 0% 0% / 0.2), 0 6px 12px -4px hsla(0 0% 0% / 0.1);
+    --shadow-xl: 0 24px 48px -12px hsla(0 0% 0% / 0.25);
+    --shadow-glow: 0 0 32px hsla(225 65% 52% / 0.2);
+    --shadow-glow-secondary: 0 0 32px hsla(0 68% 52% / 0.2);
+    --shadow-inset: inset 0 1px 0 0 hsla(210 40% 98% / 0.03);
+
+    /* Transitions - Smooth & Professional */
+    --transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 320ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 500ms cubic-bezier(0.22, 1, 0.36, 1);
 
     /* Border */
-    --border-hover: 0 0% 30%;
+    --border-hover: 220 14% 24%;
+    --border-active: 225 50% 40%;
   }
   
   * {
-    font-family: 'Product Sans', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Product Sans', system-ui, sans-serif;
   }
   
   body {
     @apply bg-background text-foreground;
-    font-family: 'Product Sans', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Product Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold tracking-tight;
-    font-family: 'Product Sans', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Product Sans', system-ui, sans-serif;
+    letter-spacing: -0.02em;
   }
+
+  h1 { letter-spacing: -0.03em; }
+  h2 { letter-spacing: -0.025em; }
 }
 
 @layer components {
-  /* Glass Card Effect */
+  /* ═══════════════════════════════════════════════════════════════════════
+     FIRMA VISUAL — Clinical Line System
+     ═══════════════════════════════════════════════════════════════════════ */
+  
+  /* Línea vertical distintiva para cards y secciones */
+  .clinical-accent {
+    position: relative;
+  }
+  
+  .clinical-accent::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--gradient-primary);
+    border-radius: 0 2px 2px 0;
+    opacity: 0.9;
+    transition: var(--transition-smooth);
+  }
+  
+  .clinical-accent:hover::before {
+    box-shadow: var(--clinical-line-glow);
+    opacity: 1;
+  }
+  
+  /* Variante completada */
+  .clinical-accent-success::before {
+    background: var(--progress-complete);
+  }
+  
+  /* Variante en progreso */
+  .clinical-accent-progress::before {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--primary)) var(--progress-value, 50%),
+      hsl(var(--muted)) var(--progress-value, 50%)
+    );
+  }
+  
+  /* Indicador de hito/milestone */
+  .milestone-marker {
+    @apply relative pl-6;
+  }
+  
+  .milestone-marker::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    border: 2px solid hsl(var(--primary));
+    border-radius: 50%;
+    background: hsl(var(--background));
+    transition: var(--transition-smooth);
+  }
+  
+  .milestone-marker:hover::before,
+  .milestone-marker[data-active="true"]::before {
+    background: hsl(var(--primary));
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2);
+  }
+  
+  .milestone-marker[data-complete="true"]::before {
+    background: hsl(var(--success));
+    border-color: hsl(var(--success));
+    box-shadow: 0 0 0 4px hsl(var(--success) / 0.2);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     CARDS — Premium Medical Style
+     ═══════════════════════════════════════════════════════════════════════ */
+  
   .glass-card {
-    @apply bg-card/50 backdrop-blur-xl border border-border rounded-lg;
-    box-shadow: var(--shadow-md);
+    @apply bg-card/80 backdrop-blur-xl border border-border rounded-xl;
+    box-shadow: var(--shadow-md), var(--shadow-inset);
+    transition: var(--transition-smooth);
   }
 
   .glass-card:hover {
     border-color: hsl(var(--border-hover));
+    box-shadow: var(--shadow-lg), var(--shadow-inset);
+    transform: translateY(-2px);
+  }
+  
+  /* Card con línea clínica */
+  .card-clinical {
+    @apply relative overflow-hidden rounded-xl border border-border bg-card;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-smooth);
+  }
+  
+  .card-clinical::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--gradient-primary);
+    transform: scaleY(0.7);
+    transform-origin: center;
+    transition: var(--transition-smooth);
+  }
+  
+  .card-clinical:hover {
+    border-color: hsl(var(--border-active));
     box-shadow: var(--shadow-lg);
   }
+  
+  .card-clinical:hover::before {
+    transform: scaleY(1);
+    box-shadow: var(--clinical-line-glow);
+  }
 
-  /* Glow Effects */
+  /* ═══════════════════════════════════════════════════════════════════════
+     GRADIENTS & EFFECTS
+     ═══════════════════════════════════════════════════════════════════════ */
+
   .glow-primary {
     box-shadow: var(--shadow-glow);
   }
@@ -118,40 +252,74 @@
     box-shadow: var(--shadow-glow-secondary);
   }
 
-  /* Gradient Text */
   .gradient-text {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+  
+  .gradient-text-subtle {
+    background: linear-gradient(135deg, hsl(210 40% 98%), hsl(220 14% 75%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 
-  /* Gradient Button */
+  /* ═══════════════════════════════════════════════════════════════════════
+     BUTTONS — Professional CTAs
+     ═══════════════════════════════════════════════════════════════════════ */
+
   .btn-gradient-primary {
     background: var(--gradient-primary);
     @apply text-primary-foreground font-semibold;
+    box-shadow: var(--shadow-md);
     transition: var(--transition-smooth);
   }
 
   .btn-gradient-primary:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-glow);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+  }
+  
+  .btn-gradient-primary:active {
+    transform: translateY(0);
   }
 
   .btn-gradient-secondary {
     background: var(--gradient-secondary);
     @apply text-secondary-foreground font-semibold;
+    box-shadow: var(--shadow-md);
     transition: var(--transition-smooth);
   }
 
   .btn-gradient-secondary:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-glow-secondary);
+    box-shadow: var(--shadow-lg), var(--shadow-glow-secondary);
   }
 
-  /* Progress Bar */
+  /* ═══════════════════════════════════════════════════════════════════════
+     PROGRESS — Clinical Progress Indicators
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  .progress-clinical {
+    @apply relative overflow-hidden rounded-full;
+    height: 6px;
+    background: hsl(var(--muted) / 0.5);
+  }
+  
+  .progress-clinical-bar {
+    @apply h-full rounded-full;
+    background: var(--progress-fill);
+    transition: width var(--transition-slow);
+  }
+  
+  .progress-clinical-bar[data-complete="true"] {
+    background: var(--progress-complete);
+  }
+
   .progress-glow {
-    box-shadow: 0 0 10px hsl(var(--primary) / 0.5);
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.4);
   }
 }
 

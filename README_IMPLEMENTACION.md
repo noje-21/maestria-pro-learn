@@ -1,4 +1,4 @@
-# Sistema Multi-Curso - Implementación Completa v4.0
+# Sistema Multi-Curso - Implementación Completa v5.0
 
 ## 📋 Resumen General
 
@@ -14,14 +14,79 @@ La plataforma ha sido exitosamente transformada de un sistema de maestría únic
 - ✅ Experiencia WOW con overlays de hitos completados
 - ✅ Microcopy humano y profesional
 - ✅ Resúmenes post-lección
-- ✅ **NUEVO** Analytics de aprendizaje real (FASE 5)
-- ✅ **NUEVO** Tracking de tiempo y sesiones
-- ✅ **NUEVO** Detección de estancamiento
-- ✅ **NUEVO** Insights para admin
+- ✅ Analytics de aprendizaje real (FASE 5)
+- ✅ Tracking de tiempo y sesiones
+- ✅ Detección de estancamiento
+- ✅ Insights para admin
+- ✅ **NUEVO** Identidad visual memorable (FASE 6)
+- ✅ **NUEVO** Patrón visual único (Clinical Line System)
+- ✅ **NUEVO** Sistema de microcopy de autor
+- ✅ **NUEVO** Landing con concepto potente
 
 ---
 
-## 📊 FASE 5: ANALYTICS DE APRENDIZAJE REAL (NUEVO)
+## 🎨 FASE 6: IDENTIDAD MEMORABLE / MARCA TOP 5%
+
+### Objetivo
+Crear una identidad visual y emocional reconocible que diferencie la plataforma.
+
+### 1️⃣ Firma Visual Única — Clinical Line System
+
+Línea vertical distintiva que acompaña:
+- Cards de módulos y cursos
+- Encabezados de secciones
+- Indicadores de progreso
+
+```css
+.clinical-accent::before {
+  width: 3px;
+  background: var(--gradient-primary);
+  /* Glow sutil en hover */
+}
+```
+
+### 2️⃣ Componente ClinicalCard
+
+Nuevo componente reutilizable con variantes:
+- `default` - Línea primaria
+- `success` - Línea verde (completado)
+- `progress` - Línea con gradiente de progreso
+- `locked` - Línea atenuada
+
+### 3️⃣ Sistema de Microcopy
+
+`src/utils/microcopy.ts` con voz de marca:
+- CTAs contextuales
+- Mensajes de progreso humanos
+- Estados vacíos empáticos
+- Labels consistentes
+
+### 4️⃣ Landing con Concepto
+
+Headline potente: "Donde la excelencia médica se forma"
+- Responde: ¿Por qué existe? ¿Para quién? ¿Qué la hace diferente?
+- Sin marketing genérico
+
+### 5️⃣ Design System v6.0
+
+Actualizado `index.css`:
+- Paleta médica refinada
+- Tipografía Plus Jakarta Sans
+- Variables de firma visual
+- Transiciones suaves profesionales
+
+### Archivos Nuevos/Modificados
+
+```
+src/components/ui/clinical-card.tsx  ← Componente firma visual
+src/utils/microcopy.ts               ← Sistema de voz de marca
+src/index.css                        ← Design System v6.0
+src/pages/Landing.tsx                ← Landing con concepto
+```
+
+---
+
+## 📊 FASE 5: ANALYTICS DE APRENDIZAJE REAL
 
 ### Objetivo
 Convertir el progreso del estudiante en datos útiles, detectar bloqueos y preparar base para recomendaciones futuras.
@@ -387,9 +452,20 @@ src/
 - [x] Mobile responsive
 - [x] Sin romper FASES 1, 2, 3 y 4
 
+### FASE 6 - Identidad Memorable ✅
+- [x] `clinical-card.tsx` componente con firma visual
+- [x] `microcopy.ts` sistema de voz de marca
+- [x] Design System v6.0 en index.css
+- [x] Landing con concepto potente
+- [x] Patrón visual Clinical Line
+- [x] Tipografía Plus Jakarta Sans
+- [x] Consistencia total de espaciados
+- [x] Mobile como primera clase
+- [x] Sin romper FASES 1-5
+
 ---
 
-## 🎉 Resultado Final v4.0
+## 🎉 Resultado Final v5.0
 
 ```
 ✔ Catálogo avanzado 100% funcional
@@ -403,6 +479,10 @@ src/
 ✔ Tracking de tiempo y sesiones
 ✔ Detección de estancamiento
 ✔ Insights accionables para admin
+✔ IDENTIDAD VISUAL MEMORABLE
+✔ Patrón Clinical Line System
+✔ Voz de marca consistente
+✔ Landing con concepto diferenciador
 ✔ UI premium y moderna
 ✔ Todo mobile responsive
 ✔ Nada roto del sistema existente
@@ -411,6 +491,6 @@ src/
 
 ---
 
-**Versión:** 4.0 - Multi-Curso Premium + Analytics  
+**Versión:** 5.0 - Identidad Memorable  
 **Fecha:** Enero 2026  
 **Estado:** ✅ 100% Funcional
