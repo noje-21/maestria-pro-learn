@@ -20,6 +20,7 @@ const Simposio = lazy(() => import("./pages/Simposio"));
 const Courses = lazy(() => import("./pages/Courses"));
 const CourseDetail = lazy(() => import("./pages/CourseDetail"));
 const MyCourses = lazy(() => import("./pages/MyCourses"));
+const EnrollmentSuccess = lazy(() => import("./pages/EnrollmentSuccess"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Optimized QueryClient with proper caching
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/simposio" element={<Simposio />} />
+              <Route path="/enrollment-success" element={<EnrollmentSuccess />} />
               <Route
                 path="/courses" 
                 element={
