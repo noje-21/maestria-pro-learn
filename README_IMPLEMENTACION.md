@@ -1,4 +1,4 @@
-# Sistema Multi-Curso - Implementación Completa v7.0
+# Sistema Multi-Curso - Implementación Completa v8.0
 
 ## 📋 Resumen General
 
@@ -23,7 +23,103 @@ La plataforma ha sido exitosamente transformada a nivel élite (top 5%) con:
 - ✅ Sistema de microcopy de autor
 - ✅ Landing con concepto potente
 - ✅ Corrección de Progreso (FASE 7) - Persistencia robusta
-- ✅ **NUEVO** Implementación Élite (FASE 8) - Landing 4 actos, módulos clínicos, chatbot mejorado
+- ✅ Implementación Élite (FASE 8) - Landing 4 actos, módulos clínicos, chatbot mejorado
+- ✅ **NUEVO** Sistema de Inscripción y Pago (FASE 9) - Stripe, emails automáticos, provisión de usuarios
+
+---
+
+## 💳 SISTEMA DE INSCRIPCIÓN Y PAGO — FASE 9
+
+### Objetivo
+Implementar un flujo profesional de inscripción → pago → acceso automático para la maestría.
+
+### Flujo Completo
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   1. REGISTRO   │────▶│    2. PAGO      │────▶│   3. ACCESO     │
+│   Modal form    │     │   Stripe        │     │   Automático    │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+        │                       │                       │
+        ▼                       ▼                       ▼
+  - Nombre completo       - Checkout Stripe      - Usuario creado
+  - Email                 - Pago seguro          - Password generado
+  - País                  - Webhook confirma     - Email enviado
+  - Especialidad                                 - Inscrito en curso
+  - Teléfono (opc)
+```
+
+### Tabla Nueva: `enrollment_leads`
+
+```sql
+CREATE TABLE public.enrollment_leads (
+  id UUID PRIMARY KEY,
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  country TEXT NOT NULL,
+  specialty TEXT NOT NULL,
+  phone TEXT,
+  course_id UUID REFERENCES courses(id),
+  status TEXT CHECK (status IN ('pending', 'contacted', 'paid', 'enrolled', 'cancelled')),
+  stripe_customer_id TEXT,
+  stripe_session_id TEXT,
+  payment_completed_at TIMESTAMPTZ,
+  user_id UUID,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
+```
+
+### Edge Functions Creadas
+
+| Función | Propósito |
+|---------|-----------|
+| `create-enrollment-checkout` | Crea sesión de Stripe Checkout |
+| `stripe-enrollment-webhook` | Procesa webhook de pago exitoso |
+| `send-enrollment-emails` | Envía emails al equipo y usuario |
+| `send-welcome-credentials` | Envía credenciales post-pago |
+
+### Componentes Frontend
+
+| Componente | Ubicación |
+|------------|-----------|
+| `EnrollmentModal` | `src/components/enrollment/EnrollmentModal.tsx` |
+| `EnrollmentSuccess` | `src/pages/EnrollmentSuccess.tsx` |
+
+### Flujo Post-Pago (Webhook)
+
+1. Stripe envía `checkout.session.completed`
+2. Webhook valida firma y extrae `lead_id`
+3. Crea usuario en Supabase Auth con password generado
+4. Actualiza profile a `status: approved`
+5. Inscribe usuario en el curso activo
+6. Actualiza lead a `status: enrolled`
+7. Envía email con credenciales de acceso
+
+### Emails Automatizados
+
+1. **Al registrar lead:** Confirmación al usuario + notificación al equipo
+2. **Post-pago:** Email con credenciales (usuario/password) + link al campus
+
+### Configuración Requerida
+
+**Secrets:**
+- `STRIPE_SECRET_KEY` - Clave secreta de Stripe
+- `STRIPE_WEBHOOK_SECRET` - Secret del webhook endpoint
+- `RESEND_API_KEY` - Para envío de emails
+
+**Stripe:**
+- Producto: "Maestría en Circulación Pulmonar 2025"
+- Price ID: `price_1Sxx6rCf1a6gJUEtzCYfBml9`
+- Webhook URL: `https://lwjalklsuddlwvhcumex.supabase.co/functions/v1/stripe-enrollment-webhook`
+
+### Seguridad
+
+- RLS habilitado en `enrollment_leads`
+- Solo admins pueden ver todos los leads
+- Usuarios anónimos pueden crear leads (INSERT público)
+- Webhook valida firma de Stripe
+- Passwords generados con crypto seguro
 
 ---
 
