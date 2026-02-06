@@ -5,15 +5,3 @@ verify_jwt = true
 
 [functions.verify-reset-code]
 verify_jwt = false
-
-[functions.create-enrollment-checkout]
-verify_jwt = false
-
-[functions.stripe-enrollment-webhook]
-verify_jwt = false
-
-[functions.send-enrollment-emails]
-verify_jwt = false
-
-[functions.send-welcome-credentials]
-verify_jwt = false

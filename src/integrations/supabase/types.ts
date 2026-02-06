@@ -124,65 +124,6 @@ export type Database = {
         }
         Relationships: []
       }
-      enrollment_leads: {
-        Row: {
-          country: string
-          course_id: string | null
-          created_at: string | null
-          email: string
-          full_name: string
-          id: string
-          payment_completed_at: string | null
-          phone: string | null
-          specialty: string
-          status: string
-          stripe_customer_id: string | null
-          stripe_session_id: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          country: string
-          course_id?: string | null
-          created_at?: string | null
-          email: string
-          full_name: string
-          id?: string
-          payment_completed_at?: string | null
-          phone?: string | null
-          specialty: string
-          status?: string
-          stripe_customer_id?: string | null
-          stripe_session_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          country?: string
-          course_id?: string | null
-          created_at?: string | null
-          email?: string
-          full_name?: string
-          id?: string
-          payment_completed_at?: string | null
-          phone?: string | null
-          specialty?: string
-          status?: string
-          stripe_customer_id?: string | null
-          stripe_session_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "enrollment_leads_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       exam_attempts: {
         Row: {
           answers: Json | null

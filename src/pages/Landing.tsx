@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -34,11 +33,9 @@ import { motion } from "framer-motion";
 import logoMlcp from "@/assets/logo-mlcp.jpg";
 import EventCarousel from "@/components/EventCarousel";
 import { ClinicalCard, ClinicalCardHeader, ClinicalCardTitle, ClinicalCardDescription, ClinicalCardContent } from "@/components/ui/clinical-card";
-import { EnrollmentModal } from "@/components/enrollment/EnrollmentModal";
 
 const Landing = () => {
   const navigate = useNavigate();
-  const [enrollmentModalOpen, setEnrollmentModalOpen] = useState(false);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -194,20 +191,20 @@ const Landing = () => {
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-10">
                 <Button
                   size="lg"
-                  onClick={() => setEnrollmentModalOpen(true)}
+                  onClick={() => scrollToSection("formacion")}
                   className="btn-gradient-primary gap-2 h-12 px-6 text-base"
                 >
-                  Inscribirme ahora
+                  Conocer la formación
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  onClick={() => scrollToSection("formacion")}
+                  onClick={() => scrollToSection("contacto")}
                   className="gap-2 h-12 border-border/60 hover:bg-muted/30"
                 >
-                  <Play className="h-4 w-4" />
-                  Ver programa
+                  <MessageCircle className="h-4 w-4" />
+                  Hablar con el equipo
                 </Button>
               </div>
 
@@ -663,19 +660,20 @@ const Landing = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
                   size="lg" 
-                  onClick={() => setEnrollmentModalOpen(true)}
+                  onClick={() => navigate("/auth")}
                   className="btn-gradient-primary gap-2 h-12 px-8 text-base"
                 >
-                  Inscribirme ahora
+                  Acceder al Campus Virtual
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
                   className="gap-2 h-12 px-8 border-border/60"
-                  onClick={() => navigate("/auth")}
+                  onClick={() => window.open("mailto:magisterenhipertensionpulmonar@gmail.com", "_blank")}
                 >
-                  Ya tengo cuenta
+                  <MessageCircle className="h-4 w-4" />
+                  Escribir al equipo
                 </Button>
               </div>
 
@@ -769,12 +767,6 @@ const Landing = () => {
           </div>
         </div>
       </footer>
-
-      {/* Modal de Inscripción */}
-      <EnrollmentModal 
-        open={enrollmentModalOpen} 
-        onOpenChange={setEnrollmentModalOpen} 
-      />
     </div>
   );
 };
