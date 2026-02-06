@@ -1,8 +1,8 @@
-# Sistema Multi-Curso - Implementación Completa v6.0
+# Sistema Multi-Curso - Implementación Completa v7.0
 
 ## 📋 Resumen General
 
-La plataforma ha sido exitosamente transformada de un sistema de maestría única a una plataforma multi-curso profesional con:
+La plataforma ha sido exitosamente transformada a nivel élite (top 5%) con:
 
 - ✅ Catálogo avanzado con búsqueda, filtros y paginación
 - ✅ Dashboard dinámico según rol (admin/estudiante)
@@ -22,7 +22,98 @@ La plataforma ha sido exitosamente transformada de un sistema de maestría únic
 - ✅ Patrón visual único (Clinical Line System)
 - ✅ Sistema de microcopy de autor
 - ✅ Landing con concepto potente
-- ✅ **NUEVO** Corrección de Progreso (FASE 7) - Persistencia robusta
+- ✅ Corrección de Progreso (FASE 7) - Persistencia robusta
+- ✅ **NUEVO** Implementación Élite (FASE 8) - Landing 4 actos, módulos clínicos, chatbot mejorado
+
+---
+
+## 🚀 IMPLEMENTACIÓN ÉLITE — FASE 8
+
+### Objetivo
+Llevar la plataforma a nivel top 5% en experiencia, claridad y conversión, sin perder seriedad académica.
+
+### A. Landing como Historia en 4 Actos
+
+**ACTO 1 — Contexto (El Problema)**
+- Headline: "La hipertensión pulmonar no espera. Tu formación tampoco debería."
+- Estadísticas de impacto: demora diagnóstica, pacientes en clases avanzadas, pocos centros de referencia
+- Badge de problema crítico, no marketing vacío
+
+**ACTO 2 — Autoridad (Quiénes Enseñan)**
+- "Aprende de quienes tratan pacientes, no solo de quienes escriben sobre ellos"
+- 15 especialistas de 12 países
+- Modalidad MEET UP explicada: presencial + campus virtual
+
+**ACTO 3 — Transformación (Lo Que Dominarás)**
+- Módulos transformados en progresión clínica
+- 4 hitos clave con enfoque accionable:
+  1. Reconocer al paciente en riesgo
+  2. Interpretar estudios con criterio clínico
+  3. Estratificar riesgo y definir pronóstico
+  4. Tomar decisiones terapéuticas críticas
+- Cada hito con: problema que resuelve, decisiones que habilita, errores que evita
+
+**ACTO 4 — Acción (CTA Humano)**
+- "¿Quieres saber si este programa es para ti?"
+- Sin presión, sin marketing agresivo
+- Opciones: acceder al campus o contactar al equipo
+
+### B. Módulos con Enfoque Clínico
+
+Transformación de módulos de "lista de temas" a "progresión clínica":
+
+| Antes | Después |
+|-------|---------|
+| "Módulo 1: Introducción" | "Reconocer al paciente en riesgo" |
+| "Módulo 2: Diagnóstico" | "Interpretar estudios con criterio clínico" |
+| Lista de contenidos | Bullets accionables: qué problema resuelve, qué habilita, qué errores evita |
+
+### C. Chatbot Mejorado
+
+- **Preguntas frecuentes predefinidas** con botones clickeables:
+  - "¿Es solo presencial?"
+  - "¿Quedan grabadas las clases?"
+  - "¿Qué pasa después de los 12 días?"
+  - "¿Cómo es el campus virtual?"
+
+- **System prompt actualizado** con información del programa para respuestas precisas sobre:
+  - Modalidad MEET UP (presencial + virtual)
+  - Campus virtual y grabaciones
+  - Acceso post-programa
+  - Docentes y metodología
+
+### D. Identidad Visual Élite
+
+**Firma Visual: Clinical Line System**
+- Línea vertical distintiva en cards y módulos
+- Colores según estado: primary (en curso), emerald (completado), amber (progreso), muted (disponible)
+- Gradiente sutil en líneas de progreso
+- Patrón repetible que identifica la plataforma
+
+**Microcopy System v7.0**
+- Voz de autor: profesional, humana, cercana
+- Terminología consistente: Hitos (módulos), Pasos (lecciones)
+- Mensajes empáticos en estados vacíos
+- Celebración sin exageración
+
+### E. Mobile First
+
+- Reducción de scroll innecesario
+- Bloques más cortos
+- CTAs claros y bien dimensionados
+- Ritmo visual optimizado
+
+### Archivos Modificados
+
+```
+src/pages/Landing.tsx               ← Landing en 4 actos con módulos clínicos
+src/components/ChatBot.tsx          ← Preguntas frecuentes y mejor UX
+src/utils/microcopy.ts              ← Sistema de voz v7.0
+src/components/course/CourseModuleCard.tsx  ← Clinical Line System
+src/components/course/LessonContent.tsx     ← Progress line visual
+src/index.css                       ← Design System v7.0
+supabase/functions/ai-tutor/index.ts ← System prompt con FAQ del programa
+```
 
 ---
 

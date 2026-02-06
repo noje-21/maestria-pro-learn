@@ -7,12 +7,14 @@ import {
   PlayCircle, 
   User,
   Clock,
-  BookOpen
+  BookOpen,
+  Target
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { labels, cta, getModuleProgressMessage } from "@/utils/microcopy";
 
 interface Lesson {
   id: string;
@@ -167,12 +169,18 @@ const CourseModuleCardComponent = ({
   };
 
   const statusConfig = getStatusConfig();
+  const progressMessage = getModuleProgressMessage(completedCount, totalCount);
 
   return (
     <Card className={cn(
-      "overflow-hidden transition-all border-border/50",
-      hasCurrentLesson && "ring-1 ring-primary/30 border-primary/30",
-      isComplete && "border-emerald-500/30"
+      "overflow-hidden transition-all border-border/50 relative",
+      // Clinical line indicator
+      "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]",
+      "before:transition-all before:duration-300",
+      hasCurrentLesson && "ring-1 ring-primary/30 border-primary/30 before:bg-gradient-to-b before:from-primary before:to-primary/70",
+      isComplete && "border-emerald-500/30 before:bg-gradient-to-b before:from-emerald-500 before:to-emerald-400",
+      isInProgress && !hasCurrentLesson && "before:bg-gradient-to-b before:from-amber-500 before:to-amber-400",
+      !isComplete && !isInProgress && !hasCurrentLesson && "before:bg-muted"
     )}>
       {/* Module Header */}
       <motion.button
@@ -188,7 +196,7 @@ const CourseModuleCardComponent = ({
           {isComplete ? (
             <CheckCircle2 className="h-6 w-6" />
           ) : (
-            moduleNumber
+            <span>{moduleNumber}</span>
           )}
         </div>
 
@@ -220,11 +228,10 @@ const CourseModuleCardComponent = ({
             )}
             <div className="flex items-center gap-1">
               <BookOpen className="h-3 w-3" />
-              <span>{totalCount} lecciones</span>
+              <span>{totalCount} pasos</span>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="font-medium">{completedCount}/{totalCount}</span>
-              <span>completadas</span>
+            <div className="flex items-center gap-1 font-medium text-foreground/80">
+              <span>{progressMessage}</span>
             </div>
           </div>
 

@@ -18,12 +18,21 @@ import {
   Activity,
   Target,
   Zap,
+  AlertTriangle,
+  Brain,
+  Shield,
+  TrendingUp,
+  MessageCircle,
+  Play,
+  Clock,
+  Microscope,
+  HeartPulse,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import logoMlcp from "@/assets/logo-mlcp.jpg";
 import EventCarousel from "@/components/EventCarousel";
-import { ClinicalCard, ClinicalCardHeader, ClinicalCardTitle, ClinicalCardDescription } from "@/components/ui/clinical-card";
+import { ClinicalCard, ClinicalCardHeader, ClinicalCardTitle, ClinicalCardDescription, ClinicalCardContent } from "@/components/ui/clinical-card";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -35,16 +44,66 @@ const Landing = () => {
     }
   };
 
+  // Módulos con enfoque clínico transformativo
+  const clinicalModules = [
+    {
+      number: 1,
+      title: "Reconocer al paciente en riesgo",
+      impact: "El diagnóstico temprano cambia el pronóstico.",
+      bullets: [
+        "Identifica señales de alarma antes de que sea tarde",
+        "Decide cuándo sospechar HP en cuadros inespecíficos",
+        "Evita la demora diagnóstica que afecta supervivencia",
+      ],
+      icon: AlertTriangle,
+    },
+    {
+      number: 2,
+      title: "Interpretar estudios con criterio clínico",
+      impact: "Del ecocardiograma al cateterismo: cada dato cuenta.",
+      bullets: [
+        "Lee imágenes con ojo de especialista",
+        "Decide cuándo avanzar a estudios invasivos",
+        "Evita sobreinterpretaciones que llevan a tratamientos innecesarios",
+      ],
+      icon: Microscope,
+    },
+    {
+      number: 3,
+      title: "Estratificar riesgo y definir pronóstico",
+      impact: "Saber qué paciente necesita qué, y cuándo.",
+      bullets: [
+        "Aplica escalas de riesgo en la práctica real",
+        "Personaliza el enfoque según el perfil del paciente",
+        "Evita subestimar la gravedad clínica",
+      ],
+      icon: TrendingUp,
+    },
+    {
+      number: 4,
+      title: "Tomar decisiones terapéuticas críticas",
+      impact: "Farmacología avanzada con impacto medible.",
+      bullets: [
+        "Selecciona el tratamiento óptimo según evidencia",
+        "Combina terapias cuando el paciente lo requiere",
+        "Evita demoras en la escalación terapéutica",
+      ],
+      icon: HeartPulse,
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background relative overflow-x-hidden">
-      {/* Ambient glow */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-secondary/5 rounded-full blur-3xl" />
+      {/* Clinical Line Pattern - Firma visual sutil */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-8 w-px h-full bg-gradient-to-b from-transparent via-primary/10 to-transparent" />
+        <div className="absolute top-0 right-8 w-px h-full bg-gradient-to-b from-transparent via-primary/10 to-transparent" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/3 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-secondary/3 rounded-full blur-3xl" />
       </div>
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/90 backdrop-blur-xl">
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -65,18 +124,18 @@ const Landing = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => scrollToSection("about")}
+              onClick={() => scrollToSection("problema")}
               className="hidden md:inline-flex text-muted-foreground hover:text-foreground"
             >
-              Programa
+              El problema
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => scrollToSection("features")}
+              onClick={() => scrollToSection("formacion")}
               className="hidden md:inline-flex text-muted-foreground hover:text-foreground"
             >
-              Metodología
+              Formación
             </Button>
             <Button
               onClick={() => navigate("/auth")}
@@ -89,11 +148,13 @@ const Landing = () => {
         </div>
       </nav>
 
-      {/* Hero Section - Concepto potente */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          ACTO 1 — CONTEXTO: El problema crítico
+          ═══════════════════════════════════════════════════════════════════ */}
       <section className="relative pt-24 md:pt-28 min-h-[90vh] flex items-center">
         <div className="container mx-auto px-4 py-12 md:py-16">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            {/* Left - Text Content */}
+            {/* Left - Contexto y problema */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -102,54 +163,57 @@ const Landing = () => {
             >
               <Badge 
                 variant="secondary" 
-                className="mb-5 bg-primary/10 text-primary border-primary/20 px-4 py-1.5"
+                className="mb-5 bg-destructive/10 text-destructive border-destructive/20 px-4 py-1.5"
               >
-                <Target className="h-3 w-3 mr-1.5" />
-                Único en Latinoamérica
+                <AlertTriangle className="h-3 w-3 mr-1.5" />
+                Problema crítico en la región
               </Badge>
               
-              {/* Headline con concepto */}
+              {/* Headline con contexto */}
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] font-black leading-[1.1] mb-6">
-                Donde la excelencia{" "}
+                La hipertensión pulmonar{" "}
                 <span className="relative">
-                  <span className="gradient-text">médica</span>
-                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-primary/0" />
+                  <span className="gradient-text">no espera.</span>
                 </span>
-                {" "}se forma
+                <br />
+                <span className="text-muted-foreground text-2xl sm:text-3xl md:text-4xl font-semibold">
+                  Tu formación tampoco debería.
+                </span>
               </h1>
               
-              {/* Subtexto - El "por qué" */}
+              {/* El problema real - médico, directo */}
               <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
-                La Maestría Latinoamericana en Circulación Pulmonar reúne a los especialistas 
-                más destacados de la región para transformar el manejo de la hipertensión pulmonar.
+                En Latinoamérica, el diagnóstico tardío sigue siendo la norma. 
+                Los pacientes llegan años después de los primeros síntomas. 
+                <strong className="text-foreground"> Esta maestría existe para cambiar eso.</strong>
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-10">
                 <Button
                   size="lg"
-                  onClick={() => navigate("/auth")}
+                  onClick={() => scrollToSection("formacion")}
                   className="btn-gradient-primary gap-2 h-12 px-6 text-base"
                 >
-                  Acceder al Campus
+                  Conocer la formación
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  onClick={() => scrollToSection("about")}
+                  onClick={() => scrollToSection("contacto")}
                   className="gap-2 h-12 border-border/60 hover:bg-muted/30"
                 >
-                  Conocer el programa
-                  <ChevronDown className="h-4 w-4" />
+                  <MessageCircle className="h-4 w-4" />
+                  Hablar con el equipo
                 </Button>
               </div>
 
-              {/* Trust indicators - Diseño refinado */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-8 pt-6 border-t border-border/40">
+              {/* Trust indicators compactos */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 pt-6 border-t border-border/40">
                 {[
-                  { value: "28", label: "Módulos", suffix: "+" },
-                  { value: "15", label: "Expertos", suffix: "+" },
-                  { value: "12", label: "Países", suffix: "" },
+                  { value: "28", label: "Hitos clínicos" },
+                  { value: "15+", label: "Referentes" },
+                  { value: "12", label: "Países" },
                 ].map((stat, idx) => (
                   <motion.div 
                     key={idx} 
@@ -158,10 +222,7 @@ const Landing = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 + idx * 0.1 }}
                   >
-                    <p className="text-2xl font-bold">
-                      <span className="gradient-text">{stat.value}</span>
-                      <span className="text-muted-foreground">{stat.suffix}</span>
-                    </p>
+                    <p className="text-2xl font-bold gradient-text">{stat.value}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
                   </motion.div>
                 ))}
@@ -177,8 +238,6 @@ const Landing = () => {
             >
               <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-border/30">
                 <EventCarousel />
-                {/* Overlay sutil */}
-                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-background/20 to-transparent" />
               </div>
             </motion.div>
           </div>
@@ -190,14 +249,14 @@ const Landing = () => {
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 1.5, repeat: Infinity }}
         >
-          <span className="text-xs text-muted-foreground">Descubre más</span>
+          <span className="text-xs text-muted-foreground">Conoce más</span>
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </motion.div>
       </section>
 
-      {/* Why section - El concepto */}
-      <section id="about" className="py-20 md:py-28 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-card/0 via-card/30 to-card/0" />
+      {/* Problema contextualizado */}
+      <section id="problema" className="py-16 md:py-24 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-card/0 via-card/40 to-card/0" />
         
         <div className="container mx-auto px-4 relative">
           <motion.div
@@ -205,39 +264,39 @@ const Landing = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-12"
           >
             <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-primary/20">
               <Stethoscope className="h-3 w-3 mr-1.5" />
-              ¿Por qué esta formación?
+              El contexto clínico
             </Badge>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-5">
-              Porque la hipertensión pulmonar requiere{" "}
-              <span className="gradient-text">especialistas formados con rigor</span>
+              Por qué la HP requiere{" "}
+              <span className="gradient-text">formación especializada</span>
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Actualizados con la última evidencia científica y conectados 
-              con la realidad clínica de América Latina.
+              La hipertensión pulmonar afecta el pronóstico de forma silenciosa. 
+              Cuando los síntomas son evidentes, la enfermedad ya ha progresado.
             </p>
           </motion.div>
 
-          {/* Cards con firma visual */}
-          <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
+          {/* Stats de impacto - sobrios */}
+          <div className="grid md:grid-cols-3 gap-5 max-w-4xl mx-auto">
             {[
               {
-                icon: Heart,
-                title: "Conocimiento de referentes",
-                description: "Aprende directamente de quienes lideran el campo en la región. 15 expertos de 12 países compartiendo su experiencia.",
+                stat: "2-3 años",
+                label: "Demora diagnóstica promedio en la región",
+                icon: Clock,
               },
               {
-                icon: Activity,
-                title: "Formación aplicada",
-                description: "Rotaciones prácticas en centros de referencia. Casos reales, entrenamiento hands-on, habilidades transferibles.",
+                stat: "70%",
+                label: "Pacientes llegan en clase funcional III-IV",
+                icon: AlertTriangle,
               },
               {
-                icon: Users2,
-                title: "Red profesional",
-                description: "Conecta con especialistas de toda Latinoamérica. Una comunidad que trasciende el programa.",
+                stat: "< 50",
+                label: "Centros de referencia en toda Latinoamérica",
+                icon: MapPin,
               },
             ].map((item, idx) => (
               <motion.div
@@ -247,14 +306,12 @@ const Landing = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
               >
-                <ClinicalCard className="h-full">
-                  <ClinicalCardHeader>
-                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
-                      <item.icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <ClinicalCardTitle>{item.title}</ClinicalCardTitle>
-                    <ClinicalCardDescription className="mt-2">{item.description}</ClinicalCardDescription>
-                  </ClinicalCardHeader>
+                <ClinicalCard className="h-full text-center p-6">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <item.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <p className="text-3xl font-bold gradient-text mb-2">{item.stat}</p>
+                  <p className="text-sm text-muted-foreground">{item.label}</p>
                 </ClinicalCard>
               </motion.div>
             ))}
@@ -262,8 +319,10 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Who is it for */}
-      <section className="py-20 md:py-28">
+      {/* ═══════════════════════════════════════════════════════════════════
+          ACTO 2 — AUTORIDAD: Los que lideran el campo
+          ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
             <motion.div
@@ -273,23 +332,25 @@ const Landing = () => {
               transition={{ duration: 0.6 }}
             >
               <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-primary/20">
-                <GraduationCap className="h-3 w-3 mr-1.5" />
-                ¿Para quién es?
+                <Award className="h-3 w-3 mr-1.5" />
+                Quiénes enseñan
               </Badge>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-5">
-                Profesionales comprometidos con la excelencia
+                Aprende de quienes tratan pacientes,{" "}
+                <span className="gradient-text">no solo de quienes escriben sobre ellos</span>
               </h2>
               <p className="text-muted-foreground mb-8 leading-relaxed">
-                El programa está diseñado para médicos especialistas que buscan 
-                convertirse en referentes en el manejo de la hipertensión pulmonar.
+                15 especialistas de 12 países. Jefes de unidades de HP, 
+                investigadores con publicaciones de alto impacto, 
+                médicos que ven pacientes cada día.
               </p>
 
               <div className="space-y-3">
                 {[
-                  "Cardiólogos y neumólogos",
-                  "Médicos internistas con enfoque cardiovascular",
-                  "Intensivistas y especialistas en cuidados críticos",
-                  "Reumatólogos interesados en hipertensión pulmonar",
+                  "Directores de programas de HP en centros de referencia",
+                  "Autores de guías latinoamericanas de HP",
+                  "Investigadores con trials multicéntricos",
+                  "Clínicos con décadas de experiencia en casos complejos",
                 ].map((item, idx) => (
                   <motion.div
                     key={idx}
@@ -299,8 +360,8 @@ const Landing = () => {
                     transition={{ delay: idx * 0.08 }}
                     className="flex items-center gap-3 p-3 rounded-lg bg-card/50 border border-border/40"
                   >
-                    <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
                     </div>
                     <span className="text-sm font-medium">{item}</span>
                   </motion.div>
@@ -317,9 +378,9 @@ const Landing = () => {
               <ClinicalCard variant="success" className="p-8">
                 <div className="space-y-6">
                   {[
-                    { icon: Calendar, title: "Modalidad intensiva", desc: "3 al 15 de noviembre · Régimen MEET UP" },
-                    { icon: Users2, title: "Presencial con expertos", desc: "Interacción directa con referentes de la región" },
-                    { icon: MapPin, title: "Rotaciones prácticas", desc: "Entrenamiento hands-on en centros de referencia" },
+                    { icon: Calendar, title: "Formato intensivo", desc: "3 al 15 de noviembre · 12 días de inmersión total" },
+                    { icon: Users2, title: "Modalidad MEET UP", desc: "Presencial con los expertos, grabaciones disponibles después" },
+                    { icon: MapPin, title: "Rotaciones prácticas", desc: "Entrenamiento hands-on en ecocardiografía y cateterismo" },
                   ].map((item, idx) => (
                     <div key={idx} className="flex items-start gap-4">
                       <div className="p-2.5 rounded-lg bg-background/50 border border-border/50">
@@ -338,9 +399,11 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-20 md:py-28 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-card/0 via-card/30 to-card/0" />
+      {/* ═══════════════════════════════════════════════════════════════════
+          ACTO 3 — TRANSFORMACIÓN: Lo que dominarás
+          ═══════════════════════════════════════════════════════════════════ */}
+      <section id="formacion" className="py-16 md:py-24 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-card/0 via-card/40 to-card/0" />
         
         <div className="container mx-auto px-4 relative">
           <motion.div
@@ -348,42 +411,25 @@ const Landing = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-12"
           >
             <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-primary/20">
-              <Zap className="h-3 w-3 mr-1.5" />
-              Metodología
+              <Brain className="h-3 w-3 mr-1.5" />
+              Tu transformación clínica
             </Badge>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-5">
-              Una experiencia educativa{" "}
-              <span className="gradient-text">diseñada para transformar</span>
+              Al terminar, podrás{" "}
+              <span className="gradient-text">tomar decisiones que antes no podías</span>
             </h2>
             <p className="text-muted-foreground text-lg">
-              Combinamos teoría de vanguardia con práctica directa
+              No es una lista de temas. Es una progresión clínica que te lleva 
+              del reconocimiento al manejo avanzado.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto mb-12">
-            {[
-              {
-                icon: BookOpen,
-                title: "28 Módulos especializados",
-                description: "Desde fundamentos hasta tratamientos de vanguardia en hipertensión pulmonar.",
-                variant: "default" as const,
-              },
-              {
-                icon: Users2,
-                title: "Expertos regionales",
-                description: "Aprende de los referentes más destacados de Latinoamérica.",
-                variant: "progress" as const,
-              },
-              {
-                icon: Award,
-                title: "Certificación profesional",
-                description: "Certificado avalado por los líderes en manejo de hipertensión pulmonar.",
-                variant: "success" as const,
-              },
-            ].map((item, idx) => (
+          {/* Módulos clínicos - transformados */}
+          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            {clinicalModules.map((module, idx) => (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
@@ -391,47 +437,65 @@ const Landing = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
               >
-                <ClinicalCard variant={item.variant} className="h-full" progress={idx === 1 ? 60 : undefined}>
-                  <ClinicalCardHeader>
-                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
-                      <item.icon className="h-5 w-5 text-primary" />
+                <ClinicalCard className="h-full">
+                  <ClinicalCardHeader step={module.number}>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                        <module.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <ClinicalCardTitle className="text-base">
+                          {module.title}
+                        </ClinicalCardTitle>
+                        <p className="text-sm text-primary/80 font-medium mt-1">
+                          {module.impact}
+                        </p>
+                      </div>
                     </div>
-                    <ClinicalCardTitle>{item.title}</ClinicalCardTitle>
-                    <ClinicalCardDescription className="mt-2">{item.description}</ClinicalCardDescription>
                   </ClinicalCardHeader>
+                  <ClinicalCardContent className="pl-14 space-y-2">
+                    {module.bullets.map((bullet, bIdx) => (
+                      <div key={bIdx} className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary/60 mt-2 shrink-0" />
+                        <span className="text-sm text-muted-foreground">{bullet}</span>
+                      </div>
+                    ))}
+                  </ClinicalCardContent>
                 </ClinicalCard>
               </motion.div>
             ))}
           </div>
 
-          {/* Training areas - Diseño refinado */}
+          {/* Áreas de entrenamiento práctico */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="max-w-4xl mx-auto"
+            className="max-w-4xl mx-auto mt-10"
           >
             <ClinicalCard className="p-6 md:p-8">
-              <h3 className="text-lg font-semibold mb-6 text-center">Áreas de entrenamiento</h3>
-              <div className="grid sm:grid-cols-2 gap-3">
+              <h3 className="text-lg font-semibold mb-6 text-center">
+                Entrenamiento práctico incluido
+              </h3>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {[
-                  "Ecocardiografía avanzada",
-                  "Capilaroscopia",
+                  "Ecocardiografía avanzada en HP",
                   "Cateterismo cardíaco derecho",
-                  "Enfermedad intersticial pulmonar",
-                  "Manejo farmacológico específico",
-                  "Casos clínicos complejos",
+                  "Capilaroscopia e intersticio pulmonar",
+                  "Estratificación con escalas pronósticas",
+                  "Selección farmacológica según perfil",
+                  "Manejo del paciente en deterioro",
                 ].map((item, idx) => (
                   <motion.div 
                     key={idx} 
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/20"
+                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/30"
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.05 }}
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
                     <span className="text-sm">{item}</span>
                   </motion.div>
                 ))}
@@ -441,57 +505,91 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* How it Works - Pasos con firma visual */}
-      <section className="py-20 md:py-28">
+      {/* Perfil del participante */}
+      <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-12"
           >
             <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-primary/20">
-              <Target className="h-3 w-3 mr-1.5" />
-              Tu recorrido
+              <GraduationCap className="h-3 w-3 mr-1.5" />
+              ¿Es para ti?
             </Badge>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-              El camino hacia la especialización
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-5">
+              Para médicos que quieren{" "}
+              <span className="gradient-text">marcar la diferencia</span>
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-4 gap-6 max-w-5xl mx-auto relative">
-            {/* Línea conectora */}
-            <div className="hidden md:block absolute top-12 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20" />
-            
-            {[
-              { step: "01", title: "Registro", desc: "Crea tu cuenta en el campus virtual" },
-              { step: "02", title: "Acceso", desc: "Explora los módulos y materiales" },
-              { step: "03", title: "Formación", desc: "Avanza en tu ruta de aprendizaje" },
-              { step: "04", title: "Certificación", desc: "Obtén tu acreditación profesional" },
-            ].map((item, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="text-center relative"
-              >
-                <div className="w-16 h-16 rounded-2xl bg-card border border-border/60 flex items-center justify-center mx-auto mb-4 relative z-10">
-                  <span className="text-xl font-bold gradient-text">{item.step}</span>
-                </div>
-                <h4 className="font-semibold mb-1">{item.title}</h4>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
-              </motion.div>
-            ))}
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <ClinicalCard className="h-full">
+                <ClinicalCardHeader>
+                  <ClinicalCardTitle className="text-emerald-600 flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5" />
+                    Este programa es para ti si...
+                  </ClinicalCardTitle>
+                </ClinicalCardHeader>
+                <ClinicalCardContent className="space-y-3">
+                  {[
+                    "Eres cardiólogo, neumólogo, internista o intensivista",
+                    "Quieres especializarte en HP con enfoque práctico",
+                    "Buscas formación con referentes de la región",
+                    "Puedes dedicar 12 días intensivos a tu formación",
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                      <span className="text-sm text-muted-foreground">{item}</span>
+                    </div>
+                  ))}
+                </ClinicalCardContent>
+              </ClinicalCard>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <ClinicalCard className="h-full" variant="locked">
+                <ClinicalCardHeader>
+                  <ClinicalCardTitle className="text-muted-foreground flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Probablemente no es para ti si...
+                  </ClinicalCardTitle>
+                </ClinicalCardHeader>
+                <ClinicalCardContent className="space-y-3">
+                  {[
+                    "Buscas un curso corto o introductorio",
+                    "No puedes comprometerte con la carga intensiva",
+                    "Prefieres formación 100% asincrónica",
+                    "No tienes base previa en cardiología o neumología",
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <div className="w-4 h-4 rounded-full border border-muted-foreground/30 mt-0.5 shrink-0" />
+                      <span className="text-sm text-muted-foreground">{item}</span>
+                    </div>
+                  ))}
+                </ClinicalCardContent>
+              </ClinicalCard>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Trust Section */}
-      <section className="py-20 md:py-28 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-card/0 via-card/30 to-card/0" />
+      {/* Respaldo regional */}
+      <section className="py-16 md:py-24 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-card/0 via-card/40 to-card/0" />
         
         <div className="container mx-auto px-4 relative">
           <motion.div
@@ -502,25 +600,25 @@ const Landing = () => {
             className="text-center max-w-3xl mx-auto"
           >
             <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-primary/20">
-              <Award className="h-3 w-3 mr-1.5" />
+              <Shield className="h-3 w-3 mr-1.5" />
               Respaldo regional
             </Badge>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-5">
-              Avalado por expertos de toda la región
+              Avalado por la comunidad médica de{" "}
+              <span className="gradient-text">toda la región</span>
             </h2>
             <p className="text-muted-foreground mb-10 text-lg">
-              Un programa respaldado por la comunidad médica especializada en 
-              hipertensión pulmonar de Latinoamérica.
+              Expertos de 12 países respaldando una formación de excelencia.
             </p>
             
             <div className="flex flex-wrap justify-center gap-3">
-              {["Argentina", "Brasil", "Chile", "Colombia", "México", "Perú"].map((country, idx) => (
+              {["Argentina", "Brasil", "Chile", "Colombia", "Ecuador", "México", "Paraguay", "Perú", "Uruguay", "Venezuela", "Panamá", "Costa Rica"].map((country, idx) => (
                 <motion.div
                   key={country}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
-                  transition={{ delay: idx * 0.05 }}
+                  transition={{ delay: idx * 0.03 }}
                 >
                   <Badge 
                     variant="outline" 
@@ -535,8 +633,10 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-20 md:py-28">
+      {/* ═══════════════════════════════════════════════════════════════════
+          ACTO 4 — ACCIÓN: CTA claro y humano
+          ═══════════════════════════════════════════════════════════════════ */}
+      <section id="contacto" className="py-16 md:py-24">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -545,21 +645,58 @@ const Landing = () => {
             transition={{ duration: 0.6 }}
           >
             <ClinicalCard className="p-8 md:p-14 max-w-4xl mx-auto text-center">
+              <Badge variant="secondary" className="mb-6 bg-primary/10 text-primary border-primary/20">
+                <MessageCircle className="h-3 w-3 mr-1.5" />
+                Da el primer paso
+              </Badge>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-5">
-                Comienza tu especialización
+                ¿Quieres saber si este programa es para ti?
               </h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
-                Únete al programa que está formando a los especialistas en 
-                circulación pulmonar de América Latina.
+                Habla con nuestro equipo académico. Sin compromiso, 
+                sin presión. Solo una conversación para resolver tus dudas.
               </p>
-              <Button 
-                size="lg" 
-                onClick={() => navigate("/auth")}
-                className="btn-gradient-primary gap-2 h-12 px-8 text-base"
-              >
-                Acceder al Campus Virtual
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  size="lg" 
+                  onClick={() => navigate("/auth")}
+                  className="btn-gradient-primary gap-2 h-12 px-8 text-base"
+                >
+                  Acceder al Campus Virtual
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="gap-2 h-12 px-8 border-border/60"
+                  onClick={() => window.open("mailto:magisterenhipertensionpulmonar@gmail.com", "_blank")}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Escribir al equipo
+                </Button>
+              </div>
+
+              {/* Preguntas frecuentes rápidas */}
+              <div className="mt-10 pt-8 border-t border-border/40">
+                <p className="text-sm text-muted-foreground mb-4">Preguntas frecuentes:</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {[
+                    "¿Solo es presencial?",
+                    "¿Quedan grabadas las clases?",
+                    "¿Qué pasa después de los 12 días?",
+                  ].map((q, idx) => (
+                    <Badge 
+                      key={idx}
+                      variant="outline" 
+                      className="px-3 py-1.5 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => window.open("mailto:magisterenhipertensionpulmonar@gmail.com?subject=" + encodeURIComponent(q), "_blank")}
+                    >
+                      {q}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             </ClinicalCard>
           </motion.div>
         </div>
@@ -577,7 +714,7 @@ const Landing = () => {
               />
               <div>
                 <p className="font-semibold">Campus MCP</p>
-                <p className="text-xs text-muted-foreground">Circulación Pulmonar</p>
+                <p className="text-xs text-muted-foreground">Maestría en Circulación Pulmonar</p>
               </div>
             </div>
 
