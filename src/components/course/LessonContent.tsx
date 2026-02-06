@@ -10,6 +10,7 @@ import { LessonTabs } from "./LessonTabs";
 import { LessonCompletedSummary } from "./LessonCompletedSummary";
 import { cn } from "@/lib/utils";
 import { getHumanProgressMessage, getStepDescription } from "@/utils/progressMessages";
+import { labels } from "@/utils/microcopy";
 interface LessonContentProps {
   lesson: {
     id: string;
@@ -123,8 +124,13 @@ const LessonContentComponent = ({
       >
         {/* Main Content - Single scroll container */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
-          {/* Module Progress Header - Sticky on scroll */}
+          {/* Module Progress Header - Sticky on scroll with Clinical Line */}
           <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl border-b border-border/30">
+            {/* Clinical progress line */}
+            <div 
+              className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-primary to-primary/70 transition-all duration-500"
+              style={{ width: `${moduleProgress}%` }}
+            />
             <div className="w-full px-4 md:px-6 lg:px-8 py-3">
               <div className="max-w-5xl mx-auto">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -135,9 +141,9 @@ const LessonContentComponent = ({
                       className="bg-primary/10 text-primary border-primary/20 font-medium px-3 py-1.5 gap-1.5"
                     >
                       <Target className="h-3.5 w-3.5" />
-                      Hito {moduleNumber}
+                      {labels.module} {moduleNumber}
                     </Badge>
-                    <span className="text-sm text-muted-foreground hidden sm:inline">
+                    <span className="text-sm text-muted-foreground hidden sm:inline truncate max-w-[200px]">
                       {moduleName}
                     </span>
                   </div>
