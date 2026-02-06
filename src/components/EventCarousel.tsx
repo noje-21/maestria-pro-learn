@@ -39,7 +39,7 @@ const EventCarousel = () => {
       imageMobile: maestria2025Mobile,
       alt: "Maestría Latinoamericana en Circulación Pulmonar 2025",
       action: () => {
-        window.location.href = "https://campus.maestriacp.com/";
+        window.location.href = "https://www.maestriacp.com/";
       },
     },
     {
