@@ -27,19 +27,19 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get user profile with reset code
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, email, reset_code, reset_code_expires_at")
+    // Look up token from dedicated table
+    const { data: token, error: tokenError } = await supabase
+      .from("password_reset_tokens")
+      .select("id, user_id, reset_code, expires_at")
       .eq("email", email)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    console.log(`Profile lookup result: found=${!!profile}, error=${!!profileError}`);
-
-    if (profileError || !profile) {
-      console.error("Profile error:", profileError);
+    if (tokenError || !token) {
+      console.log(`No reset token found for email: ${email}`);
       return new Response(
-        JSON.stringify({ success: false, error: "Usuario no encontrado" }),
+        JSON.stringify({ success: false, error: "No se encontró solicitud de recuperación" }),
         {
           status: 404,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -48,7 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Check if code is valid
-    if (!profile.reset_code || profile.reset_code !== code) {
+    if (token.reset_code !== code) {
       console.log(`Invalid reset code attempt for email: ${email}`);
       return new Response(
         JSON.stringify({ success: false, error: "Código de verificación inválido" }),
@@ -60,8 +60,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Check if code has expired
-    if (!profile.reset_code_expires_at || new Date(profile.reset_code_expires_at) < new Date()) {
-      console.log(`Code expired. Expires at: ${profile.reset_code_expires_at}`);
+    if (new Date(token.expires_at) < new Date()) {
+      console.log(`Code expired for email: ${email}`);
+      // Clean up expired token
+      await supabase.from("password_reset_tokens").delete().eq("id", token.id);
       return new Response(
         JSON.stringify({ success: false, error: "El código de verificación ha expirado" }),
         {
@@ -73,7 +75,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Update password
     const { error: updateError } = await supabase.auth.admin.updateUserById(
-      profile.id,
+      token.user_id,
       { password: newPassword }
     );
 
@@ -82,14 +84,11 @@ const handler = async (req: Request): Promise<Response> => {
       throw updateError;
     }
 
-    // Clear reset code
+    // Delete all tokens for this user
     await supabase
-      .from("profiles")
-      .update({
-        reset_code: null,
-        reset_code_expires_at: null,
-      })
-      .eq("id", profile.id);
+      .from("password_reset_tokens")
+      .delete()
+      .eq("user_id", token.user_id);
 
     console.log(`Password reset successful for user ${email}`);
 
