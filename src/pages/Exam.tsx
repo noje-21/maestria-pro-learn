@@ -16,7 +16,6 @@ interface Question {
   option_b: string;
   option_c: string;
   option_d: string;
-  correct_answer: string;
   hint: string | null;
 }
 
@@ -91,9 +90,9 @@ const Exam = () => {
       }
       setExamId(exam.id);
 
-      // Obtener las preguntas del examen
+      // Obtener las preguntas del examen (vista segura sin correct_answer)
       const { data: questionsData, error: questionsError } = await supabase
-        .from('exam_questions')
+        .from('exam_questions_safe' as any)
         .select('*')
         .eq('exam_id', exam.id);
 
