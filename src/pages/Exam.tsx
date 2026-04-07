@@ -109,10 +109,10 @@ const Exam = () => {
         return;
       }
       
-      setQuestions(questionsData || []);
+      setQuestions((questionsData as unknown as Question[]) || []);
       
       // Aleatorizar preguntas
-      const shuffled = shuffleArray(questionsData || []);
+      const shuffled = shuffleArray((questionsData as unknown as Question[]) || []);
       setShuffledQuestions(shuffled);
       
       // Crear opciones mezcladas para cada pregunta
