@@ -34,7 +34,7 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("email", email)
       .maybeSingle();
 
-    console.log(`Profile lookup result:`, { profile, profileError });
+    console.log(`Profile lookup result: found=${!!profile}, error=${!!profileError}`);
 
     if (profileError || !profile) {
       console.error("Profile error:", profileError);
@@ -49,7 +49,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if code is valid
     if (!profile.reset_code || profile.reset_code !== code) {
-      console.log(`Invalid code. Expected: ${profile.reset_code}, Got: ${code}`);
+      console.log(`Invalid reset code attempt for email: ${email}`);
       return new Response(
         JSON.stringify({ success: false, error: "Código de verificación inválido" }),
         {
