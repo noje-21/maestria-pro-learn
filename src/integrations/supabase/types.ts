@@ -871,7 +871,50 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      exam_questions_safe: {
+        Row: {
+          created_at: string | null
+          exam_id: string | null
+          hint: string | null
+          id: string | null
+          option_a: string | null
+          option_b: string | null
+          option_c: string | null
+          option_d: string | null
+          question_text: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          exam_id?: string | null
+          hint?: string | null
+          id?: string | null
+          option_a?: string | null
+          option_b?: string | null
+          option_c?: string | null
+          option_d?: string | null
+          question_text?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          exam_id?: string | null
+          hint?: string | null
+          id?: string | null
+          option_a?: string | null
+          option_b?: string | null
+          option_c?: string | null
+          option_d?: string | null
+          question_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       calculate_course_progress: {
@@ -946,8 +989,8 @@ export type Database = {
           _answers: Json
           _exam_id: string
           _lesson_id: string
-          _passed: boolean
-          _score: number
+          _passed?: boolean
+          _score?: number
         }
         Returns: Json
       }
