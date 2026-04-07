@@ -871,6 +871,65 @@ export type Database = {
       }
     }
     Views: {
+      enrollment_leads_safe: {
+        Row: {
+          country: string | null
+          course_id: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string | null
+          payment_completed_at: string | null
+          phone: string | null
+          specialty: string | null
+          status: string | null
+          stripe_customer_id: string | null
+          stripe_session_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          country?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string | null
+          payment_completed_at?: string | null
+          phone?: string | null
+          specialty?: string | null
+          status?: string | null
+          stripe_customer_id?: never
+          stripe_session_id?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          country?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string | null
+          payment_completed_at?: string | null
+          phone?: string | null
+          specialty?: string | null
+          status?: string | null
+          stripe_customer_id?: never
+          stripe_session_id?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollment_leads_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exam_questions_safe: {
         Row: {
           created_at: string | null
