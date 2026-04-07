@@ -637,6 +637,33 @@ export type Database = {
           },
         ]
       }
+      password_reset_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          reset_code: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          reset_code: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          reset_code?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -645,8 +672,6 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
-          reset_code: string | null
-          reset_code_expires_at: string | null
           status: string | null
           updated_at: string | null
         }
@@ -657,8 +682,6 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
-          reset_code?: string | null
-          reset_code_expires_at?: string | null
           status?: string | null
           updated_at?: string | null
         }
@@ -669,8 +692,6 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
-          reset_code?: string | null
-          reset_code_expires_at?: string | null
           status?: string | null
           updated_at?: string | null
         }
