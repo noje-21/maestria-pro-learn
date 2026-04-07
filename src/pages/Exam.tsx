@@ -16,7 +16,6 @@ interface Question {
   option_b: string;
   option_c: string;
   option_d: string;
-  correct_answer: string;
   hint: string | null;
 }
 
@@ -91,9 +90,9 @@ const Exam = () => {
       }
       setExamId(exam.id);
 
-      // Obtener las preguntas del examen
+      // Obtener las preguntas del examen (vista segura sin correct_answer)
       const { data: questionsData, error: questionsError } = await supabase
-        .from('exam_questions')
+        .from('exam_questions_safe' as any)
         .select('*')
         .eq('exam_id', exam.id);
 
@@ -110,10 +109,10 @@ const Exam = () => {
         return;
       }
       
-      setQuestions(questionsData || []);
+      setQuestions((questionsData as unknown as Question[]) || []);
       
       // Aleatorizar preguntas
-      const shuffled = shuffleArray(questionsData || []);
+      const shuffled = shuffleArray((questionsData as unknown as Question[]) || []);
       setShuffledQuestions(shuffled);
       
       // Crear opciones mezcladas para cada pregunta
@@ -160,15 +159,6 @@ const Exam = () => {
     }
   };
 
-  const getOptionKey = (option: string): string => {
-    const map: Record<string, string> = {
-      'A': 'option_a',
-      'B': 'option_b',
-      'C': 'option_c',
-      'D': 'option_d'
-    };
-    return map[option] || '';
-  };
 
   const handleSubmit = async () => {
     if (!user || !examId || !lessonId) return;
@@ -187,20 +177,8 @@ const Exam = () => {
       return;
     }
 
-    let correct = 0;
-    questions.forEach((q) => {
-      const userAnswer = answers[q.id];
-      if (userAnswer && getOptionKey(q.correct_answer) === userAnswer) {
-        correct++;
-      }
-    });
-
-    const percentage = Math.round((correct / questions.length) * 100);
-    setScore(percentage);
-    const passed = percentage >= 80;
-
     try {
-      // Llamar a la función RPC para registrar el intento
+      // Send answers to server for grading (server-side validation)
       const answersData = questions.reduce((acc, q) => {
         acc[q.id] = answers[q.id] || '';
         return acc;
@@ -210,23 +188,28 @@ const Exam = () => {
         _exam_id: examId,
         _lesson_id: lessonId,
         _answers: answersData,
-        _score: percentage,
-        _passed: passed
+        _score: 0,
+        _passed: false
       });
 
       if (error) throw error;
 
+      const serverResult = data as any;
+      const serverScore = serverResult?.score ?? 0;
+      const serverPassed = serverResult?.passed ?? false;
+      
+      setScore(serverScore);
       setSubmitted(true);
 
-      if (passed) {
+      if (serverPassed) {
         toast({
           title: "¡Excelente trabajo!",
-          description: `Has aprobado con ${percentage}%. La siguiente clase está desbloqueada.`,
+          description: `Has aprobado con ${serverScore}%. La siguiente clase está desbloqueada.`,
         });
       } else {
         toast({
           title: "Necesitas mejorar",
-          description: `Has obtenido ${percentage}%. Necesitas 80% para aprobar.`,
+          description: `Has obtenido ${serverScore}%. Necesitas 80% para aprobar.`,
           variant: "destructive",
         });
       }
@@ -390,54 +373,31 @@ const Exam = () => {
                 </p>
               </div>
 
-              {/* Answer Review */}
+              {/* Answer Review - answers are validated server-side */}
               <div className="space-y-4">
                 <h3 className="text-lg md:text-xl font-bold">Revisión de Respuestas</h3>
                 {shuffledQuestions.map((question, idx) => {
                   const userAnswer = answers[question.id];
-                  const correctKey = getOptionKey(question.correct_answer);
-                  const isCorrect = userAnswer === correctKey;
                   return (
                     <div
                       key={question.id}
-                      className={`p-3 md:p-4 rounded-lg border ${
-                        isCorrect
-                          ? "bg-success/5 border-success/30"
-                          : "bg-destructive/5 border-destructive/30"
-                      }`}
+                      className="p-3 md:p-4 rounded-lg border border-border/50"
                     >
                       <div className="flex items-start gap-2 mb-2">
-                        {isCorrect ? (
-                          <CheckCircle2 className="h-4 md:h-5 w-4 md:w-5 text-success mt-0.5 flex-shrink-0" />
-                        ) : (
-                          <XCircle className="h-4 md:h-5 w-4 md:w-5 text-destructive mt-0.5 flex-shrink-0" />
-                        )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm md:text-base font-semibold mb-2">
                             {idx + 1}. {question.question_text}
                           </p>
                           <p className="text-xs md:text-sm text-muted-foreground">
                             Tu respuesta:{" "}
-                            <span
-                              className={
-                                isCorrect ? "text-success" : "text-destructive"
-                              }
-                            >
-                              {userAnswer ? question[userAnswer as keyof Question] : 'No respondida'}
+                            <span>
+                              {userAnswer ? question[userAnswer as keyof Question] as string : 'No respondida'}
                             </span>
                           </p>
-                          {!isCorrect && (
-                            <>
-                              <p className="text-xs md:text-sm text-success mt-1">
-                                Respuesta correcta:{" "}
-                                {question[correctKey as keyof Question]}
-                              </p>
-                              {question.hint && (
-                                <p className="text-xs text-primary/80 mt-2 italic">
-                                  💡 {question.hint}
-                                </p>
-                              )}
-                            </>
+                          {question.hint && (
+                            <p className="text-xs text-primary/80 mt-2 italic">
+                              💡 {question.hint}
+                            </p>
                           )}
                         </div>
                       </div>

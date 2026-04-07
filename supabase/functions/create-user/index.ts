@@ -46,31 +46,47 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    // Verify requester is admin (if auth header present)
+    // Verify requester is admin (REQUIRED)
     const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-      if (!authError && user) {
-        // Check if requester is admin
-        const { data: roleData } = await supabaseAdmin
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-
-        if (!roleData) {
-          return new Response(
-            JSON.stringify({ success: false, error: "No tienes permisos de administrador" }),
-            {
-              status: 403,
-              headers: { "Content-Type": "application/json", ...corsHeaders },
-            }
-          );
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ success: false, error: "No autorizado" }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         }
-      }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ success: false, error: "No autorizado" }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Check if requester is admin
+    const { data: roleData } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!roleData) {
+      return new Response(
+        JSON.stringify({ success: false, error: "No tienes permisos de administrador" }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     // Check if user already exists in auth
