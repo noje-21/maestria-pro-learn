@@ -116,7 +116,7 @@ const CourseCardComponent = ({ course, index, onClick }: CourseCardProps) => {
           )}
           
           {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent opacity-90" />
+          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-card/80 to-transparent pointer-events-none" />
           
           {/* Top Badges */}
           <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
