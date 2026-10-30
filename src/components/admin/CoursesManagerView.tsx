@@ -25,9 +25,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DataTable, Column, Action } from "@/components/common/DataTable";
-import { Plus, Pencil, Trash2, Save, X, BookOpen, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Save, X, BookOpen, Loader2, Upload, ImageOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { normalizeImageUrl } from "@/lib/imageUrl";
 import { motion } from "framer-motion";
 
 interface Course {
@@ -102,7 +103,7 @@ export const CoursesManagerView = () => {
       const courseData = {
         title: formData.title,
         description: formData.description || null,
-        image_url: formData.image_url || null,
+        image_url: normalizeImageUrl(formData.image_url),
         level: formData.level,
         status: formData.status,
         start_date: formData.start_date || null,

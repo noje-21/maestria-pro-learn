@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Pencil, Trash2, Save, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { normalizeImageUrl } from "@/lib/imageUrl";
 
 interface Course {
   id: string;
@@ -72,7 +73,7 @@ export const CoursesManager = () => {
           .update({
             title: formData.title,
             description: formData.description || null,
-            image_url: formData.image_url || null,
+            image_url: normalizeImageUrl(formData.image_url),
             level: formData.level,
             status: formData.status,
             start_date: formData.start_date || null,
@@ -91,7 +92,7 @@ export const CoursesManager = () => {
         const { error } = await supabase.from('courses').insert({
           title: formData.title,
           description: formData.description || null,
-          image_url: formData.image_url || null,
+          image_url: normalizeImageUrl(formData.image_url),
           level: formData.level,
           status: formData.status,
           start_date: formData.start_date || null,
