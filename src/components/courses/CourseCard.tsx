@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getCourseCardCTA, getHumanProgressMessage } from "@/utils/progressMessages";
+import { CourseCover } from "@/components/common/CourseCover";
 
 interface CourseCardProps {
   course: {
@@ -103,10 +104,10 @@ const CourseCardComponent = ({ course, index, onClick }: CourseCardProps) => {
         <div className="relative aspect-[16/10] overflow-hidden">
           {/* Background Image */}
           {course.image_url ? (
-            <img
+            <CourseCover
               src={course.image_url}
               alt={course.title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              imgClassName="transition-transform duration-700 group-hover:scale-105"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/30 via-secondary/20 to-primary/10 flex items-center justify-center">
@@ -115,7 +116,7 @@ const CourseCardComponent = ({ course, index, onClick }: CourseCardProps) => {
           )}
           
           {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent opacity-90" />
+          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-card/80 to-transparent pointer-events-none" />
           
           {/* Top Badges */}
           <div className="absolute top-3 left-3 right-3 flex items-start justify-between">

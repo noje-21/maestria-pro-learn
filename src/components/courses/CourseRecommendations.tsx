@@ -6,6 +6,7 @@ import { BookOpen, Sparkles, ArrowRight, TrendingUp, ChevronLeft, ChevronRight }
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
+import { CourseCover } from "@/components/common/CourseCover";
 
 interface RecommendedCourse {
   id: string;
@@ -219,10 +220,10 @@ export const CourseRecommendations = ({
                   {/* Image */}
                   <div className="relative aspect-[16/9] overflow-hidden">
                     {course.image_url ? (
-                      <img
+                      <CourseCover
                         src={course.image_url}
                         alt={course.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        imgClassName="transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center">
