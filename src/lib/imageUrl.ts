@@ -11,7 +11,7 @@ export function normalizeImageUrl(url: string | null | undefined): string | null
     trimmed.match(/drive\.google\.com\/file\/d\/([^/?#]+)/) ||
     trimmed.match(/drive\.google\.com\/(?:open|uc)\?(?:.*&)?id=([^&#]+)/);
   if (driveMatch) {
-    return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1600`;
+    return `https://lh3.googleusercontent.com/d/${driveMatch[1]}=w1600`;
   }
 
   return trimmed;
