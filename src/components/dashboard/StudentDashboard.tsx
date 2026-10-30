@@ -22,6 +22,7 @@ import { StudentAnalytics } from "@/components/dashboard/StudentAnalytics";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { getHumanProgressMessage, getEncouragementMessage } from "@/utils/progressMessages";
+import { CourseCover } from "@/components/common/CourseCover";
 
 interface EnrolledCourse {
   id: string;
@@ -103,10 +104,10 @@ const CourseCard = memo(({
       >
         <div className="aspect-[16/10] bg-gradient-to-br from-primary/20 to-secondary/20 relative overflow-hidden">
           {course.image_url ? (
-            <img
+            <CourseCover
               src={course.image_url}
               alt={course.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              imgClassName="group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
             <div className="flex items-center justify-center h-full">

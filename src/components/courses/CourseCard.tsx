@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getCourseCardCTA, getHumanProgressMessage } from "@/utils/progressMessages";
+import { CourseCover } from "@/components/common/CourseCover";
 
 interface CourseCardProps {
   course: {
@@ -103,10 +104,10 @@ const CourseCardComponent = ({ course, index, onClick }: CourseCardProps) => {
         <div className="relative aspect-[16/10] overflow-hidden">
           {/* Background Image */}
           {course.image_url ? (
-            <img
+            <CourseCover
               src={course.image_url}
               alt={course.title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              imgClassName="transition-transform duration-700 group-hover:scale-105"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/30 via-secondary/20 to-primary/10 flex items-center justify-center">

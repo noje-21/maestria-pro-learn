@@ -430,7 +430,7 @@ export const CoursesManagerView = () => {
                     <img
                       src={previewUrl}
                       alt="Vista previa de portada"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                       onError={() => setPreviewError(true)}
                     />
                   )}

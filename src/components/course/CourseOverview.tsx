@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { CourseCover } from "@/components/common/CourseCover";
 
 interface CourseOverviewProps {
   course: {
@@ -106,11 +107,7 @@ const CourseOverviewComponent = ({
         {/* Background */}
         <div className="absolute inset-0 h-[280px] md:h-[320px]">
           {course.image_url ? (
-            <img
-              src={course.image_url}
-              alt={course.title}
-              className="w-full h-full object-cover"
-            />
+            <CourseCover src={course.image_url} alt={course.title} />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/30 via-secondary/20 to-primary/10" />
           )}
