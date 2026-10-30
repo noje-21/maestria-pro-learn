@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,9 +25,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DataTable, Column, Action } from "@/components/common/DataTable";
-import { Plus, Pencil, Trash2, Save, X, BookOpen, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Save, X, BookOpen, Loader2, Upload, ImageOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { normalizeImageUrl } from "@/lib/imageUrl";
 import { motion } from "framer-motion";
 
 interface Course {
@@ -61,6 +62,42 @@ export const CoursesManagerView = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState(initialFormData);
+  const [uploading, setUploading] = useState(false);
+  const [previewError, setPreviewError] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewUrl = normalizeImageUrl(formData.image_url);
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Error", description: "El archivo debe ser una imagen", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Error", description: "La imagen no puede superar 5MB", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `courses/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage
+        .from("lesson-images")
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+      if (error) throw error;
+      const { data } = supabase.storage.from("lesson-images").getPublicUrl(path);
+      setPreviewError(false);
+      setFormData((prev) => ({ ...prev, image_url: data.publicUrl }));
+      toast({ title: "Imagen subida", description: "Guarda el curso para aplicar la portada" });
+    } catch (error: any) {
+      console.error("Error uploading course image:", error);
+      toast({ title: "Error", description: error.message || "No se pudo subir la imagen", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     loadCourses();
@@ -102,7 +139,7 @@ export const CoursesManagerView = () => {
       const courseData = {
         title: formData.title,
         description: formData.description || null,
-        image_url: formData.image_url || null,
+        image_url: normalizeImageUrl(formData.image_url),
         level: formData.level,
         status: formData.status,
         start_date: formData.start_date || null,
@@ -350,15 +387,55 @@ export const CoursesManagerView = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="image_url">URL de Imagen</Label>
-              <Input
-                id="image_url"
-                type="url"
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                placeholder="https://ejemplo.com/imagen.jpg"
-                disabled={saving}
-              />
+              <Label htmlFor="image_url">Imagen de portada</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="image_url"
+                  type="url"
+                  value={formData.image_url}
+                  onChange={(e) => {
+                    setPreviewError(false);
+                    setFormData({ ...formData, image_url: e.target.value });
+                  }}
+                  placeholder="Pega un enlace o sube una imagen"
+                  disabled={saving || uploading}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={saving || uploading}
+                  className="shrink-0"
+                >
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  <span className="ml-2 hidden sm:inline">Subir</span>
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              </div>
+              {previewUrl && (
+                <div className="mt-2 rounded-md border border-border overflow-hidden bg-muted aspect-video flex items-center justify-center">
+                  {previewError ? (
+                    <div className="flex flex-col items-center gap-1 p-4 text-center text-xs text-muted-foreground">
+                      <ImageOff className="h-5 w-5" />
+                      No se puede mostrar esta imagen. Si es de Google Drive, compártela como
+                      "Cualquier persona con el enlace" o súbela con el botón.
+                    </div>
+                  ) : (
+                    <img
+                      src={previewUrl}
+                      alt="Vista previa de portada"
+                      className="w-full h-full object-cover"
+                      onError={() => setPreviewError(true)}
+                    />
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
