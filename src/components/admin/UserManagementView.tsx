@@ -209,6 +209,37 @@ export const UserManagementView = () => {
     }
   };
 
+  const handleStatusChange = async (user: UserWithRole, status: "approved" | "rejected") => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({ status })
+        .eq("id", user.id)
+        .select("id");
+
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("No tienes permiso para cambiar este usuario");
+      }
+
+      setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, status } : u)));
+      toast({
+        title: status === "approved" ? "Usuario aprobado" : "Usuario rechazado",
+        description:
+          status === "approved"
+            ? `${user.full_name || user.email} ya puede acceder a la plataforma`
+            : `${user.full_name || user.email} no tendrá acceso`,
+      });
+    } catch (error: any) {
+      console.error("Error updating status:", error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el estado",
+        variant: "destructive",
+      });
+    }
+  };
+
   const columns: Column<UserWithRole>[] = useMemo(() => [
     {
       key: "full_name",
@@ -273,14 +304,28 @@ export const UserManagementView = () => {
     },
   ], []);
 
-  const actions: Action<UserWithRole>[] = useMemo(() => [
+  const actions: Action<UserWithRole>[] = [
+    {
+      icon: CheckCircle,
+      label: "Aprobar usuario",
+      variant: "ghost" as const,
+      show: (row) => row.status !== "approved",
+      onClick: (row) => handleStatusChange(row, "approved"),
+    },
+    {
+      icon: XCircle,
+      label: "Rechazar usuario",
+      variant: "ghost" as const,
+      show: (row) => row.status !== "rejected" && row.role !== "admin",
+      onClick: (row) => handleStatusChange(row, "rejected"),
+    },
     {
       icon: Trash2,
       label: "Eliminar usuario",
       variant: "ghost" as const,
       onClick: (row) => setDeleteUserId(row.id),
     },
-  ], []);
+  ];
 
   // Stats
   const stats = useMemo(() => ({

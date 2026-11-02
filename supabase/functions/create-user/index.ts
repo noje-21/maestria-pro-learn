@@ -137,7 +137,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Create user in auth
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -147,9 +147,9 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
-    if (authError) {
-      console.error("Error creating auth user:", authError);
-      throw authError;
+    if (createError) {
+      console.error("Error creating auth user:", createError);
+      throw createError;
     }
 
     if (!authData.user) {
