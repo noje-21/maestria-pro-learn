@@ -1,117 +1,131 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { z } from "npm:zod@3";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Reset codes are valid for exactly 60 seconds.
+const CODE_TTL_MS = 60 * 1000;
+const FROM = "Maestría Latinoamericana <no-reply@maestriacp.com>";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const BodySchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(255),
+});
 
-interface PasswordResetRequest {
-  email: string;
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+async function sha256(value: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-const handler = async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+function generateCode(): string {
+  const n = new Uint32Array(1);
+  crypto.getRandomValues(n);
+  return (100000 + (n[0] % 900000)).toString();
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { email }: PasswordResetRequest = await req.json();
+    const parsed = BodySchema.safeParse(await req.json().catch(() => ({})));
+    if (!parsed.success) return json({ success: false, error: "Correo electrónico inválido" }, 400);
+    const { email } = parsed.data;
 
-    console.log(`Password reset requested for: ${email}`);
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendKey) return json({ success: false, error: "El envío de correos no está configurado" }, 500);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // Check if user exists
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from("profiles")
       .select("id, email, full_name")
-      .eq("email", email)
+      .ilike("email", email)
       .maybeSingle();
 
-    if (profileError || !profile) {
-      console.error("Profile not found:", email);
-      return new Response(
-        JSON.stringify({ success: false, error: "Usuario no encontrado" }),
-        {
-          status: 404,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
+    // Generic answer when the account doesn't exist (avoid revealing registered emails).
+    if (!profile) {
+      return json({ success: true, expiresInSeconds: CODE_TTL_MS / 1000 });
     }
 
-    // Generate 6-digit code
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-    // Delete any existing tokens for this user
-    await supabase
+    // Cooldown: one code per minute.
+    const { data: existing } = await supabase
       .from("password_reset_tokens")
-      .delete()
-      .eq("user_id", profile.id);
+      .select("created_at")
+      .eq("user_id", profile.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    // Save reset code in dedicated table
-    const { error: insertError } = await supabase
-      .from("password_reset_tokens")
-      .insert({
-        user_id: profile.id,
-        email: email,
-        reset_code: resetCode,
-        expires_at: expiresAt.toISOString(),
-      });
+    if (existing) {
+      const elapsed = Date.now() - new Date(existing.created_at).getTime();
+      if (elapsed < CODE_TTL_MS) {
+        const wait = Math.ceil((CODE_TTL_MS - elapsed) / 1000);
+        return json(
+          { success: false, error: `Espera ${wait} segundos para pedir otro código`, retryAfterSeconds: wait },
+          429,
+        );
+      }
+    }
 
+    const code = generateCode();
+    const expiresAt = new Date(Date.now() + CODE_TTL_MS);
+
+    await supabase.from("password_reset_tokens").delete().eq("user_id", profile.id);
+
+    const { error: insertError } = await supabase.from("password_reset_tokens").insert({
+      user_id: profile.id,
+      email,
+      reset_code: await sha256(code),
+      expires_at: expiresAt.toISOString(),
+    });
     if (insertError) {
       console.error("Error saving reset code:", insertError);
-      throw insertError;
+      return json({ success: false, error: "No se pudo generar el código" }, 500);
     }
 
-    // Send email with Resend
-    const emailResponse = await resend.emails.send({
-      from: "Maestría Latinoamericana <onboarding@resend.dev>",
-      to: [email],
-      subject: "Recuperación de contraseña – Maestría Latinoamericana",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #213ECC;">Recuperación de contraseña</h2>
-          <p>Hola ${profile.full_name || ""},</p>
-          <p>Has solicitado recuperar tu contraseña.</p>
-          <p>Tu código de verificación es:</p>
-          <div style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
-            ${resetCode}
-          </div>
-          <p style="color: #666;">Este código expira en 15 minutos.</p>
-          <p style="color: #999; font-size: 14px; margin-top: 30px;">
-            Si no solicitaste este cambio, ignora este mensaje.
-          </p>
+    const name = (profile.full_name || "").replace(/[<>&"]/g, "");
+    const html = `
+      <div style="font-family: Arial, Helvetica, sans-serif; max-width: 560px; margin: 0 auto; background:#ffffff; color:#1f2937; padding: 32px;">
+        <h2 style="color:#213ECC; margin:0 0 16px;">Código para cambiar tu contraseña</h2>
+        <p>Hola${name ? ` ${name}` : ""},</p>
+        <p>Usa este código para cambiar tu contraseña en Maestría Latinoamericana:</p>
+        <div style="background:#f3f4f6; border-radius:8px; padding:20px; text-align:center; font-size:34px; font-weight:bold; letter-spacing:8px; margin:24px 0;">
+          ${code}
         </div>
-      `,
+        <p style="color:#b91c1c; font-weight:bold;">Este código vence en 1 minuto.</p>
+        <p style="color:#6b7280; font-size:13px; margin-top:28px;">
+          Si no pediste este cambio, ignora este correo. Tu contraseña no cambiará.
+        </p>
+      </div>`;
+
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: FROM,
+        to: [profile.email || email],
+        subject: `Tu código: ${code} (vence en 1 minuto)`,
+        html,
+      }),
     });
 
-    console.log(`Reset email sent successfully to ${email}`);
+    if (!res.ok) {
+      const details = await res.text();
+      console.error(`Resend failed [${res.status}]: ${details}`);
+      await supabase.from("password_reset_tokens").delete().eq("user_id", profile.id);
+      return json({ success: false, error: "No se pudo enviar el correo. Intenta de nuevo.", status: res.status }, 502);
+    }
 
-    return new Response(
-      JSON.stringify({ success: true, message: "Código enviado al correo" }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
-  } catch (error: any) {
-    console.error("Error sending reset email:", error);
-    return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    return json({ success: true, expiresInSeconds: CODE_TTL_MS / 1000 });
+  } catch (error) {
+    console.error("send-password-reset error:", error);
+    return json({ success: false, error: "Error inesperado" }, 500);
   }
-};
-
-serve(handler);
+});
