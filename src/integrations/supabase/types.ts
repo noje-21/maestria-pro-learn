@@ -639,6 +639,9 @@ export type Database = {
       }
       password_reset_tokens: {
         Row: {
+          attempts: number
+          change_expires_at: string | null
+          change_token_hash: string | null
           created_at: string
           email: string
           expires_at: string
@@ -647,6 +650,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attempts?: number
+          change_expires_at?: string | null
+          change_token_hash?: string | null
           created_at?: string
           email: string
           expires_at: string
@@ -655,6 +661,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attempts?: number
+          change_expires_at?: string | null
+          change_token_hash?: string | null
           created_at?: string
           email?: string
           expires_at?: string

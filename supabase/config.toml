@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.verify-reset-code]
 verify_jwt = false
+
+[functions.send-password-reset]
+verify_jwt = false
