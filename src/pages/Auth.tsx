@@ -161,14 +161,7 @@ const Auth = () => {
         <div className="absolute inset-0 bg-gradient-glow pointer-events-none" />
 
         <div className="relative z-10 w-full max-w-md mx-4">
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setShowPasswordReset(false);
-              setResetStep("email");
-            }}
-            className="mb-4"
-          >
+          <Button variant="ghost" onClick={() => setShowPasswordReset(false)} className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver al inicio de sesión
           </Button>
@@ -180,93 +173,18 @@ const Auth = () => {
                   <Lock className="h-8 w-8 text-primary" />
                 </div>
               </div>
-              <h1 className="text-3xl font-bold">
-                {resetStep === "email" ? "Recuperar contraseña" : "Verificar código"}
-              </h1>
-              <p className="text-muted-foreground">
-                {resetStep === "email"
-                  ? "Ingresa tu correo electrónico registrado"
-                  : "Ingresa el código enviado a tu correo"}
-              </p>
+              <h1 className="text-3xl font-bold">Recuperar contraseña</h1>
+              <p className="text-muted-foreground">Te enviaremos un código a tu correo</p>
             </div>
 
-            {resetStep === "email" ? (
-              <form onSubmit={handlePasswordResetRequest} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="resetEmail">Correo Electrónico</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="resetEmail"
-                      type="email"
-                      placeholder="tu@email.com"
-                      value={resetEmail}
-                      onChange={(e) => setResetEmail(e.target.value)}
-                      className="pl-10 bg-background/50"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full btn-gradient-primary" disabled={loading}>
-                  {loading ? "Enviando..." : "Enviar código"}
-                </Button>
-              </form>
-            ) : (
-              <form onSubmit={handlePasswordResetVerify} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="resetCode">Código de verificación</Label>
-                  <Input
-                    id="resetCode"
-                    type="text"
-                    placeholder="123456"
-                    value={resetCode}
-                    onChange={(e) => setResetCode(e.target.value)}
-                    className="bg-background/50 text-center text-2xl tracking-widest"
-                    maxLength={6}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">Nueva contraseña</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      placeholder="••••••••"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="pl-10 bg-background/50"
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="pl-10 bg-background/50"
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full btn-gradient-primary" disabled={loading}>
-                  {loading ? "Verificando..." : "Actualizar contraseña"}
-                </Button>
-              </form>
-            )}
+            <PasswordCodeFlow
+              initialEmail={email}
+              onDone={() => {
+                setShowPasswordReset(false);
+                setIsLogin(true);
+                setPassword("");
+              }}
+            />
           </div>
         </div>
       </div>
