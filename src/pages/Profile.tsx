@@ -9,6 +9,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { profileUpdateSchema } from "@/lib/validations";
+import { KeyRound } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { PasswordCodeFlow } from "@/components/auth/PasswordCodeFlow";
 
 interface ProfileData {
   full_name: string;
@@ -29,6 +39,7 @@ const Profile = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [profile, setProfile] = useState<ProfileData>({
     full_name: "",
     email: "",
