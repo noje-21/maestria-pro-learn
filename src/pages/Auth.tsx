@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { signUpSchema, signInSchema } from "@/lib/validations";
-import { supabase } from "@/integrations/supabase/client";
+import { PasswordCodeFlow } from "@/components/auth/PasswordCodeFlow";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -21,13 +21,7 @@ const Auth = () => {
   const [country, setCountry] = useState("");
   const { signIn, signUp } = useAuth();
 
-  // Password reset states
   const [showPasswordReset, setShowPasswordReset] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const [resetStep, setResetStep] = useState<"email" | "code">("email");
-  const [resetCode, setResetCode] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,92 +62,6 @@ const Auth = () => {
     }
   };
 
-  const handlePasswordResetRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.functions.invoke("send-password-reset", {
-        body: { email: resetEmail },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Código enviado",
-        description: "Revisa tu correo para obtener el código de verificación",
-      });
-
-      setResetStep("code");
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "No se pudo enviar el código de recuperación",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePasswordResetVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (newPassword !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Las contraseñas no coinciden",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      toast({
-        title: "Error",
-        description: "La contraseña debe tener al menos 6 caracteres",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.functions.invoke("verify-reset-code", {
-        body: {
-          email: resetEmail,
-          code: resetCode,
-          newPassword: newPassword,
-        },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Contraseña actualizada",
-        description:
-          "Tu contraseña ha sido actualizada correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.",
-      });
-
-      // Reset form and go back to login
-      setShowPasswordReset(false);
-      setResetStep("email");
-      setResetEmail("");
-      setResetCode("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setIsLogin(true);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "No se pudo verificar el código",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (showPasswordReset) {
     return (

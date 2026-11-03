@@ -292,6 +292,30 @@ const Profile = () => {
                   </div>
                 </div>
 
+                <Dialog open={passwordOpen} onOpenChange={setPasswordOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full gap-2">
+                      <KeyRound className="h-4 w-4" />
+                      Cambiar contraseña
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Cambiar contraseña</DialogTitle>
+                      <DialogDescription>
+                        Te enviaremos un código a tu correo para confirmar que eres tú.
+                      </DialogDescription>
+                    </DialogHeader>
+                    {passwordOpen && (
+                      <PasswordCodeFlow
+                        initialEmail={profile.email || user?.email || ""}
+                        lockEmail
+                        onDone={() => setPasswordOpen(false)}
+                      />
+                    )}
+                  </DialogContent>
+                </Dialog>
+
                 <Button
                   variant="destructive"
                   className="w-full"
