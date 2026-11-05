@@ -108,8 +108,15 @@ const EventCarousel = () => {
             >
               <img
                 src={isMobile && slide.imageMobile ? slide.imageMobile : slide.image}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60 select-none pointer-events-none"
+                draggable={false}
+              />
+              <img
+                src={isMobile && slide.imageMobile ? slide.imageMobile : slide.image}
                 alt={slide.alt}
-                className="w-full h-full select-none object-contain"
+                className="relative w-full h-full select-none object-contain"
                 draggable={false}
               />
             </div>
