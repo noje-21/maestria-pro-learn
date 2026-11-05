@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import maestria2025 from "@/assets/maestria-2025-new.jpg";
 import campusVirtual from "@/assets/campus-virtual.jpg";
-import simposio2026 from "@/assets/simposio-2026.png.asset.json";
+import simposio2026 from "@/assets/simposio-2026.jpg";
 import maestria2025Mobile from "@/assets/maestria-2025-mobile.jpg";
 import campusVirtualMobile from "@/assets/campus-virtual-mobile.jpg";
 
@@ -25,8 +25,8 @@ const EventCarousel = () => {
   const slides: Slide[] = [
     {
       id: 1,
-      image: simposio2026.url,
-      imageMobile: simposio2026.url,
+      image: simposio2026,
+      imageMobile: simposio2026,
       alt: "5to Simposio Latinoamericano en Hipertensión Pulmonar · 12 de noviembre de 2026",
       action: () => navigate("/simposio"),
     },
@@ -108,8 +108,15 @@ const EventCarousel = () => {
             >
               <img
                 src={isMobile && slide.imageMobile ? slide.imageMobile : slide.image}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60 select-none pointer-events-none"
+                draggable={false}
+              />
+              <img
+                src={isMobile && slide.imageMobile ? slide.imageMobile : slide.image}
                 alt={slide.alt}
-                className="w-full h-full select-none object-contain"
+                className="relative w-full h-full select-none object-contain"
                 draggable={false}
               />
             </div>
