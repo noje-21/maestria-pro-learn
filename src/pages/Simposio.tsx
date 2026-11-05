@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Calendar, MapPin } from "lucide-react";
 import { z } from "zod";
-import simposioImage from "@/assets/simposio-2025.jpg";
+import simposioImage from "@/assets/simposio-2026.png.asset.json";
 
 const simposioSchema = z.object({
   nombre: z.string().min(3, "El nombre debe tener al menos 3 caracteres").max(200, "El nombre es muy largo"),
@@ -55,8 +55,10 @@ const Simposio = () => {
       try {
         await supabase.functions.invoke("send-simposio-confirmation", {
           body: {
-            email: validatedData.correo,
+            correo: validatedData.correo,
             nombre: validatedData.nombre,
+            modalidad: validatedData.modalidad,
+            pais: validatedData.pais,
           },
         });
       } catch (emailError) {
@@ -108,24 +110,24 @@ const Simposio = () => {
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Simposio Image */}
           <img
-            src={simposioImage}
-            alt="4to Simposio Latinoamericano de Hipertensión Pulmonar"
-            className="w-full rounded-2xl shadow-lg"
+            src={simposioImage.url}
+            alt="5to Simposio Latinoamericano en Hipertensión Pulmonar"
+            className="w-full max-w-2xl mx-auto block rounded-2xl shadow-lg"
           />
 
           {/* Event Info */}
           <div className="glass-card p-6">
             <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
-              4to Simposio Latinoamericano de Hipertensión Pulmonar
+              5to Simposio Latinoamericano en Hipertensión Pulmonar
             </h1>
             <div className="flex flex-col md:flex-row gap-4 justify-center items-center text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
-                <span>14 de Noviembre 2025</span>
+                <span>12 de Noviembre 2026</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-primary" />
-                <span>Buenos Aires, Argentina</span>
+                <span>Teatro Castelao, Centro Gallego · Buenos Aires, Argentina</span>
               </div>
             </div>
           </div>
