@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, Plus, Edit2, Trash2, Save, X } from "lucide-react";
+import { Loader2, Plus, Edit2, Trash2, Save, X, ArrowUp, ArrowDown } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
 interface Module {
   id: string;
+  course_id: string | null;
   module_number: number;
   title: string;
   description: string | null;
@@ -120,6 +121,58 @@ export const ModuleLessonManager = () => {
         description: "No se pudo guardar el módulo",
         variant: "destructive",
       });
+    }
+  };
+
+  const [reordering, setReordering] = useState(false);
+
+  // Mueve un módulo una posición arriba/abajo dentro de su curso y
+  // renumera todos los módulos del curso de forma consecutiva (1..N).
+  const moveModule = async (moduleId: string, direction: -1 | 1) => {
+    const target = modules.find((m) => m.id === moduleId);
+    if (!target || reordering) return;
+
+    const siblings = modules
+      .filter((m) => m.course_id === target.course_id)
+      .sort((a, b) => a.module_number - b.module_number);
+    const index = siblings.findIndex((m) => m.id === moduleId);
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= siblings.length) return;
+
+    const reordered = [...siblings];
+    [reordered[index], reordered[newIndex]] = [reordered[newIndex], reordered[index]];
+    const changes = reordered
+      .map((m, i) => ({ id: m.id, module_number: i + 1, prev: m.module_number }))
+      .filter((c) => c.module_number !== c.prev);
+
+    const previous = modules;
+    const numberById = new Map(changes.map((c) => [c.id, c.module_number]));
+    setModules((current) =>
+      current
+        .map((m) => (numberById.has(m.id) ? { ...m, module_number: numberById.get(m.id)! } : m))
+        .sort((a, b) => a.module_number - b.module_number)
+    );
+
+    try {
+      setReordering(true);
+      const results = await Promise.all(
+        changes.map((c) =>
+          supabase.from("modules").update({ module_number: c.module_number }).eq("id", c.id)
+        )
+      );
+      const failed = results.find((r) => r.error);
+      if (failed?.error) throw failed.error;
+    } catch (error) {
+      console.error("Error reordering modules:", error);
+      setModules(previous);
+      toast({
+        title: "Error",
+        description: "No se pudo cambiar el orden del módulo",
+        variant: "destructive",
+      });
+      loadData();
+    } finally {
+      setReordering(false);
     }
   };
 
@@ -389,8 +442,31 @@ export const ModuleLessonManager = () => {
                     </>
                   )}
                 </div>
-                {!editingModule && (
+                {!editingModule && (() => {
+                  const siblings = modules.filter((m) => m.course_id === module.course_id);
+                  const position = siblings.findIndex((m) => m.id === module.id);
+                  return (
                   <div className="flex gap-2 shrink-0">
+                    <Button
+                      onClick={() => moveModule(module.id, -1)}
+                      size="sm"
+                      variant="ghost"
+                      disabled={reordering || position <= 0}
+                      aria-label="Subir módulo"
+                      title="Subir módulo"
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={() => moveModule(module.id, 1)}
+                      size="sm"
+                      variant="ghost"
+                      disabled={reordering || position === siblings.length - 1}
+                      aria-label="Bajar módulo"
+                      title="Bajar módulo"
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
                     <Button
                       onClick={() => setEditingModule(module)}
                       size="sm"
@@ -420,7 +496,8 @@ export const ModuleLessonManager = () => {
                       </AlertDialogContent>
                     </AlertDialog>
                   </div>
-                )}
+                  );
+                })()}
               </div>
             </CardHeader>
 
