@@ -30,7 +30,7 @@ const Simposio = () => {
     pais: "",
     documento: "",
     telefono: "",
-    modalidad: "",
+    modalidad: "presencial",
   });
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -76,7 +76,7 @@ const Simposio = () => {
         pais: "",
         documento: "",
         telefono: "",
-        modalidad: "",
+        modalidad: "presencial",
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -216,15 +216,8 @@ const Simposio = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="modalidad">Modalidad *</Label>
-                  <Select value={formData.modalidad} onValueChange={(value) => setFormData({ ...formData, modalidad: value })}>
-                    <SelectTrigger id="modalidad">
-                      <SelectValue placeholder="Selecciona modalidad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="presencial">Presencial</SelectItem>
-                      <SelectItem value="virtual">Virtual</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input id="modalidad" value="Presencial" readOnly disabled />
+                  <p className="text-xs text-muted-foreground">Este simposio es únicamente presencial.</p>
                 </div>
 
                 <Button type="submit" className="w-full btn-gradient-primary" disabled={loading}>
